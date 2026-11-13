@@ -8,10 +8,10 @@
 - **Game/flavor/version:** World of Warcraft / WoW Forever / 1.60.1 only
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
-- **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat. See the publication checklist before upload.
-- **Candidate file:** PartyQuestsForever_1.0.0-rc1.zip
-- **Candidate release type:** Beta. A final 1.0.0 Release file should follow the final review.
-- **Logo:** `docs/project-icon.png` (original 512 × 512 PNG)
+- **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
+- **Release file:** PartyQuestsForever_1.0.1.zip
+- **Release type:** Release
+- **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
 - **Optional integration:** WIM. Do not mark it as a required dependency.
 - **Project ID / issue URL:** Unassigned; add only after the project exists.
@@ -30,7 +30,7 @@ See available party quests beside Blizzard's objective tracker or in a separate 
 - Group quests by zone and display Forever character surnames.
 - Choose a left/right tracker sidebar or a separate resizable window.
 - Double-click a foreign quest to check known eligibility and request a manual share by whisper.
-- Click **Share Quest Log** in the main Map & Quest Log title bar to draft a clickable snapshot link.
+- Click **Share** in the party tracker header or **Share Quest Log** in the main Map & Quest Log title bar to draft a clickable snapshot link.
 - View shared logs in a Blizzard-styled window with collapsible quests, objective completion and turn-in status.
 - Share through character whispers, WIM and Battle.net whispers. Battle.net uses a separate data route for cross-faction/realm sharing.
 - Configure the addon through its AddOns settings page and draggable minimap button.
@@ -59,9 +59,9 @@ Built for **WoW Forever 1.60.1**. Retail, other Classic clients and raid trackin
 
 Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.com/Questie/QuestieDB/tree/0f7d8adc92b28ac6594f4ad8745257f4d9784edf) and historic Questie contributions. Full upstream licensing, attribution and its historical caveat are bundled. Party Quests Forever is not affiliated with Questie. Its project icon is original artwork.
 
-## Candidate changelog
+## Release changelog
 
-First public release candidate under the Party Quests Forever name. Includes collapsible party/zone/quest tracking, combined shared quests, native tracker styling, full surnames, minimap/settings controls, clickable active-log snapshots, WIM integration, Battle.net snapshot transport, and transfer diagnostics. Existing installation folders and settings are preserved.
+Adds a Share button to the party tracker header between Party Quests and Refresh. Includes collapsible party/zone/quest tracking, combined shared quests, native tracker styling, full surnames, minimap/settings controls, clickable active-log snapshots, WIM integration, Battle.net snapshot transport, and transfer diagnostics. Existing installation folders and settings are preserved.
 
 ## Submission references checked 2026-11-13
 
