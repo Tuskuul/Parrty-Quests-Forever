@@ -68,7 +68,7 @@ Automatic Blizzard tracker recovery remains optional and off by default.
 Retail, other Classic clients, and raid tracking are not supported.
 
 CREDITS AND LICENSE
-Created by Wolfie. Original project icon is included; tools/build_icon.py builds it.
+Created by Wolfie. Approved project artwork is included; tools/build_icon.py prepares its icon sizes.
 Code is distributed under GPLv3. Static fallback data adapts QuestieDB snapshot
 0f7d8adc92b28ac6594f4ad8745257f4d9784edf and historic Questie contributions.
 Full upstream attribution, licensing statement and historical caveat remain in
