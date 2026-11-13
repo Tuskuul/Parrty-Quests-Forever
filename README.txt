@@ -1,4 +1,4 @@
-Party Quests Forever 1.0.0-rc1
+Party Quests Forever 1.0.1
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -38,6 +38,7 @@ that its owner share it. A single click expands it. Unknown eligibility sends
 nothing; actual quest acceptance and manual sharing remain server/player decisions.
 
 SHARE A QUEST LOG
+Click Share in the Party Quests tracker header, between its title and Refresh.
 Click Share Quest Log in the main Map & Quest Log title bar, left of fullscreen.
 It captures your active quests, objective counts/completion and turn-in status,
 then inserts a marker at your current chat cursor. Your draft/channel/recipient
