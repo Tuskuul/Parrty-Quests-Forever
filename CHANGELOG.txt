@@ -1,0 +1,300 @@
+Party Quests Forever 1.0.0-rc1
+
+- Applied the final Party Quests Forever display name to the addon list,
+  settings, separate-window title and diagnostic/status output.
+- Preserves the SimplyPartyQuests installation folder, saved settings, slash
+  shortcuts and communication protocols for existing users.
+- Added an original project logo and matching addon/minimap icon.
+- Prepared current user documentation, CurseForge listing copy and final
+  publication checklist, with existing native-discovery limits stated.
+- Recorded confirmed WIM send/receive and Battle.net snapshot transfer testing.
+- Existing quest data and full licensing notices/caveat remain unchanged.
+- Release candidate for review; no CurseForge publication has been performed.
+
+Simply Party Quests 0.16.1
+
+- Added Transfer diagnostics directly to the shared quest-log viewer.
+- Shows elapsed wait and received packet counts while a snapshot is loading.
+- Records bounded transfer-stage counters/recent events even when broad quest
+  diagnostics are off: request routing, send result, incoming BNet events,
+  publication state, reply queueing, packet receipt/rejection, and timeout.
+- Records message kind/size and routing IDs; does not copy quest payload text
+  into the transfer trace. Captures clear on reload; recent trace holds 80 rows.
+- Normalizes channel labels on the dedicated private BNet data event while
+  retaining numeric sender-ID checks. Does not relax reply authentication.
+- Automated tests pass. The reported stalled BNet fetch still needs paired
+  sender/recipient reports to determine actual Forever delivery behavior.
+- Update both copies, /reload, send a fresh link and capture both reports.
+
+Simply Party Quests 0.16.0
+
+- Added Battle.net whisper quest-log links, including WIM Battle.net windows.
+- Resolves the actual chat account to its online WoW game session; snapshot
+  requests/replies use Battle.net addon data rather than character whispers.
+- Designed for sharing across factions/realms within the same WoW client flavor.
+- Keeps chat account IDs separate from game-session IDs and authenticates replies
+  against the requested session. Existing chunk bounds/caches/expiry still apply.
+- Provides unavailable-session/API feedback and Battle.net transport diagnostics.
+- Automated mocks cover separate data routing and failures. Live Forever BNet
+  delivery and cross-faction/cross-realm validation remain pending.
+- Both sender and recipient need 0.16.0 or newer. Replace files and /reload.
+
+Simply Party Quests 0.15.0
+
+- Added optional WIM compatibility using its widget-focus and namespaced
+  hyperlink hooks, without changing its native item/URL link handlers.
+- Sharing targets the focused WIM editor and preserves its draft and cursor,
+  using WIM's own focus/recipient routing instead of Blizzard chat activation.
+- Rejects captured drafts when WIM recycles the window for another recipient.
+- Added support for independent editors advertised through CHAT_FOCUS_OVERRIDE;
+  Blizzard-based chat replacements continue using the existing native path.
+- Detects WIM loading after Party Quests and registers hooks once.
+- Reports WIM focus/link hook status in the existing diagnostics report.
+- Automated mocks cover WIM behavior, custom chat overrides, partial API
+  availability, and existing chat/party features. Live addon testing is pending.
+- Replace files and /reload. No mandatory chat-addon dependency.
+
+Simply Party Quests 0.14.4
+
+- Captures the active chat draft on hovering the map share button and refreshes
+  that capture before Blizzard processes chat focus loss.
+- Restores the exact edit box, draft text, cursor, whisper recipient, channel,
+  and sticky channel after activation, before inserting the snapshot marker.
+- Prevents focus loss from redirecting a whisper link into sticky guild chat.
+- Regression tests now simulate Blizzard clearing text/resetting channel during
+  focus loss and activation; live Forever validation is still needed.
+- Replace files and /reload.
+
+Simply Party Quests 0.14.3
+
+- Sharing inserts the snapshot marker at the cursor in the active chat draft
+  instead of replacing the draft through OpenChat.
+- Retains the current chat channel and whisper recipient. If the edit box is
+  inactive, reopens the last active box while preserving its text and channel.
+- Supports both modern ChatFrameUtil and legacy ChatEdit helpers.
+- Automated mocked chat/UI tests pass. Replace files and /reload.
+
+Simply Party Quests 0.14.2
+
+- Fixed the invisible Map & Quest Log share button by supplying explicit classic
+  Blizzard normal/pressed/highlight textures and a gold font label.
+- Matches the fullscreen control's frame strata and raises the button above
+  title-bar artwork. Retains the position immediately left of the arrow.
+- Automated mocked UI tests pass; live visibility verification is still needed.
+- Replace files and /reload.
+
+Simply Party Quests 0.14.1
+
+- Added a Blizzard-styled Share Quest Log button to the Map & Quest Log title
+  bar, immediately left of the fullscreen/minimize arrow.
+- Button follows the native map window in normal and fullscreen layouts and
+  appears when Blizzard loads the map UI. Existing native controls are retained.
+- The settings sharing action remains available as a secondary entry point.
+- Replace files and /reload.
+
+Simply Party Quests 0.14.0
+
+- Added Settings > Quick access > Share my quest log in chat. Captures a fixed
+  active-log snapshot and drafts a marker for the player to send.
+- Copies with this addon convert the marker into a native local addon link.
+  Clicking fetches the snapshot from its actual sender through addon whispers.
+- Added a movable Blizzard-styled viewer with timestamp, collapsible quests,
+  objective counts, native objective completion flags and ready-for-turn-in data.
+- Snapshots work independently of party membership; the owner must be online
+  for first fetch. No lifetime completion history is included.
+- Added chunk bounds, sender checks, request throttling, escaped display text,
+  expiration, cache limits, and clear unavailable/offline feedback.
+- Keeps chat snapshots separate from party discovery and live progress caches.
+- Automated Lua mock tests pass; live Forever chat/UI validation is pending.
+- Replace files and /reload. Existing preferences remain.
+
+Simply Party Quests 0.13.2
+
+- Added native Blizzard quest-tracker header backgrounds to player dropdowns
+  and zone/group dropdowns, including the combined shared-quest headings.
+- Padded header text and adjusted row heights for wrapped names and titles.
+- Ordinary quests and objective rows retain their existing text-only style.
+- Pooled rows clear header styling when reused for non-heading content.
+- Replace files and /reload. Existing preferences remain.
+
+Simply Party Quests 0.13.1
+
+- Added a read-only Inspect share APIs button under Settings > Troubleshooting.
+- Samples the last clicked quest and up to four own/four foreign IDs before,
+  after data loading, and after a short wait. Captures native quest/error/info/
+  system messages for 90 seconds, including native error identifiers if available.
+- Inspector never sends whispers or shares; existing double-click behavior remains.
+- Added research notes separating sharing capability from recipient eligibility.
+- Existing QuestieDB-derived fallback data remains; this build investigates how
+  much can be replaced with native client queries.
+- Replace files and /reload. Existing settings are retained.
+
+Validation: Lua mock suite passes, including safe probing, bounded/expiring
+capture, delayed results, and no outgoing whispers or shares from the inspector.
+Out-of-log IsPushableQuest reliability still needs the live-client test.
+
+Simply Party Quests 0.13.0
+
+- Double-click foreign quests in either view to check character completion and
+  known acceptance rules, then whisper the verified owner asking for a share.
+- A single click only expands/collapses. No automatic sharing or whisper replies.
+- Added a separate pinned acceptance-metadata snapshot with conservative handling
+  of missing/corrected records and unsupported special rules. Unknown sends nothing.
+- Guards against completed/already-owned quests, low level, race/class mismatch,
+  missing prerequisites, chain exclusions, unavailable history, offline/departed
+  owners, combat, preview and recycled click handlers.
+- Added a settings checkbox; default enabled. Limits requests to one per quest
+  per 60 seconds, plus a five-second global interval.
+- Replace files and /reload. Existing preferences are retained.
+
+Validation: automated Lua mocks pass for both UI actions, completion, eligibility,
+recipient verification, whisper format, cooldowns, settings and handler cleanup.
+Whisper behavior, client restrictions and source-data coverage need in-game testing.
+
+Simply Party Quests 0.12.8
+
+- Fixed party tracking disappearing when your own quest log/watch list is empty.
+- Party view can show when Blizzard hides its empty tracker container or header.
+- Uses a matching party-only All Objectives header while the native one is absent;
+  rejoins the native header when it becomes visible again.
+- Still hides automatically when solo, respects manual hiding, and keeps the
+  native bar toggle hidden when the native header is absent. Minimap access remains.
+- Replace files and /reload. Existing preferences are preserved.
+
+Validation: Lua mock checks pass for actual GROUP_ROSTER_UPDATE with an empty
+own log, hidden native root/header, remote-only quests, switching back to the
+joined header, manual visibility, and leaving the party.
+
+Simply Party Quests 0.12.7
+
+- Party Quests bar button now belongs to the native All Objectives header.
+  It hides with the empty/hidden header instead of floating alone on screen.
+- Added a minimap quick-access button: left-click toggles the party view,
+  right-click opens settings, and Shift-click refreshes party quests.
+- Drag the minimap button around the rim; its angle is saved. A Quick access
+  setting controls minimap button visibility. /spq remains available.
+- Replace files and /reload. Existing preferences remain.
+
+Validation: Lua mock checks pass for empty-header visibility, restoration,
+minimap clicks, settings toggle, scaled dragging, saved position, and cleanup.
+Native appearance and interaction still need an in-game check.
+
+Simply Party Quests 0.12.6
+
+- Joined the party column to the native tracker frame with no gap.
+- All Objectives now spans both columns; party and personal quest sections align
+  below the shared header. Native quest column width stays unchanged.
+- Hiding the party column or switching to the pop-out restores the original
+  native header anchors. The main native collapse control hides both columns.
+- Retains left/right placement, height controls, and per-member collapses.
+- Replace files and /reload. Existing settings remain.
+
+Validation: automated mocks pass for shared header layout on either side,
+zero-gap docking, native collapse behavior, and exact header-anchor restoration.
+In-game appearance still needs verification.
+
+Simply Party Quests 0.12.5
+
+- Reduced the default sidebar height limit from 600 to 420 pixels.
+- Added Shorter sidebar / Taller sidebar settings (240-720 pixels).
+- Member headings now collapse/reopen that member's personal sections and quests.
+- Saves each member's collapse state through refreshes and reloads; combined
+  shared quests remain in their own section.
+- Replace files and /reload. Existing settings are preserved.
+
+Validation: Lua mock tests pass for member click handlers, scoped collapse,
+refresh/reload persistence, reopening, height limits, and height controls.
+
+Simply Party Quests 0.12.4
+
+- Both displays now use one shared party/quest membership and section builder.
+- Sidebar keeps every party member visible, including players whose entire log
+  moved into combined shared quests and members with no discoveries yet.
+- Shows member quest counts, partial/synced/offline status, and empty sections.
+- Displays available quest requirement text and ready indicators in the sidebar.
+- Retains the Party Quests toggle inside All Objectives from 0.12.3.
+- Replace files and /reload. Existing preferences are preserved.
+
+Validation: Lua mocks pass for both views' ID parity with combine on/off,
+partial-party shared quests, all-shared members, empty/offline members,
+requirements, switching displays, and removal updates. Live testing remains needed.
+
+Simply Party Quests 0.12.3
+
+- Moved the Party Quests toggle into the All Objectives header, immediately left
+  of the native collapse button, instead of above the tracker near coordinates.
+- Uses a visible Blizzard button with native tracker font and a higher frame level.
+- Follows late header creation and has an inside-header fallback while loading.
+- Existing visibility, solo auto-hide, and sidebar settings remain unchanged.
+- Replace files and /reload.
+
+Validation: automated checks pass for native header anchoring, late header
+availability, fallback placement, click toggling, and existing addon behavior.
+
+Simply Party Quests 0.12.2
+
+- Party views hide automatically outside a normal party.
+- Added a Party Quests button above the default tracker to open/hide the selected
+  view, including while solo. The button remains available when the pane is hidden.
+- Leaving/changing a party clears a temporary solo visibility override.
+- Uses the client's actual ObjectiveTrackerHeaderFont and ObjectiveTrackerLineFont,
+  native tracker colors, secondary header artwork, and collapse/expand icons.
+- Removed the custom sidebar font-size switch; native font settings now apply.
+- Left/right placement, width, grouping, collapses, and saved settings remain.
+- Replace files and /reload. The final Party Quests Forever rename is deferred.
+
+Validation: automated Lua mock suite passes, including party/solo toggles,
+leave-party behavior, pop-out visibility, and native font object selection.
+Actual client placement and artwork still need in-game validation.
+
+Simply Party Quests 0.12.1
+
+- Replaced the opaque rectangular background with transparent tracker-style text.
+- Added a thin gold divider, compact text controls, and text shadows.
+- Removed repeated member names from zone headings; player/section/zone labels
+  now form a readable hierarchy.
+- Fits the panel height to its contents instead of occupying the full tracker height.
+- Removed the always-visible scroll bar and instruction row; mouse-wheel scrolling
+  and a small hint appear only when content exceeds the height limit.
+- Retains left/right placement, width and font options, collapse, and Settings.
+- Replace files and /reload. Existing preferences are preserved.
+
+Validation: automated Lua mocks pass, including overflow bounds, content shrink,
+scroll reset, and member-label deduplication. Live appearance needs an in-game check.
+
+Simply Party Quests 0.12.0
+
+- Moved the tracker-attached party view into an independent scrolling sidebar.
+- Choose the left or right side of Blizzard's tracker in addon settings.
+- Default width is 420 pixels, adjustable from 320 to 640 in settings.
+- Default quest titles are 16 points, progress 14 points; compact mode uses 14/12.
+- Removed the three-row pages and the narrow native module layout.
+- Preserves shared grouping, zones, collapses, progress data, Settings, and refresh.
+- Follows default tracker position and visibility; does not add native modules.
+- Keeps the separate draggable/resizable window as an alternative.
+- Existing Simply Party Quests settings are preserved. Existing tracker mode
+  automatically uses the new left sidebar; /spq tracker selects this view.
+- Replace the SimplyPartyQuests files and /reload.
+
+Validation: automated Lua mock checks cover left/right anchoring, width limits,
+fonts, the full list, collapse, removals, visibility, native module preservation,
+combat deferral, recovery, and settings. Live layout still needs in-game testing.
+
+Simply Party Quests 0.11.1
+
+- Renamed the addon, folder, settings page, reports, and saved-variable namespace.
+- /spq opens settings. /ppq remains an alias.
+- Retains the 0.11.0 settings menu and both tracker views.
+- Updated release metadata, installation guide, credits, and public description.
+- Added a top-level GPLv3 license; retained upstream data notices in full.
+- The renamed addon uses a new sync prefix. Full-log sync requires all peers to
+  update; native discovery still works without an addon on the other player.
+
+Upgrade from the former addon: remove or disable PoofPartyQuests before enabling
+SimplyPartyQuests. Preferences start fresh under the new folder/name. The old
+saved-variable file is untouched. A newly installed addon folder may require a
+client restart to appear; subsequent updates to this folder need only /reload.
+
+Validation: automated Lua mock suite and archive structure checks passed.
+Native UI placement, settings layout, and live multiplayer progress require
+in-game testing before promoting this build to a stable public release.

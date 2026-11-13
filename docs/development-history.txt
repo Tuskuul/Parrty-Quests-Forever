@@ -1,0 +1,424 @@
+Simply Party Quests v0.11.1 - WoW Forever (interface 16001)
+
+INSTALL / UPDATE
+Extract SimplyPartyQuests into the Forever client's Interface\AddOns folder.
+The final path must be Interface\AddOns\SimplyPartyQuests\SimplyPartyQuests.toc.
+Replace existing files, then use /reload if the game is running.
+Existing saved settings are preserved. A first installation may need a client restart.
+
+V0.11.1 ADDON SETTINGS MENU
+- Open Esc > Settings > AddOns > Simply Party Quests, or click Settings in the
+  Party Quests header or pop-out title bar. /spq also opens this page.
+- Choose Blizzard tracker or pop-out window; show or collapse that view,
+  combine shared quests, group by zone, or lock pop-out movement and resizing.
+- Refresh, catalog scan, and window position/size reset have labeled buttons.
+- Recovery controls include a manual Blizzard redraw and the optional automatic
+  redraw workaround. Automatic repair remains disabled unless you enable it.
+- Troubleshooting contains diagnostic recording, a fresh-capture button, report,
+  discovered-cache clearing, and sample preview. Stopping recording retains data.
+- Preferences save immediately and controls reflect changes from slash commands.
+  Integration changes wait through combat. All existing command aliases remain;
+  /spq toggle preserves the former bare-command visibility toggle. Unknown
+  commands open settings instead of printing the long command list.
+- Includes native Settings registration, a legacy AddOns menu path, and a
+  standalone settings fallback if neither client settings API is available.
+- Automated Lua mock checks passed for registration, menu entry buttons, all
+  controls, synchronization, combat deferral, and diagnostic retention. Settings
+  layout and native tracker placement still need in-game confirmation.
+
+V0.10.0 BLIZZARD OBJECTIVE TRACKER INTEGRATION
+Replace files and /reload to load the integration.
+- Default view is now a Party Quests module INSIDE Blizzard's objective tracker,
+  placed before the normal Quests section. It uses the native header, blocks,
+  fonts, collapse button and container layout. Normal quest controls stay intact.
+- Shared quests and quests you are not on use the existing discovered party data.
+  Combine and zone grouping settings carry over. Full names, individual progress,
+  unknown progress and offline/cached labels are preserved. No remote addon is
+  required for native discovery, subject to the same visibility/API limitations.
+- Click a group or quest heading to expand/collapse it. Hover a quest for full
+  party progress and its group/zone. Right-click an owned quest for its details.
+- A control row at the top pages through entries: click next, right-click previous.
+  On one page its normal click refreshes party data. Shift-click any party heading
+  refreshes; Ctrl-click opens the pop-out. The module collapse button saves state.
+- The native section has a 280-pixel height budget and short pages. Expanded
+  details may be omitted when room is tight; the hover tooltip retains the full
+  progress. Its overflow never claims all remaining space from native Quests.
+- /spq tracker switches to integration. /spq window restores the resizable pop-out
+  with its saved position and size. A Use Blizzard tracker button switches back.
+  /spq toggle toggles the active view; /spq show unhides it. The pop-out contains the
+  Combine shared quests and Group by zone controls as before.
+- Attachment, updates and detachment defer during combat. Changes coalesce into
+  native module redraws; native quest blocks and completion animations are not
+  patched. The existing optional Blizzard redraw workaround remains off unless
+  you enabled it. Integration does not claim to cure the prior native UI freeze.
+- Unsupported/unavailable native APIs fall back to the pop-out and retry loading.
+  Layout failures or addon block notifications fall back to the window. /spq report
+  includes integration mode/status/page/clipping and the last integration error.
+- Automated Lua mock checks passed for attachment, shared/foreign entries,
+  paging, collapse state, removals, combat deferral, original module preservation
+  and error fallback. Actual native frame pooling/layout needs in-game validation.
+
+V0.9.2 NATIVE TRACKER DIAGNOSTICS AND OPTIONAL REDRAW
+Replace files and /reload to load native tracker diagnostics.
+- /spq report now compares your live quest-objective API, leaderboard text and
+  Blizzard tracker text/animation state. It highlights count differences and
+  captures recent addon block notifications. Capture BEFORE manually refreshing.
+- /spq blizzard refresh requests one delayed native redraw, out of combat.
+- /spq blizzard on enables a saved optional workaround: local progress events
+  or changed local objectives request a redraw after a short delay. Defaults off.
+- /spq blizzard off disables automatic redraws and cancels a queued request.
+- Requests coalesce, wait through combat and have a 2-second minimum gap. No
+  quest untracking, watch-order changes or guessed objective counters are used.
+  Errors/block notifications naming SPQ disable automatic requests.
+- Automated mocks passed; the native redraw needs in-game testing. The exact
+  cause of the reported Blizzard display freeze is still unconfirmed.
+- Investigation details and source references: docs/native-tracker-investigation.md.
+
+V0.9.1 PARTIAL-PARTY SHARED QUEST FIX
+- The combined pane includes every quest you share with at least one party
+  member. Previously it required the whole party, while the Both on sections
+  were hidden, so quests shared with only part of the party disappeared.
+- Renamed the pane Shared quests. Each quest shows its confirmed player count
+  (including you) against party size, e.g. 2/3 players. Expanded progress lists
+  you and the members known to have that quest; unknown membership is not
+  interpreted as zero progress. Matching remains by quest ID, not title.
+- Saved quest/zone collapses, surnames, resizing and non-shared sections remain.
+- Replace files and /reload. No settings reset or game restart is required.
+
+V0.9.0 SURNAMES AND DRAG RESIZING
+- Party headings, combined quest progress and reports use full character names.
+  Forever's first-name/surname UnitName tuple is joined for display; readable
+  GetUnitName results are retained for native sender matching. A name that is
+  already complete never receives a duplicated surname.
+- Name-only tooltip rows must match one party member unambiguously. Same-first-
+  name characters remain separate by GUID and complete name; unreadable names
+  do not get interpreted as identity. UNIT_NAME_UPDATE refreshes delayed names.
+- Drag the bottom-right corner grip to change width and height. Quest cards,
+  wrapped text, footer and scroll content adapt to the new width. Size and
+  position are saved; collapsing the title bar preserves the expanded size.
+- Minimum window size 380 x 280; maximum 1200 x 1200. /spq lock toggles both
+  moving and resizing. /spq reset restores the standard 460 x 540 size/position.
+- Replace the existing addon files and /reload. Existing settings are preserved.
+- Automated checks cover surnames, duplicate first names, GUID ownership, name
+  changes, restricted data, resize layout, saved size, collapse and lock/reset.
+
+V0.8.0 ZONE GROUPING
+Restart the game after this update: QuestZones.lua is a new TOC entry.
+- Group by zone adds collapsible headings to the combined shared pane and each
+  member's Both on / They're on, I'm not sections. Quest counts appear beside
+  each heading; quests sort alphabetically within a group. Unknown zone is last.
+- Enabled by default. Toggle the button below Refresh, or /spq zone [on/off],
+  to return to the flat alphabetical view. Settings and each list's zone collapse
+  states are saved. Quest and section collapses keep their existing state.
+- Uses your readable quest-log headings when available, otherwise bundled
+  QuestieDB quest zone/category assignments and optional client area names.
+  Dungeon quests retain their dungeon category; known class categories have
+  class labels. Other categories and unknown assignments have fallback groups.
+- These are quest-log categories, not a list of every objective's physical
+  location, current party location or turn-in location. Data may be incomplete
+  for new or changed Forever quests. No other party member needs the addon.
+- Automated checks cover grouped lists, shared deduplication, dungeon metadata,
+  independent collapse persistence, toggles, client headers and unknown data.
+
+V0.7.0 PROGRESS SOURCE FALLBACKS
+Restart the game after this update: QuestItemSources.lua is a new TOC entry.
+- Remember real creature GUIDs from queried unit tokens even when the tooltip
+  omits data.guid. A corpse can then remain a native progress source after it
+  stops being targeted. Candidates still expire and use the bounded cache.
+- 2,132 static QuestieDB quest-to-objective-item mappings seed item-tooltip
+  queries for known quests. These include Arugal Must Die -> Head of Arugal
+  (5442), and The Book of Ur -> The Book of Ur (6283). Static mappings identify
+  candidate sources only; client text/counters remain the authority.
+- Up to four rotating mapped item candidates per pass and up to four remembered
+  sources run before direct party queries. No whole-item-database polling.
+- Readable loot hyperlinks seed additional item candidates, including items you
+  did not loot yourself. No recipient, quantity or loot notification is treated
+  as quest progress. Only readable native quest/player/objective rows update it.
+- Refresh also schedules a fresh background source pass. Dungeon polling works
+  out of combat. A direct response can still be empty outside your own log;
+  item/corpse replies can still be restricted or contain no party progress.
+- Reports now include each known member quest's current progress, last source,
+  latest direct-query outcome and mapped item-query status even with diagnostics
+  off. This summary lasts for the current session; raw logging is still optional.
+- Automated checks exercise an empty direct response followed by a readable
+  Arugal item response, restricted replies, corpse retention and loot triggers.
+  These checks do not prove the Forever client will expose the fallback data.
+- This does not resolve escorts for which every native source only says On quest.
+
+V0.6.1 DUNGEON POLLING FIX
+- Removed the blanket instance pause from discovery, membership validation,
+  periodic progress queries and event-triggered refreshes. Party dungeon quests
+  now use the same bounded background work as outdoor quests, out of combat.
+- Combat pauses and unreadable/restricted-data checks remain in place. Empty
+  responses never count as completion or as reliable quest removal evidence.
+- Reports show tracked member count, combat pause, instance and raid state.
+- This repairs a polling blocker; it does not guarantee that Forever exposes
+  every dungeon/escort objective through its party tooltip APIs.
+
+V0.6.0 COMBINED SHARED QUESTS AND POLLING OPTIMIZATION
+- Toggle Combine shared quests beside Refresh, or /spq combine [on/off].
+  Default is off; the setting is saved between sessions.
+- One collapsible pane contains quests confirmed in your log AND every listed
+  party member's known log, matched by quest ID. Expand a quest to see your
+  progress and each member's individual counts. Requirements appear once.
+  Unknown progress stays unknown; offline members are marked cached.
+- Both on sections are hidden while Combine shared quests is enabled. Turn
+  combining off to see shared quests per member, including subset-only quests.
+  Non-shared quests retain their usual view.
+  Member totals still count their full known list. Collapses are saved.
+- Party quest-change signals take priority over broad loot/kill notifications.
+  Generic inventory/log redraw events are recorded without launching queries.
+  Party batches have a 1-second minimum gap, follow-ups 2 seconds, backups 4.
+- Periodic passes rest 10 seconds. Direct queries have a 10-second cooldown
+  (2 seconds for event queries); repeated empty replies back off to 15 seconds
+  for shared quests and 60 for quests outside your log. Refresh bypasses this.
+- Duplicate creatures of the same NPC type share one source per pass; at most
+  four remembered sources are queued. Unchanged native data updates freshness
+  without rebuilding the tracker. Native Not on quest rows create no entries.
+- Native visibility/zone limits still apply. Combined membership uses the
+  current known lists, so unseen changes may wait for membership validation.
+- Automated Lua mock checks pass; actual Forever timing needs in-game testing.
+
+HISTORICAL RELEASE NOTES (timings below describe the older releases)
+
+V0.5.0 EVENT-TRIGGER EXPLORATION
+- Tests UNIT_QUEST_LOG_CHANGED, PARTY_KILL, CHAT_MSG_LOOT, BAG_UPDATE_DELAYED,
+  QUEST_LOG_UPDATE, QUEST_WATCH_UPDATE, QUEST_ACCEPTED, QUEST_REMOVED,
+  QUEST_TURNED_IN and PLAYER_REGEN_ENABLED as refresh notifications.
+- Each registration is attempted safely. The report says registered/unavailable;
+  registration success is not proof the event will fire for remote progress.
+- UNIT_QUEST_LOG_CHANGED records its readable unit token. A recognized party
+  member prioritizes that member's known quest IDs; player/local signals can
+  refresh all known party progress. Unrecognized/restricted unit tokens are
+  logged but do not become guesses about which member progressed.
+- Events request real native data. Kill GUIDs and loot chat text are not read,
+  logged or interpreted as quest credit, and counts are never incremented from
+  a notification alone. No combat-log subscription or file reader is used.
+- Notifications coalesce into one pending job. Refreshes start after a short
+  delay, no more often than once per two seconds, with one delayed follow-up.
+  New notifications do not cancel active jobs or periodic membership validation.
+- Work shares the existing three-request/0.15-second tick and soft time budget.
+  Periodic work gets a slot after every two event requests when both are queued.
+  Combat/instance guards still apply; events are captured and queued until the
+  queries are allowed. Leaving the party/zone cancels obsolete triggered work.
+- Reports retain recent events separately and label count changes with the
+  triggering event batch. /spq diag on resets the event capture and counters.
+
+FIRST V0.5.0 LIVE TEST
+Restart WoW after installing: EventTriggers.lua is a new TOC entry.
+Join a party in the same zone and run /spq diag on. Have the other player advance
+one kill objective WITHOUT hovering it, then end combat and wait 10-20 seconds.
+Next, test one loot objective separately. Run /spq report and copy the report.
+Look for UNIT_QUEST_LOG_CHANGED with party1/party2/etc, PARTY_KILL or loot events,
+REFRESH entries, and COUNT CHANGE entries with an event[...] source. Seeing an
+event alone does not prove that the subsequent API response contains new counts.
+Zero party quest-change events is useful evidence too. /spq diag off stops capture.
+
+Offline tests verify event coalescing, player/party-unit selection, follow-ups,
+combat deferral, source attribution, periodic fairness and restricted event or
+payload handling. Actual trigger delivery and data freshness require the live test.
+
+V0.4.2 QUEST-REMOVAL FIX
+- Known native quests are revalidated during background cycles, not just added
+  by discovery. Quests absent on two separate validated passes (at least five
+  seconds apart, no more than sixty) are removed by ID. Same-name chain steps
+  are never merged or removed just because their titles match.
+- Removal requires a connected, stable member, positive same-map or unit-
+  visibility evidence, and at least one other quest that returns true in that
+  same pass. Offline, different-zone, restricted, failed and all-false passes
+  retain observations rather than pretending an unavailable log is empty.
+- Ready quests stay listed until the membership API says they have left the
+  log. Completing objectives alone is not a removal trigger.
+- A stale mob/item/party tooltip cannot restore a removed quest until membership
+  becomes positively true again. Reaccepted/repeatable quests can still return.
+- Addon-to-addon full snapshots remain authoritative and can clear an empty log.
+
+V0.4.1 REPORT-DRIVEN FIXES
+- Native Ready for turn-in rows now set the quest's ready status. They no longer
+  appear as an unnamed objective. Cached counts are retained internally without
+  inventing completed amounts; the UI shows the confirmed ready status instead.
+- Reports distinguish first observations, actual before/after counter changes,
+  repeated identical counters, and readiness changes. Each change names its
+  polling/hover source. Recent changes have a separate bounded history so a
+  stream of repeated payloads cannot erase the evidence.
+- Direct quest responses are counted separately for shared quests and quests
+  absent from your current log. Your current quest IDs are included for comparison.
+- Applied-row counters now count rows received rather than previously cached
+  objectives carried forward by merging.
+- An anonymized replay of the supplied live report passes automated checks.
+
+V0.4.1 CHANGES
+- Background progress polling now reads available target, focus, mouseover,
+  party-member targets and visible nameplate unit tooltips without moving the
+  mouse or changing the selected target.
+- Up to 12 recently observed mob GUIDs / item IDs are re-queried through native
+  tooltip getters. This tests whether the working mouseover data can be read
+  later without another mouseover. Sources expire after ten minutes, are capped
+  at 32, and are cleared when you change zones.
+- Known quest party-progress queries have a dedicated parser for typed quest
+  rows and explicit player-name/GUID/unit rows with structured or textual x/y
+  counters, including double-column rows. Anonymous counters are never assigned
+  to a guessed player, and your own counts are excluded.
+- Generic labels such as Objective or Objective: 0/8 no longer override useful
+  reference descriptions. If a step remains unnamed, its progress is labelled
+  unnamed and the requirement reference is kept visible rather than guessing.
+- Opt-in payload diagnostics and a copyable report support live testing.
+- Existing client-first requirement text, English reference fallback, per-row
+  observation ages, compact spacing and independent collapse states remain.
+
+WINDOW
+Drag the title bar to move the window. Use - / + to collapse the whole window.
+Click a party member's name to expand their comparison. Click either section
+heading to collapse that entire list. Click a quest title to show or hide its
+requirements and progress. New quests start collapsed; sections start open.
+Position, visibility, dragging lock, and collapse states persist. Quest states
+are per party member and follow the quest when it moves between sections.
+
+Both on: quests currently in your log and the member's discovered/received list.
+They're on, I'm not: their quests absent from your current log, including ones
+you previously completed or abandoned. Your quests alone do not appear here.
+
+REQUIREMENTS VERSUS PROGRESS
+Quest requirements describe what the quest asks for, for example collecting
+six items. These are reference instructions, not a report of the party member's
+current inventory, kills or completion. English fallback summaries can differ
+from the current client or be missing for newly added quests. Client-provided
+text takes priority; missing cached data is requested asynchronously.
+
+Progress unknown means no actual count has been observed for that quest yet.
+Mouseover or target native quest tooltips can add the member's objective text
+and counts. Different objectives can be observed at different times; each count
+shows its own age. Only a fresh observation changes that age. Reference text
+never marks a quest or objective complete. For shared quests your own progress
+is displayed separately under You.
+
+NATIVE DISCOVERY / POLLING (ONLY YOU NEED THIS ADDON)
+The background sweep checks C_QuestLog.IsUnitOnQuest against 5,233 numeric
+candidate IDs, plus your current quest IDs and previously discovered IDs. Only
+positive membership matches cause title, requirement and progress requests.
+The sweep starts after login/joining a party, repeats 120 seconds after
+completion, and can be started with Refresh. Progress appears in the footer.
+It processes at most 48 membership checks per 0.15-second tick and uses a
+0.75ms soft time budget per batch when the profiling clock exists. A single
+native API call can exceed that budget. Sweeps pause in combat and instances.
+Solo players do no sweep, and recently full-synced members are skipped.
+
+Native Unit, Object and Item tooltip rows are also consumed when present.
+Ordinary item stats are never interpreted as party objective progress.
+
+LIVE TEST FINDINGS SO FAR
+The user confirmed native quest-name discovery and mouseover count updates.
+Updates worked in the same zone in their test and did not work across different
+zones. Zone-wide range has not been established. Automatic objective-count
+refresh remains unconfirmed in the live client. V0.4.0 adds alternate native
+tooltip queries and parsing; passing mocked responses does not prove the client
+provides fresh counters through those calls.
+
+A catalog sweep is a PARTIAL list, not proof of a complete remote quest log.
+New IDs absent from the catalog, unavailable remote state, distance and
+restricted data can all limit results. Negative checks alone do not remove prior observations. The guarded known-quest
+validation described above confirms absence only when other remote quest state
+is demonstrably available. If every remaining quest disappears at once, native
+validation deliberately retains the last list because there is no positive
+control quest; full addon sync can handle that empty-log case. Keep observation
+ages in mind; /spq clear clears native-only data.
+
+OPTIONAL FULL LOG SYNC (BOTH PLAYERS INSTALL)
+Copies of this addon exchange quest snapshots through the invisible party addon
+channel. Snapshots contain quest IDs, titles, readiness and objective text/counts.
+No ordinary chat messages are posted, and inventory is not transmitted. A full
+snapshot replaces a member's previous list, including quest removals and empty
+logs. It takes priority over tooltip subsets for two minutes; stale snapshots
+are marked awaiting an update. Cross-zone delivery still needs a live test.
+
+Normal parties of up to five are supported, not raid quest comparisons.
+Received/observed quest data is session-only. Leaving removes that member's data;
+offline members keep their last list with an offline label. Demo data is separate.
+
+OPTIONAL COMMANDS (ALL MAIN CONTROLS ARE ALSO IN SETTINGS)
+/spq          Open addon settings
+/spq settings Open addon settings
+/spq toggle   Toggle selected view visibility
+/spq show     Show selected view
+/spq hide     Hide selected view
+/spq tracker  Use Blizzard objective tracker
+/spq window   Use separate pop-out
+/spq combine  Toggle combined shared quests
+/spq zone     Toggle zone grouping
+/spq demo     Toggle separate sample data for preview while solo
+/spq refresh  Refresh known data, request addon sync, and start a sweep
+/spq scan     Start a catalog sweep (does not restart an active one)
+/spq status   Print checks, matches, unreadable responses, errors and skipped checks
+/spq clear    Clear observations for members without a full synced log
+/spq lock     Toggle title-bar dragging
+/spq reset    Center and reopen the window
+/spq diag on  Start a fresh bounded payload capture (saved with addon settings)
+/spq diag off Stop capture; retain the report
+/spq report   Open a window to select/copy the report with Ctrl+A / Ctrl+C
+
+FIRST V0.4.1 TEST
+Join a party in the same zone, outdoors and out of combat. Type /spq diag on.
+Pick one quest and observe its current count once, then move your mouse away.
+Have the member advance it and wait around 10-20 seconds without hovering.
+Try with a relevant target/nameplate available and then with neither available.
+Check whether the count changes. If it does not, run /spq report and copy the
+report. It includes quest IDs, party names and the raw readable payload fields;
+review it before sharing. /spq diag off stops capture.
+
+A background cycle finishes its queued work, then waits five seconds before the
+next cycle. It processes at most three tooltip requests per 0.15-second tick,
+with the same 0.75ms soft batch budget used by membership polling where the
+profiling clock exists. Solo/demo states do no background work, and combat or
+instances pause it. A long list can make a full cycle take longer than five
+seconds. A native call itself can exceed the soft time budget.
+
+If Blizzard supplies no objective counters, the addon keeps the last observed
+values and timestamps instead of inventing an update. A timestamp is when data
+was received; it cannot establish whether Blizzard's internal cache was fresh.
+Diagnostic capture stores at most 350 bounded lines and starts off. Restricted
+values are marked rather than read or converted to text. No report is sent
+anywhere automatically.
+
+VALIDATION
+Mock-client checks cover Lua loading, native parsing, polling, restricted inputs,
+async titles/requirements, static fallback, count isolation, observation ages,
+section/quest/window collapse, alternate background getters, explicit
+player/counter ownership, generic-label fallback, bounded diagnostics,
+saved settings, full snapshot updates/removals,
+chunked sync, throttling, roster cleanup and preview isolation. They are not a
+substitute for running v0.4.2 inside the Forever client. Run developer checks
+with python tests/test_partyquests.py (Python + lupa).
+
+SOURCES / THIRD-PARTY NOTICES
+The numeric candidate catalog and requirement reference summaries are adapted
+from QuestieDB's Forever sources at commit
+0f7d8adc92b28ac6594f4ad8745257f4d9784edf.
+See third_party/QuestieDB-NOTICE.txt, QuestieDB-LICENSE.md and GPL-3.0.md.
+The extracted summary generation source is tools/build_requirements.py.
+No Questie runtime code, maps, or addon dependency is bundled.
+API references inspected:
+https://github.com/Questie/Questie/blob/master/Modules/Tooltips/Forever.lua
+https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated
+
+REPORT FINDINGS (V0.4.0 LIVE CLIENT SAMPLE)
+The provided report contained direct quest payloads with objective names and
+numeric counters, and remembered-unit payloads with party-specific counts.
+The retained excerpt showed repeated values rather than a before/after change;
+it establishes data availability but not automatic freshness. The six readable
+direct quest responses matched the six shared quests in an earlier screenshot,
+while other queried IDs returned no readable payload. A shared-quest limitation
+is a hypothesis to test, not a guaranteed API contract. The v0.4.2 scope counters
+and current-log IDs make that distinction visible in the next report.
+
+Start /spq diag on before a controlled objective advance without mouseover.
+Then /spq report shows whether a real counter change was received, from which
+source, and whether direct responses were limited to shared quests.
+
+V0.4.2 LIVE TEST
+After replacing the files and /reload, stay near the party member or in the same
+zone, outside combat/instances. Allow two background validation cycles, typically
+around 10-30 seconds depending on list size. A turned-in or abandoned old chain
+step should disappear; an active step with the same name should remain. A Ready
+quest that has not yet been turned in should remain. Diagnostic change history
+records REMOVED entries when capture is enabled. Pruning passed mock-client
+checks and still needs verification in your Forever client.

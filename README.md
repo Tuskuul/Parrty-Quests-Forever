@@ -1,0 +1,38 @@
+# Party Quests Forever
+
+<img src="docs/project-icon.png" alt="Party Quests Forever icon" width="128">
+
+Track party quests and available objective progress in **WoW Forever 1.60.1**.
+Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine shared quests, and group quests by player and zone.
+
+## Current build
+
+**1.0.0-rc1**, a release candidate. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+
+## Install
+
+The addon folder must be named **SimplyPartyQuests**. Put this repository's addon files directly inside `Interface/AddOns/SimplyPartyQuests/`, so `SimplyPartyQuests.toc` sits directly inside that folder. A GitHub source ZIP's repository-named wrapper must be renamed appropriately.
+
+Existing Simply Party Quests users keep their settings. Replace files and `/reload`; a first installation may need a full client restart.
+
+Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click the minimap button. `/spq` remains supported.
+
+## Quest-log links
+
+Click **Share Quest Log** in the main Map & Quest Log title bar, left of fullscreen. It inserts a snapshot link into your current chat draft for you to send. Compatible recipients click to inspect the active quests and objective completion. This is a timestamped snapshot, not lifetime completion history or a live view.
+
+Character chat, WIM and Battle.net whispers are supported. The owner must remain online with the addon for first fetch. Battle.net requires a compatible WoW session and uses its own data route for cross-faction/realm sharing. Not every UI/client/server combination has been tested.
+
+## Documentation
+
+- [Installation, controls and troubleshooting](README.txt)
+- [Changelog](CHANGELOG.txt)
+- [CurseForge listing copy](docs/CURSEFORGE.md)
+- [Release checklist](docs/RELEASE-CHECKLIST.md)
+- [Chat integration notes](docs/chat-compatibility.md)
+
+The `.pkgmeta` file sets `package-as: SimplyPartyQuests` to preserve the install folder when a CurseForge-compatible packager is configured. It does not publish a release by itself.
+
+## License and credits
+
+Created by Wolfie. Project code is GPLv3. Static fallback data derives from QuestieDB and historic Questie contributions. The full [upstream notice](third_party/QuestieDB-NOTICE.txt) and [licensing statement, including its historical contributor caveat](third_party/QuestieDB-LICENSE.md), are retained. The [release checklist](docs/RELEASE-CHECKLIST.md) records that outstanding publication review. This addon is not affiliated with Questie. The project icon is original artwork.

@@ -1,0 +1,23 @@
+Requirement summaries adapted from QuestieDB and its historic Questie contributors.
+Source: https://github.com/Questie/QuestieDB/tree/0f7d8adc92b28ac6594f4ad8745257f4d9784edf
+Modified for Simply Party Quests: extracted objectivesText summaries only, merged
+generated/trace/authored summary overrides, omitted all progress and runtime code.
+Bundled summaries are an English fallback; client-provided text takes priority.
+Redistributed under GPLv3 terms as permitted by the upstream licensing notice.
+See QuestieDB-LICENSE.md for the complete upstream licensing statement and
+GPL-3.0.md for the license. No affiliation with Questie is implied.
+Regenerate with tools/build_requirements.py (Python + lupa; network required).
+
+QuestItemSources.lua also adapts static objective item identifiers from the same
+QuestieDB snapshot. Regenerate with tools/build_item_sources.py. Mappings select
+native tooltip candidates and do not supply player progress.
+
+QuestZones.lua adapts static quest zone/category identifiers and area-name
+fallbacks from the same snapshot, plus explicit Forever category corrections.
+Regenerate with tools/build_zones.py. No player location or progress is imported.
+
+QuestEligibility.lua adapts static acceptance fields (levels, race/class masks,
+quest chains, flags and special restrictions) from the same snapshot. Known
+eligibility corrections are conservatively marked uncertain rather than
+interpreting upstream runtime expressions. Regenerate with tools/build_eligibility.py.
+This metadata is separate from objectives and cannot guarantee server acceptance.
