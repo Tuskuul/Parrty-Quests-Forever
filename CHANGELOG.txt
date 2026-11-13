@@ -1,3 +1,21 @@
+Party Quests Forever 1.0.1
+
+- Added Share between Party Quests and Refresh in the tracker sidebar header.
+- Uses the existing quest-log snapshot sharing action.
+- Preserves the current chat draft, channel and recipient, including WIM.
+- Hovering shows a brief Share Quest Log tooltip.
+
+Party Quests Forever 1.0.0
+
+- First stable release under the Party Quests Forever name.
+- Party tracker sidebar and resizable window, combined shared quests, and
+  collapsible player, zone and quest groups.
+- Clickable quest-log snapshots through character chat, WIM and Battle.net.
+- Final approved adventure artwork and matching addon/minimap icon.
+- Preserves SimplyPartyQuests installation folder, settings and protocols.
+- Final release version applied to addon metadata and diagnostic reports.
+- Includes full upstream data attribution and licensing notices.
+
 Party Quests Forever 1.0.0-rc1
 
 - Applied the final Party Quests Forever display name to the addon list,
