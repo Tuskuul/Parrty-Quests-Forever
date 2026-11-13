@@ -1,8 +1,8 @@
 # Party Quests Forever
 
-<img src="docs/project-icon.png" alt="Party Quests Forever icon" width="128">
+<img src="docs/project-icon.png" alt="Party Quests Forever icon" width="512">
 
-[Full-size artwork](docs/artwork/PartyQuestsForever-original.png)
+[Full-size artwork](docs/artwork/PartyQuestsForever-adventure.png)
 
 Track party quests and available objective progress in **WoW Forever 1.60.1**.
 Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine shared quests, and group quests by player and zone.
