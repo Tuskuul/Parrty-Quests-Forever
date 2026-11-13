@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.0.0-rc1**, a release candidate. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.0.1**, a maintenance update. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
 
 ## Install
 
@@ -21,7 +21,7 @@ Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click th
 
 ## Quest-log links
 
-Click **Share Quest Log** in the main Map & Quest Log title bar, left of fullscreen. It inserts a snapshot link into your current chat draft for you to send. Compatible recipients click to inspect the active quests and objective completion. This is a timestamped snapshot, not lifetime completion history or a live view.
+Click **Share** in the Party Quests tracker header, or **Share Quest Log** in the main Map & Quest Log title bar, left of fullscreen. It inserts a snapshot link into your current chat draft for you to send. Compatible recipients click to inspect the active quests and objective completion. This is a timestamped snapshot, not lifetime completion history or a live view.
 
 Character chat, WIM and Battle.net whispers are supported. The owner must remain online with the addon for first fetch. Battle.net requires a compatible WoW session and uses its own data route for cross-faction/realm sharing. Not every UI/client/server combination has been tested.
 
@@ -37,4 +37,4 @@ The `.pkgmeta` file sets `package-as: SimplyPartyQuests` to preserve the install
 
 ## License and credits
 
-Created by Wolfie. Project code is GPLv3. Static fallback data derives from QuestieDB and historic Questie contributions. The full [upstream notice](third_party/QuestieDB-NOTICE.txt) and [licensing statement, including its historical contributor caveat](third_party/QuestieDB-LICENSE.md), are retained. The [release checklist](docs/RELEASE-CHECKLIST.md) records that outstanding publication review. This addon is not affiliated with Questie. The project icon is original artwork.
+Created by Wolfie. Project code is GPLv3. Static fallback data derives from QuestieDB and historic Questie contributions. The full [upstream notice](third_party/QuestieDB-NOTICE.txt) and [licensing statement, including its historical contributor caveat](third_party/QuestieDB-LICENSE.md), are retained. This addon is not affiliated with Questie. The project icon is original artwork.
