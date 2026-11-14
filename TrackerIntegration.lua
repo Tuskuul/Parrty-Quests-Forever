@@ -168,7 +168,17 @@ function A:InitTrackerSidebar()
     if self.sidebar then return end
     local f=CreateFrame("Frame","SimplyPartyQuestsSidebar",UIParent,"BackdropTemplate")
     self.sidebar=f;f:SetSize(420,540);f:SetClampedToScreen(true);f:SetFrameStrata("MEDIUM")
-    -- Tracker-style text and a single gold divider, without an opaque window.
+    -- Match Blizzard's Edit Mode background without applying opacity to text.
+    if NineSliceUtil and type(NineSliceUtil.ApplyLayoutByName)=="function" then
+        f.trackerBackground=CreateFrame("Frame",nil,f,"NineSlicePanelTemplate")
+        f.trackerBackground:SetFrameLevel(f:GetFrameLevel())
+        f.trackerBackground:SetAllPoints(f)
+        NineSliceUtil.ApplyLayoutByName(f.trackerBackground,"UniqueCornersLayout","common-opacity-background")
+    else
+        f.trackerBackground=f:CreateTexture(nil,"BACKGROUND")
+        f.trackerBackground:SetAllPoints(f);f.trackerBackground:SetColorTexture(0,0,0,1)
+    end
+    f.trackerBackground:SetAlpha(0)
     f.title=text(f,"header",nativeColor("Header"));f.title:SetPoint("TOPLEFT",7,-38);f.title:SetText("Party Quests")
     local headerArt=f:CreateTexture(nil,"BACKGROUND")
     headerArt:SetAtlas("UI-QuestTracker-Secondary-Objective-Header")
@@ -383,6 +393,23 @@ function A:UpdateTrackerSidebarCombat()
         s.due=GetTime()+1
     end
 end
+function A:SyncTrackerSidebarOpacity(tracker)
+    local f=self.sidebar
+    if not f or not f.trackerBackground then return end
+    -- This is the normalized background value used by Blizzard's Forever
+    -- ObjectiveTrackerManager:SetOpacity, not the whole frame's text alpha.
+    local manager=ObjectiveTrackerManager
+    local alpha=self.readable(manager) and manager.backgroundAlpha or nil
+    if not self.public(alpha,"number") then
+        local background=tracker and self.readable(tracker.NineSlice) and tracker.NineSlice
+        alpha=background and invoke(background.GetAlpha,background) or nil
+    end
+    if not self.public(alpha,"number") or alpha~=alpha then return end
+    alpha=math.max(0,math.min(1,alpha))
+    if f.trackerBackgroundAlpha~=alpha then
+        f.trackerBackground:SetAlpha(alpha);f.trackerBackgroundAlpha=alpha
+    end
+end
 function A:TrackerIntegrationTick()
     if not self.db then return end
     if combat() then self:UpdateTrackerSidebarCombat();return end
@@ -406,6 +433,7 @@ function A:TrackerIntegrationTick()
         return
     end
     self:InitTrackerSidebar()
+    self:SyncTrackerSidebarOpacity(tracker)
     local f=self.sidebar
     local side=self.db.trackerSide=="right" and "right" or "left"
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
