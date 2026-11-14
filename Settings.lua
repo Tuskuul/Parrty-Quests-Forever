@@ -81,7 +81,7 @@ function A:InitSettings()
     end
     text("Choose where party quests appear and how they are organized. Changes are saved immediately.")
     text("Quick access",true)
-    actions("shareLog","Share my quest log in chat",function() A:DraftQuestLogLink() end)
+    actions("shareLog","Share my quest log in chat",function() A:OpenQuestLogShare() end)
     text("Creates a snapshot of your current quests and objective progress, then opens a chat draft for you to send. Recipients with this addon click it to view the snapshot. Links can be fetched for 15 minutes while you remain online. Completion means active objective progress / ready for turn-in, not your lifetime quest history.")
     check("minimap","Show minimap button","Left-click toggles party quests; right-click opens settings; Shift-click refreshes. Drag it around the minimap to move it.",function() return not A.db.hideMinimapButton end,function(v) A.db.hideMinimapButton=not v;A:UpdateMinimapButton() end)
     text("Display",true)
