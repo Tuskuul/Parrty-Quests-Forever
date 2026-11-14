@@ -7,7 +7,7 @@ end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
 local function progress(name,q,remote,connected)
     local label=name..(connected==false and " (offline, cached)" or "")..": "
-    if q.ready then return label.."|cff82ce9aReady for turn-in|r" end
+    if A:IsQuestReady(q) then return label.."|cff82ce9aReady for turn-in|r" end
     local parts={}
     for _,o in ipairs(q.objectives or {}) do
         local text=o.text or "Objective"
@@ -63,7 +63,7 @@ function A:BuildTrackerEntries()
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=q.title..(q.ready and " |cff82ce9a[Ready]|r" or "")
+                    local title=q.title..(self:IsQuestReady(q) and " |cff82ce9a[Ready]|r" or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
                     entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
