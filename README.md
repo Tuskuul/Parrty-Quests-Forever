@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.0**, a consolidated feature release. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.1.1**, a maintenance update. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
 
 ## Install
 
@@ -22,6 +22,8 @@ Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click th
 Native party quests show **Ready** when the member's reported progress completes every known requirement, even without an explicit turn-in flag. Unknown or partial progress remains unmarked.
 
 Progress queries and existing sidebar text now update during combat. Sidebar layout changes, discovery, membership checks and native tracker repair wait until combat ends. Client restrictions still affect available data.
+
+The party sidebar background follows the Objective Tracker opacity in Blizzard Edit Mode. This controls the background, not quest-text transparency.
 
 ## Quest-log links
 
