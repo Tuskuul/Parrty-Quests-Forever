@@ -51,7 +51,7 @@ function A:ShowQuestShareSelection()
             f.rows[i]=b
         end
         b.questID=q.id;b:SetChecked(false)
-        b.caption:SetText(plain(q.title)..(q.ready and " |cff19ff19[Ready]|r" or ""))
+        b.caption:SetText(plain(q.title)..(q.ready and " |cff00ff00[Ready]|r" or ""))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y);b:Show()
         y=y+math.max(40,b.caption:GetStringHeight()+16)
     end
