@@ -9,9 +9,9 @@ end
 function A:IsQuestReady(q)
     if not q then return false end
     if q.ready then return true end
-    -- Full addon snapshots and our own log have an explicit completion flag.
-    -- A native tooltip's earlier false flag may instead be a cached incomplete count.
-    if q.ready==false and not q.lastNativeSource then return false end
+    -- Only a confirmed false blocks inference. Legacy synced logs encoded an
+    -- absent GetInfo.isComplete flag as false, even with complete objectives.
+    if q.ready==false and q.readyKnown then return false end
     local objectives,requirements=q.objectives or {},q.requirements or {}
     if #objectives==0 or #requirements==0 then return false end
     local observed={}
