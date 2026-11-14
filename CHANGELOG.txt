@@ -1,3 +1,17 @@
+Party Quests Forever 1.1.0
+
+- Added Share to the party tracker header for easier access.
+- Sharing offers Full log or Select quests; choose one or more active quests.
+- Preserves chat drafts, cursor, channel and recipient through sharing choices.
+- Fixed Ready tags for other players when their complete progress matches every
+  known requirement; unknown or incomplete progress remains unmarked.
+- Progress queries and existing sidebar text update during combat. Layout,
+  discovery, membership checks and native tracker repair wait until combat ends.
+- Settings displays the installed addon version.
+- Simplified party status wording to Discovered quests.
+- Includes the final adventure artwork and matching in-game icon.
+- Preserves existing installation folder, saved settings and sharing protocols.
+
 Party Quests Forever 1.0.4
 
 - Shows the installed addon version in the settings page header.
