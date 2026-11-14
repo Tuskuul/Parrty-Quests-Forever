@@ -63,6 +63,8 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
+- Cleaned up the party-only empty state: compact Party Quests heading, tracker-position anchoring, and no duplicate empty sections.
+
 - Party sidebar now follows the live Objective Tracker fonts, text size,
   outlines, shadows, text colors and scale, alongside its background opacity.
 - Reflows party rows when tracker appearance changes so larger text fits.
