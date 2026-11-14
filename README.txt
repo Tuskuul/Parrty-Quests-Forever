@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.0
+Party Quests Forever 1.1.1
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -15,6 +15,8 @@ need a full client restart before the addon appears in the AddOns list.
 Disable the older PoofPartyQuests addon if it is still installed.
 
 QUICK START
+The tracker sidebar background follows Blizzard Edit Mode's Objective Tracker
+opacity setting. Quest text stays readable; no reload is needed after changes.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
 Choose a left/right tracker sidebar or the separate window. Settings contain
