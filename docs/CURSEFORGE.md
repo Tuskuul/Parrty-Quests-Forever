@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.1_CurseForge_Release.zip
+- **Release file:** PartyQuestsForever_1.1.2_CurseForge_Release.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,11 +63,12 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Party tracker background now follows the Objective Tracker opacity setting
-  in Blizzard Edit Mode, including fully transparent backgrounds.
-- Uses Blizzard's background styling while keeping quest text readable.
-- Opacity changes apply automatically without a reload.
-- Keeps the separate window and combat text updates unchanged.
+- Party sidebar now follows the live Objective Tracker fonts, text size,
+  outlines, shadows, text colors and scale, alongside its background opacity.
+- Reflows party rows when tracker appearance changes so larger text fits.
+- Ready text uses the native tracker completion color.
+- Appearance changes apply automatically outside combat; combat progress text
+  continues updating without changing frame layout.
 
 
 ## Submission references checked 2026-11-13
