@@ -196,7 +196,7 @@ function A:Render()
                     local function progress(name,quest,remote,m)
                         local c=m and RAID_CLASS_COLORS and RAID_CLASS_COLORS[m.class]
                         textRow(name..(m and m.connected==false and " - offline (cached)" or ""),12,c and {c.r,c.g,c.b} or {0.66,0.72,0.8},22)
-                        if quest.ready then textRow("Ready for turn-in",12,{0.51,0.81,0.6},30)
+                        if self:IsQuestReady(quest) then textRow("Ready for turn-in",12,{0.51,0.81,0.6},30)
                         elseif #(quest.objectives or {})==0 then textRow("Progress unknown",12,{0.67,0.64,0.5},30)
                         else for _,o in ipairs(quest.objectives) do textRow(objective(o,remote),12,nil,30) end end
                     end
@@ -239,7 +239,7 @@ function A:Render()
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..q.title..(q.ready and " |cff82ce9a[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..q.title..(self:IsQuestReady(q) and " |cff82ce9a[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()
@@ -253,7 +253,7 @@ function A:Render()
                         elseif #q.objectives==0 then
                             textRow("Requirements not available yet.",11,{0.55,0.6,0.68},32)
                         end
-                        if q.ready then
+                        if self:IsQuestReady(q) then
                             textRow("Objectives complete - ready for turn-in.",12,{0.51,0.81,0.60},32)
                         elseif #q.objectives>0 then
                             textRow(m.name.." - last known progress",11,{0.66,0.72,0.8},32)
