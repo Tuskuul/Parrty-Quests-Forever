@@ -217,8 +217,7 @@ function A:Render()
         if expanded then
             local status
             if m.syncedAt then status="Full log synced "..age(m.syncedAt)..(GetTime()-m.syncedAt>120 and " |cffffc36a- awaiting update|r" or "")
-            elseif m.sweepAt then status="Native list - catalog swept "..age(m.sweepAt).." (partial)"
-            else status="Discovered quests only - partial list" end
+            else status="Discovered quests" end
             if m.connected==false then status=status.." - offline" end
             textRow(status,11,{0.65,0.71,0.8},14)
             local function section(title,quests,both)
