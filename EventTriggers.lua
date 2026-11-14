@@ -3,9 +3,6 @@ local public=A.public
 A.triggerStats={events={},units={},batches=0,registered={}}
 local triggers={"UNIT_QUEST_LOG_CHANGED","PARTY_KILL","CHAT_MSG_LOOT","BAG_UPDATE_DELAYED",
     "QUEST_LOG_UPDATE","QUEST_WATCH_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED","QUEST_TURNED_IN","PLAYER_REGEN_ENABLED"}
-local function paused()
-    return (InCombatLockdown and InCombatLockdown())
-end
 function A:TriggerLog(line)
     self:Diag(line)
     if not (self.db and self.db.diag) then return end
@@ -65,7 +62,7 @@ function A:TriggerTick()
     if not next(self.members) or self.demo then
         self.triggerPending,self.triggerTasks,self.triggerActive=nil,nil,nil;return
     end
-    if self.triggerTasks or not self.triggerPending or paused() then return end
+    if self.triggerTasks or not self.triggerPending then return end
     local now=GetTime()
     local cooldown=self.triggerPending.priority==2 and 1 or (self.triggerPending.followup and 2 or 4)
     if now<self.triggerPending.due or (self.triggerLastAt and now-self.triggerLastAt<cooldown) then return end
