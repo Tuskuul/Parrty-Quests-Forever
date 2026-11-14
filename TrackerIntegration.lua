@@ -171,18 +171,11 @@ function A:InitTrackerSidebar()
     if self.sidebar then return end
     local f=CreateFrame("Frame","SimplyPartyQuestsSidebar",UIParent,"BackdropTemplate")
     self.sidebar=f;f:SetSize(420,540);f:SetClampedToScreen(true);f:SetFrameStrata("MEDIUM")
-    -- Match Blizzard's Edit Mode background without applying opacity to text.
-    if NineSliceUtil and type(NineSliceUtil.ApplyLayoutByName)=="function" then
-        f.trackerBackground=CreateFrame("Frame",nil,f,"NineSlicePanelTemplate")
-        f.trackerBackground:SetFrameLevel(math.max(0,f:GetFrameLevel()-1))
-        f.trackerBackground:ClearAllPoints()
-        f.trackerBackground:SetPoint("TOPLEFT",f,"TOPLEFT",0,0)
-        f.trackerBackground:SetPoint("BOTTOMRIGHT",f,"BOTTOMRIGHT",0,0)
-        NineSliceUtil.ApplyLayoutByName(f.trackerBackground,"UniqueCornersLayout","common-opacity-background")
-    else
-        f.trackerBackground=f:CreateTexture(nil,"BACKGROUND")
-        f.trackerBackground:SetAllPoints(f);f.trackerBackground:SetColorTexture(0,0,0,1)
-    end
+    -- Keep the party sidebar background strictly inside our own frame.
+    -- A simple texture avoids NineSlice edge bleed into Blizzard's tracker.
+    f.trackerBackground=f:CreateTexture(nil,"BACKGROUND")
+    f.trackerBackground:SetAllPoints(f)
+    f.trackerBackground:SetColorTexture(0,0,0,1)
     f.trackerBackground:SetAlpha(0)
     f.title=text(f,"header",nativeColor("Header"));f.title:SetPoint("TOPLEFT",7,-38);f.title:SetText("Party Quests")
     local headerArt=f:CreateTexture(nil,"BACKGROUND");f.headerArt=headerArt
@@ -197,16 +190,7 @@ function A:InitTrackerSidebar()
         b:SetScript("OnLeave",function() labelFont:SetTextColor(unpack(nativeColor("Header"))) end)
         return b
     end
-    f.collapse=button("-",18,function() A:SetViewCollapsed(not A.db.trackerCollapsed);A:SyncSettings() end)
-    f.collapse.caption:Hide()
-    f.collapse.normal=f.collapse:CreateTexture(nil,"ARTWORK");f.collapse.normal:SetAllPoints(f.collapse)
-    f.collapse.pushed=f.collapse:CreateTexture(nil,"ARTWORK");f.collapse.pushed:SetAllPoints(f.collapse)
-    f.collapse:SetNormalTexture(f.collapse.normal);f.collapse:SetPushedTexture(f.collapse.pushed)
-    local glow=f.collapse:CreateTexture(nil,"HIGHLIGHT");glow:SetAtlas("ui-questtrackerbutton-yellow-highlight");glow:SetAllPoints(f.collapse)
-    f.collapse:SetHighlightTexture(glow)
-    f.collapse:SetSize(16,16);f.collapse:SetPoint("TOPRIGHT",-4,-38)
-    f.collapse:Hide()
-    f.collapse:EnableMouse(false)
+    -- Blizzard's native tracker minimize button is the only master collapse control.
     f.settings=button("Settings",56,function() A:OpenSettings() end);f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-38)
     f.refresh=button("Refresh",54,function() A:RefreshParty() end);f.refresh:SetPoint("RIGHT",f.settings,"LEFT",-6,0)
     f.share=button("Share",42,function()
@@ -337,8 +321,8 @@ function A:SizeTrackerSidebar()
     local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
     f.scroll:SetSize(f:GetWidth()-6,math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
-    f.hint:SetShown(overflow and not self.db.trackerCollapsed)
-    f:SetHeight(self.db.trackerCollapsed and (padding-14) or math.min(limit,content+padding+(overflow and 14 or 0)))
+    f.hint:SetShown(overflow)
+    f:SetHeight(math.min(limit,content+padding+(overflow and 14 or 0)))
     local offset=f.scroll:GetVerticalScroll() or 0
     if offset>f.maxScroll then f.scroll:SetVerticalScroll(f.maxScroll) end
 end
@@ -412,12 +396,8 @@ function A:SyncTrackerSidebarOpacity(tracker)
     -- ObjectiveTrackerManager:SetOpacity, not the whole frame's text alpha.
     local manager=ObjectiveTrackerManager
     local alpha=self.readable(manager) and manager.backgroundAlpha or nil
-    if not self.public(alpha,"number") then
-        local background=tracker and self.readable(tracker.NineSlice) and tracker.NineSlice
-        alpha=background and invoke(background.GetAlpha,background) or nil
-    end
-    if not self.public(alpha,"number") or alpha~=alpha then return end
-    alpha=math.max(0,math.min(0.55,alpha))
+    if not self.public(alpha,"number") or alpha~=alpha then alpha=0.28 end
+    alpha=math.max(0.12,math.min(0.38,alpha))
     if f.trackerBackgroundAlpha~=alpha then
         f.trackerBackground:SetAlpha(alpha);f.trackerBackgroundAlpha=alpha
     end
@@ -464,7 +444,7 @@ function A:SyncTrackerSidebarAppearance(tracker)
     end
     refresh(f.title,"header","Header");refresh(f.partyOnlyTitle,"header","Header")
     refresh(f.hint,"line","Normal")
-    for _,name in ipairs({"share","refresh","settings","collapse"}) do
+    for _,name in ipairs({"share","refresh","settings"}) do
         local button=f[name]
         if button then refresh(button.caption,"line","Header") end
     end
@@ -526,7 +506,6 @@ function A:TrackerIntegrationTick()
         s.anchor=anchor;s.side=side;s.nativeVisible=nativeVisible;s.dirty=true
     end
     self:SetTrackerSidebarHeaderLayout(nativeVisible)
-    local collapsed=false
     if f:GetWidth()~=width or f.heightLimit~=height then f:SetWidth(width);f.heightLimit=height;s.dirty=true end
     f.scroll:SetShown(true)
     self:SizeTrackerSidebar()
