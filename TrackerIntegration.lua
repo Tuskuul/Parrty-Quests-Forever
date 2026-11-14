@@ -4,10 +4,21 @@ local function invoke(fn,...)
     if type(fn)~="function" then return nil end
     local ok,a=pcall(fn,...);if ok then return a end
 end
+local function nativeColor(role)
+    local c=OBJECTIVE_TRACKER_COLOR and OBJECTIVE_TRACKER_COLOR[role]
+    if c then return {c.r,c.g,c.b} end
+    if role=="Header" then return {1,0.82,0} end
+    if role=="Complete" then return {0.51,0.81,0.6} end
+    return {0.8,0.8,0.8}
+end
+local function completeColor()
+    local c=nativeColor("Complete")
+    return string.format("|cff%02x%02x%02x",math.floor(c[1]*255+0.5),math.floor(c[2]*255+0.5),math.floor(c[3]*255+0.5))
+end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
 local function progress(name,q,remote,connected)
     local label=name..(connected==false and " (offline, cached)" or "")..": "
-    if A:IsQuestReady(q) then return label.."|cff82ce9aReady for turn-in|r" end
+    if A:IsQuestReady(q) then return label..completeColor().."Ready for turn-in|r" end
     local parts={}
     for _,o in ipairs(q.objectives or {}) do
         local text=o.text or "Objective"
@@ -63,7 +74,7 @@ function A:BuildTrackerEntries()
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=q.title..(self:IsQuestReady(q) and " |cff82ce9a[Ready]|r" or "")
+                    local title=q.title..(self:IsQuestReady(q) and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
                     entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
@@ -150,12 +161,6 @@ function A:TrackerEntryClick(row,button)
     end
     self:Render();self:InvalidateTrackerIntegration()
 end
-local function nativeColor(role)
-    local c=OBJECTIVE_TRACKER_COLOR and OBJECTIVE_TRACKER_COLOR[role]
-    if c then return {c.r,c.g,c.b} end
-    if role=="Header" then return {1,0.82,0} end
-    return {0.8,0.8,0.8}
-end
 local function applyFont(f,role)
     f:SetFontObject(role=="header" and (ObjectiveTrackerHeaderFont or GameFontNormal) or (ObjectiveTrackerLineFont or GameFontHighlightSmall))
 end
@@ -180,7 +185,7 @@ function A:InitTrackerSidebar()
     end
     f.trackerBackground:SetAlpha(0)
     f.title=text(f,"header",nativeColor("Header"));f.title:SetPoint("TOPLEFT",7,-38);f.title:SetText("Party Quests")
-    local headerArt=f:CreateTexture(nil,"BACKGROUND")
+    local headerArt=f:CreateTexture(nil,"BACKGROUND");f.headerArt=headerArt
     headerArt:SetAtlas("UI-QuestTracker-Secondary-Objective-Header")
     headerArt:SetPoint("TOPLEFT",0,-32);headerArt:SetPoint("TOPRIGHT",0,-32);headerArt:SetHeight(26)
     local function button(label,width,callback)
@@ -410,6 +415,55 @@ function A:SyncTrackerSidebarOpacity(tracker)
         f.trackerBackground:SetAlpha(alpha);f.trackerBackgroundAlpha=alpha
     end
 end
+function A:SyncTrackerSidebarAppearance(tracker)
+    if combat() then return end
+    local f,s=self.sidebar,self.integration
+    if not f then return end
+    local now=GetTime()
+    if s.nextAppearance and now<s.nextAppearance then return end
+    s.nextAppearance=now+0.25
+    local parts={}
+    local function add(value)
+        if self.public(value,"string") or self.public(value,"number") or self.public(value,"boolean") then
+            parts[#parts+1]=tostring(value)
+        else parts[#parts+1]="-" end
+    end
+    -- Font objects can change in place after Edit Mode or accessibility changes.
+    -- Include their shadow/outline/spacing as well as face and point size.
+    for _,font in ipairs({ObjectiveTrackerHeaderFont or GameFontNormal,ObjectiveTrackerLineFont or GameFontHighlightSmall}) do
+        for _,method in ipairs({"GetFont","GetShadowOffset","GetShadowColor","GetSpacing"}) do
+            if type(font[method])=="function" then
+                local ok,a,b,c,d=pcall(font[method],font)
+                if ok then add(a);add(b);add(c);add(d) end
+            end
+        end
+    end
+    for _,role in ipairs({"Header","Normal","NormalHighlight","Complete"}) do
+        for _,v in ipairs(nativeColor(role)) do add(v) end
+    end
+    local scale=tracker and invoke(tracker.GetEffectiveScale,tracker)
+    local parentScale=UIParent and invoke(UIParent.GetEffectiveScale,UIParent)
+    if self.public(scale,"number") and self.public(parentScale,"number") and scale>0 and parentScale>0 then
+        scale=scale/parentScale
+        if scale==scale and scale<100 then add(scale) else scale=nil end
+    else scale=nil end
+    local signature=table.concat(parts,";")
+    if s.appearanceSignature==signature then return end
+    s.appearanceSignature=signature
+    if scale and s.sidebarScale~=scale then f:SetScale(scale);s.sidebarScale=scale end
+    local function refresh(region,role,color)
+        if not region then return end
+        applyFont(region,role);region:SetTextColor(unpack(nativeColor(color)))
+    end
+    refresh(f.title,"header","Header");refresh(f.partyOnlyTitle,"header","Header")
+    refresh(f.hint,"line","Normal")
+    for _,name in ipairs({"share","refresh","settings","collapse"}) do
+        local button=f[name]
+        if button then refresh(button.caption,"line","Header") end
+    end
+    -- Rebuild our rows to recalculate wrapping and height for the live fonts.
+    s.dirty=true;s.due=nil
+end
 function A:TrackerIntegrationTick()
     if not self.db then return end
     if combat() then self:UpdateTrackerSidebarCombat();return end
@@ -434,6 +488,7 @@ function A:TrackerIntegrationTick()
     end
     self:InitTrackerSidebar()
     self:SyncTrackerSidebarOpacity(tracker)
+    self:SyncTrackerSidebarAppearance(tracker)
     local f=self.sidebar
     local side=self.db.trackerSide=="right" and "right" or "left"
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
