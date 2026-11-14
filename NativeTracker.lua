@@ -20,26 +20,127 @@ end
 function A:QueueNativeTracker(reason,manual)
     if not self.db or self.demo or (not manual and not self.db.nativeTrackerRepair) then return end
     local s=self.nativeTracker
+    if s.suspended then return end
     s.queued=s.queued+1
     -- Keep the first deadline; event bursts must not defer a refresh forever.
     s.due=s.due or (GetTime()+0.8)
     s.reason=manual and "manual" or (s.reason or reason)
 end
+local function counts(value)
+    if not public(value,"string") then return end
+    local done,total=value:match("(%d+)%s*/%s*(%d+)")
+    if done and total then return tonumber(done),tonumber(total) end
+end
+function A:ReadNativeTrackerObjective(module,id,index)
+    local api=C_QuestLog or {}
+    local logIndex=call(api.GetLogIndexForQuestID,id)
+    if not public(logIndex,"number") or logIndex<1 then return end
+    local text=call(GetQuestLogLeaderBoard,index,logIndex,true)
+    local done,total=counts(text)
+    if not done or not total or total<1 then return end
+    local block=object(call(module.GetExistingBlock,module,id))
+    local line=block and object(call(block.GetExistingLine,block,index))
+    local font=line and object(line.Text)
+    local visible=font and call(font.GetText,font)
+    local shownDone,shownTotal=counts(visible)
+    return {id=id,index=index,done=done,total=total,shownDone=shownDone,shownTotal=shownTotal,
+        text=text,visible=visible,block=block~=nil}
+end
+function A:NativeTrackerRefreshReady(module)
+    local parent=object(module and module.parentContainer)
+    if not parent then return false,"native module is not attached" end
+    if call(module.CanUpdate,module)==false then return false,"native module is busy" end
+    if call(module.IsCollapsed,module)==true or call(parent.IsCollapsed,parent)==true then
+        return false,"native tracker is collapsed"
+    end
+    if call(parent.IsShown,parent)==false then return false,"native tracker is hidden" end
+    return true
+end
+function A:RecordNativeTrackerRefresh(message)
+    local s=self.nativeTracker
+    s.history[#s.history+1]=string.format("%.1f %s",GetTime(),message)
+    while #s.history>12 do table.remove(s.history,1) end
+end
+function A:VerifyNativeTrackerRefresh(module)
+    local s=self.nativeTracker
+    local check=s.verify
+    if not check or GetTime()<check.at then return end
+    local ready,why=self:NativeTrackerRefreshReady(module)
+    if not ready then
+        if GetTime()>=check.deadline then
+            s.verify=nil;s.due=nil;s.suspended=true;self.db.nativeTrackerRepair=false
+            s.result="redraw verification unavailable: "..why.."; automatic refresh paused"
+            self:RecordNativeTrackerRefresh(s.result)
+            print("Party Quests Forever: native redraw could not be verified; automatic refresh is now off. Use /spq report for refresh details.")
+        else s.result="verification deferred: "..why;check.at=GetTime()+1 end
+        return
+    end
+    local matched,stale,blank,unknown=0,0,0,0
+    for _,before in ipairs(check.objectives) do
+        local after=self:ReadNativeTrackerObjective(module,before.id,before.index)
+        local watched=call((C_QuestLog or {}).GetQuestWatchType,before.id)
+        if not after then unknown=unknown+1
+        elseif after.shownDone and after.shownTotal then
+            if after.done==after.shownDone and after.total==after.shownTotal then matched=matched+1
+            else stale=stale+1 end
+        elseif public(watched,"number") and watched>=0 then blank=blank+1
+        else unknown=unknown+1 end
+    end
+    s.verify=nil
+    s.result=string.format("verified counter text: %d match; %d stale; %d blank; %d unavailable",matched,stale,blank,unknown)
+    self:RecordNativeTrackerRefresh(s.result)
+    if blank>0 then
+        s.suspended=true;s.due=nil;self.db.nativeTrackerRepair=false
+        print("Party Quests Forever: Blizzard's quest rows became blank after a redraw. Automatic refresh is now off. Use /reload to restore the tracker; /spq report includes refresh details.")
+    end
+end
 function A:NativeTrackerTick()
     local s=self.nativeTracker
-    if self.demo or not s.due or GetTime()<s.due or (InCombatLockdown and InCombatLockdown()) then return end
-    if s.last and GetTime()-s.last<2 then return end
-    s.due=nil;s.last=GetTime()
+    if self.demo or (InCombatLockdown and InCombatLockdown()) then return end
     local tracker=object(QuestObjectiveTracker)
+    if s.verify then
+        self:VerifyNativeTrackerRefresh(tracker)
+        return
+    end
+    if not s.due or GetTime()<s.due or s.suspended then return end
+    if s.last and GetTime()-s.last<2 then return end
     if not tracker or type(tracker.MarkDirty)~="function" then
+        s.due=nil
         s.result="native quest tracker unavailable";s.reason=nil;return
     end
-    -- Ask the native quest module to schedule its normal redraw. Never edit
-    -- its blocks/counters or untrack quests to force a reconstruction.
+    local ready,why=self:NativeTrackerRefreshReady(tracker)
+    if not ready then s.result="redraw deferred: "..why;s.due=GetTime()+1;return end
+    local mismatches={}
+    for id in pairs(self.own) do
+        local index=call((C_QuestLog or {}).GetLogIndexForQuestID,id)
+        local total=public(index,"number") and call(GetNumQuestLeaderBoards,index) or nil
+        if public(total,"number") then
+            for i=1,math.min(total,30) do
+                local row=self:ReadNativeTrackerObjective(tracker,id,i)
+                if row and row.shownDone and row.shownTotal and (row.done~=row.shownDone or row.total~=row.shownTotal) then
+                    mismatches[#mismatches+1]=row
+                end
+            end
+        end
+    end
+    s.due=nil
+    if #mismatches==0 then s.result="no confirmed numeric mismatch; no redraw";s.reason=nil;return end
+    table.sort(mismatches,function(a,b) if a.id==b.id then return a.index<b.index end;return a.id<b.id end)
+    local signature={}
+    for _,r in ipairs(mismatches) do signature[#signature+1]=table.concat({r.id,r.index,r.done,r.total,r.shownDone,r.shownTotal},":") end
+    signature=table.concat(signature,";")
+    if s.lastMismatch==signature then s.result="same stale counters; duplicate redraw skipped";s.reason=nil;return end
+    s.lastMismatch=signature;s.last=GetTime()
+    self:RecordNativeTrackerRefresh("confirmed mismatch "..signature)
+    -- One normal native dirty request per distinct mismatch. No direct edits
+    -- to counters, block state, module contents, visibility or watched quests.
     local ok,err=pcall(tracker.MarkDirty,tracker)
-    if ok then s.requested=s.requested+1;s.result="redraw requested (not display verification)"
+    if ok then
+        s.requested=s.requested+1;s.result="redraw requested; awaiting counter verification"
+        s.verify={at=GetTime()+1.5,deadline=GetTime()+8,objectives=mismatches}
     else
         s.errors=s.errors+1;s.result="redraw failed: "..safe(err)
+        s.suspended=true
         self.db.nativeTrackerRepair=false -- no repeated errors in a broken UI
     end
     s.history[#s.history+1]=string.format("%.1f %s: %s",GetTime(),s.reason or "progress",s.result)
@@ -49,7 +150,8 @@ end
 function A:NativeTrackerReport()
     local s=self.nativeTracker
     local module=object(QuestObjectiveTracker)
-    local rows={"Native tracker repair: "..(self.db.nativeTrackerRepair and "on" or "off")
+    local rows={"Guarded native refresh: suspended="..tostring(not not s.suspended),
+        "Native tracker repair: "..(self.db.nativeTrackerRepair and "on" or "off")
         .."; requests="..s.requested.."; errors="..s.errors.."; pending="..tostring(s.due~=nil),
         "Last redraw: "..(s.result or "none"),
         "Native module: dirty="..safe(module and module.isDirty).."; state="..safe(module and module.state)}
@@ -105,7 +207,7 @@ frame:SetScript("OnEvent",function(_,event,addon,action)
                 A.integration.lastError="addon block notification; integration disabled"
                 A:InvalidateTrackerIntegration()
             end
-        end;s.due=nil
+        end;s.due=nil;s.verify=nil;s.suspended=true
     end
 end)
 for _,event in ipairs({"ADDON_ACTION_BLOCKED","ADDON_ACTION_FORBIDDEN"}) do pcall(frame.RegisterEvent,frame,event) end
