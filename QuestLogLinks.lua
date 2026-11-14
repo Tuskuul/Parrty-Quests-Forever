@@ -28,24 +28,33 @@ function A:PruneQuestLinks()
     trim(s.published,6);trim(s.observed,80);trim(s.received,20)
     for who,at in pairs(s.lastRequest) do if now-at>60 then s.lastRequest[who]=nil end end
 end
-function A:CreateQuestLogSnapshot()
+function A:CreateQuestLogSnapshot(questIDs)
     self:ReadOwn();self:PruneQuestLinks()
+    if questIDs then
+        local selected=0
+        for id in pairs(questIDs) do
+            if questIDs[id] and self.own[id] then selected=selected+1 end
+        end
+        if selected==0 then return nil,"None of the selected quests are still in your log. Choose your quests again." end
+    end
     local s=self:QuestLinkState();s.serial=s.serial+1
     local name=ownName();if not self.public(name,"string") or name=="" then return nil,"Your character name is unavailable." end
     local hash=0;for i=1,#name do hash=(hash*33+name:byte(i))%4294967296 end
     local token=string.format("%x-%x-%x",math.floor(epoch()),hash,s.serial)
-    local payload=self:Serialize()
+    local payload=self:Serialize(questIDs)
     -- Preserve native completion flags for event/escort objectives without counts.
     if C_QuestLog and C_QuestLog.GetQuestObjectives then
         for id,q in pairs(self.own) do
-            local ok,objectives=pcall(C_QuestLog.GetQuestObjectives,id)
-            if ok and self.readable(objectives) then
-                local index=0
-                for _,o in ipairs(objectives) do
-                    if self.readable(o) and self.public(o.text,"string") then
-                        index=index+1
-                        if q.objectives[index] and q.objectives[index].text==o.text and self.public(o.finished,"boolean") then
-                            payload=payload.."\nF\t"..id.."\t"..index.."\t"..(o.finished and "1" or "0")
+            if not questIDs or questIDs[id] then
+                local ok,objectives=pcall(C_QuestLog.GetQuestObjectives,id)
+                if ok and self.readable(objectives) then
+                    local index=0
+                    for _,o in ipairs(objectives) do
+                        if self.readable(o) and self.public(o.text,"string") then
+                            index=index+1
+                            if q.objectives[index] and q.objectives[index].text==o.text and self.public(o.finished,"boolean") then
+                                payload=payload.."\nF\t"..id.."\t"..index.."\t"..(o.finished and "1" or "0")
+                            end
                         end
                     end
                 end
@@ -108,17 +117,19 @@ function A:InsertQuestLogChatLink(marker,draft)
     if type(ChatFrame_OpenChat)=="function" then ChatFrame_OpenChat(marker);return true end
     return false
 end
-function A:DraftQuestLogLink(draft)
+function A:DraftQuestLogLink(draft,questIDs)
     draft=draft or self:CaptureQuestLogChatDraft()
-    if not self:InitQuestLogLinks() then print("Party Quests: chat linking is unavailable in this client.");return end
-    if not self.questLinkComms then print("Party Quests: addon communication is unavailable.");return end
-    local token,err=self:CreateQuestLogSnapshot()
-    if not token then print("Party Quests: "..err);return end
+    if not self:InitQuestLogLinks() then print("Party Quests: chat linking is unavailable in this client.");return false end
+    if not self.questLinkComms then print("Party Quests: addon communication is unavailable.");return false end
+    local token,err=self:CreateQuestLogSnapshot(questIDs)
+    if not token then print("Party Quests: "..err);return false end
     -- A plain marker survives normal chat transport. Receiving copies turn it
     -- into Blizzard's local-only addon hyperlink without sending custom markup.
     if not self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft) then
         print("Party Quests: the chat entry box is unavailable.")
+        return false
     end
+    return true
 end
 function A:ObserveQuestLogLink(message,sender,event,senderGUID)
     if not self.public(message,"string") or not self.public(sender,"string") or sender=="" then return message end
@@ -381,7 +392,7 @@ function A:InstallQuestLogShareButton()
         end)
         b:SetScript("OnClick",function()
             local draft=A.questLogShareDraft;A.questLogShareDraft=nil
-            A:DraftQuestLogLink(draft);A.questLogShareDraft=nil
+            A:OpenQuestLogShare(draft);A.questLogShareDraft=nil
         end)
         b:SetScript("OnEnter",function(button)
             A.questLogShareHover=true;A.questLogShareDraft=A:CaptureQuestLogChatDraft()
