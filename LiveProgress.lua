@@ -242,7 +242,7 @@ function A:BuildLiveTasks(forEvent)
         end
     end
     for token in pairs(self.liveNameplates) do unit(token) end
-    if not forEvent then self:QueueMembershipValidation(tasks) end
+    if not forEvent and not (InCombatLockdown and InCombatLockdown()) then self:QueueMembershipValidation(tasks) end
     local ids={}
     for _,m in pairs(self.members) do for id in pairs(m.quests) do ids[id]=true end end
     for id in pairs(self.own) do ids[id]=true end
@@ -276,7 +276,7 @@ function A:BuildLiveTasks(forEvent)
 end
 function A:LiveTick()
     if self.demo or not next(self.members) then self.liveTasks=nil;return end
-    if (InCombatLockdown and InCombatLockdown()) then return end
+    local inCombat=InCombatLockdown and InCombatLockdown()
     local now=GetTime()
     if not self.liveTasks and (not self.liveDue or now>=self.liveDue) then self:BuildLiveTasks() end
     if not self.triggerTasks and not self.liveTasks then return end
@@ -296,7 +296,8 @@ function A:LiveTick()
         else self.liveIndex=self.liveIndex+1;self.liveEventStreak=0 end
         self.liveTriggerContext=triggered and self.triggerActive.context or nil
         local api=C_TooltipInfo or {}
-        if task.kind=="membership" then self:ValidationStep(task)
+        if task.kind=="membership" then
+            if not inCombat then self:ValidationStep(task) end
         elseif task.kind=="party" then self:QueryPartyProgress(task.value)
         elseif task.kind=="unit" then
             local ok,exists=pcall(UnitExists,task.value)
@@ -353,11 +354,11 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.0.3", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.0.4", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),
-        "Polling: "..(self.demo and "demo" or (memberCount==0 and "no tracked party" or (inCombat and "paused (combat)" or "active")))
+        "Polling: "..(self.demo and "demo" or (memberCount==0 and "no tracked party" or (inCombat and "active (combat; discovery/layout deferred)" or "active")))
             .."; members="..memberCount.."; instance="..tostring(inInstance).."; raid="..tostring(IsInRaid()),
         "Sweep: "..self:SweepSummary(),
         string.format("Live: %d calls; %d payloads; %d rows applied; %d empty/restricted; %d errors",s.queries,s.payloads,s.rows,s.empty,s.errors),
