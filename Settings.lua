@@ -11,9 +11,7 @@ function A:SetViewShown(shown)
     self:SyncSettings()
 end
 function A:SetViewCollapsed(value)
-    if self.db.displayMode=="blizzard" then
-        self.db.trackerCollapsed=not not value;self:InvalidateTrackerIntegration()
-    else self:SetCollapsed(not not value) end
+    if self.db.displayMode=="window" then self:SetCollapsed(not not value) end
 end
 function A:SetNativeRepair(value)
     self.db.nativeTrackerRepair=not not value
@@ -95,7 +93,7 @@ function A:InitSettings()
     check("blizzard","Beside Blizzard's objective tracker","Adds an independent scrolling list beside the normal tracker, using Blizzard's tracker fonts and colors.",function() return A.db.displayMode=="blizzard" end,function() A:SetDisplayMode("blizzard") end,true)
     check("window","Separate resizable window","Drag the title bar to move it, or the bottom-right corner to resize it.",function() return A.db.displayMode=="window" end,function() A:SetDisplayMode("window") end,true)
     check("visible","Show party quests","Automatically hidden when solo. You can open it anyway with the Party Quests button. Background discovery continues.",function() return A.db.displayMode=="blizzard" and not A.db.trackerHidden or A.db.displayMode=="window" and not A.db.hidden end,function(v) A:SetViewShown(v) end)
-    check("collapsed","Collapse the selected party view","Keeps the heading visible and hides its contents.",function() return A.db.displayMode=="blizzard" and A.db.trackerCollapsed or A.db.displayMode=="window" and A.db.collapsed end,function(v) A:SetViewCollapsed(v) end)
+    check("collapsed","Collapse pop-out window","Keeps the pop-out heading visible and hides its contents.",function() return A.db.displayMode=="window" and A.db.collapsed end,function(v) A:SetViewCollapsed(v) end)
     text("Tracker sidebar",true)
     check("sidebarLeft","Left of the default tracker","The default. Best when Blizzard's tracker is near the right edge.",function() return A.db.trackerSide~="right" end,function() A:SetTrackerSide("left") end,true)
     check("sidebarRight","Right of the default tracker","Choose this when there is room to the right. Both columns move with the default tracker.",function() return A.db.trackerSide=="right" end,function() A:SetTrackerSide("right") end,true)
