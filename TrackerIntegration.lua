@@ -194,7 +194,7 @@ function A:InitTrackerSidebar()
     f.refresh=button("Refresh",54,function() A:RefreshParty() end);f.refresh:SetPoint("RIGHT",f.settings,"LEFT",-6,0)
     f.share=button("Share",42,function()
         local draft=A.questLogShareDraft;A.questLogShareDraft=nil
-        A:DraftQuestLogLink(draft);A.questLogShareDraft=nil
+        A:OpenQuestLogShare(draft);A.questLogShareDraft=nil
     end)
     f.share:SetPoint("RIGHT",f.refresh,"LEFT",-6,0)
     f.share:SetScript("OnMouseDown",function()
