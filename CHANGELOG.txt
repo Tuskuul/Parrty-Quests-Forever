@@ -1,3 +1,13 @@
+Party Quests Forever 1.0.4
+
+- Continues bounded progress queries and event-triggered refreshes during combat.
+- Updates progress and Ready text in existing sidebar rows during combat.
+- Defers sidebar geometry, row additions/removals and Blizzard header changes
+  until combat ends. Quest discovery and membership validation remain deferred.
+- Native tracker repair still waits until combat ends.
+- Restricted or unavailable client responses never become guessed progress.
+- Diagnostics now distinguish active combat polling from deferred discovery.
+
 Party Quests Forever 1.0.3
 
 - Fixed missing Ready tags for other players' natively discovered quests when
