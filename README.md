@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.1**, a maintenance update. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.1.2**, a maintenance update. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
 
 ## Install
 
@@ -26,6 +26,8 @@ Progress queries and existing sidebar text now update during combat. Sidebar lay
 The party sidebar background follows the Objective Tracker opacity in Blizzard Edit Mode. It also follows the tracker's live fonts, size, outline, shadow, colors and scale. Appearance changes reflow rows outside combat.
 
 When Blizzard's tracker is empty or hidden, the party pane uses a compact **Party Quests** header at the tracker position. Empty quest sections are omitted.
+
+The party pane shrinks to its contents and expands up to the Objective Tracker height set in Blizzard Edit Mode. Longer lists scroll; there is no separate sidebar height setting.
 
 ## Quest-log links
 
