@@ -112,10 +112,6 @@ function A:SetSidebarWidth(width)
     self.db.sidebarWidth=math.max(320,math.min(640,width))
     self:InvalidateTrackerIntegration();self:SyncSettings()
 end
-function A:SetSidebarHeight(height)
-    self.db.sidebarHeight=math.max(240,math.min(720,height))
-    self:InvalidateTrackerIntegration();self:SyncSettings()
-end
 function A:ShouldShowPartyView()
     return self.demo or next(self.members)~=nil or self.soloOverride==true
 end
@@ -335,7 +331,7 @@ function A:SizeTrackerSidebar()
     local content=f.contentHeight or 1
     local padding=44+(f.headerOffset or 32)
     local overflow=content+padding>limit
-    local viewport=math.min(content,limit-padding-(overflow and 14 or 0))
+    local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
     f.scroll:SetSize(f:GetWidth()-6,math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
     f.hint:SetShown(overflow and not self.db.trackerCollapsed)
@@ -472,6 +468,17 @@ function A:SyncTrackerSidebarAppearance(tracker)
     -- Rebuild our rows to recalculate wrapping and height for the live fonts.
     s.dirty=true;s.due=nil
 end
+function A:TrackerSidebarHeightLimit(tracker)
+    local function valid(value)
+        return self.public(value,"number") and value==value and value>0 and value<math.huge
+    end
+    local setting=Enum and Enum.EditModeObjectiveTrackerSetting and Enum.EditModeObjectiveTrackerSetting.Height
+    local height=tracker and setting and invoke(tracker.GetSettingValue,tracker,setting)
+    if not valid(height) then height=tracker and tracker.editModeHeight end
+    if not valid(height) then height=tracker and invoke(tracker.GetHeight,tracker) end
+    if not valid(height) then height=420 end
+    return height
+end
 function A:TrackerIntegrationTick()
     if not self.db then return end
     if combat() then self:UpdateTrackerSidebarCombat();return end
@@ -500,7 +507,9 @@ function A:TrackerIntegrationTick()
     local f=self.sidebar
     local side=self.db.trackerSide=="right" and "right" or "left"
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
-    local height=math.max(240,math.min(self.db.sidebarHeight or 420,tracker:GetHeight() or 540))
+    -- Auto-size to our content, capped by the shared Edit Mode height setting.
+    -- The native tracker can currently be empty/shorter than its configured cap.
+    local height=self:TrackerSidebarHeightLimit(tracker)
     local header=self.readable(tracker.Header) and tracker.Header or nil
     local nativeVisible=tracker:IsShown() and (not header or header:IsShown())
     local anchor=nativeVisible and header or tracker
