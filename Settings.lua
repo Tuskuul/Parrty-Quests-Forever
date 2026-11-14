@@ -17,8 +17,10 @@ function A:SetViewCollapsed(value)
 end
 function A:SetNativeRepair(value)
     self.db.nativeTrackerRepair=not not value
-    if value then self:QueueNativeTracker("enabled",true)
-    else self.nativeTracker.due=nil;self.nativeTracker.reason=nil end
+    if value then
+        self.nativeTracker.suspended=nil;self.nativeTracker.lastMismatch=nil
+        self:QueueNativeTracker("enabled",true)
+    else self.nativeTracker.due=nil;self.nativeTracker.reason=nil;self.nativeTracker.verify=nil end
 end
 function A:SetDetailedDiagnostics(value,restart)
     local before=self.db.diag;self.db.diag=not not value
@@ -53,6 +55,8 @@ function A:InitSettings()
     local title=font(panel,"Party Quests Forever","GameFontNormalLarge");title:SetPoint("TOPLEFT",16,-16)
     local metadata=(C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
     local version=metadata and metadata("SimplyPartyQuests","Version") or "Unknown"
+    local build=metadata and metadata("SimplyPartyQuests","X-Build")
+    if build then version=version.." ("..build..")" end
     local versionLabel=font(panel,"Version "..version);versionLabel:SetPoint("TOPRIGHT",-16,-20)
     self.settingsStatus=font(panel,"");self.settingsStatus:SetPoint("TOPLEFT",16,-43)
     local scroll=CreateFrame("ScrollFrame",nil,panel,"UIPanelScrollFrameTemplate")
@@ -107,7 +111,7 @@ function A:InitSettings()
     text("Refresh uses current sources. A scan checks the known quest catalog for additional party quests. Some work waits until combat ends.")
     actions("resetWindow","Reset window position and size",function() A:ResetWindowLayout(false) end)
     text("Blizzard tracker recovery",true)
-    check("repair","Redraw after your progress changes (experimental)","Optional workaround for stale Blizzard counts or gaps. Requests a delayed redraw outside combat. Leave off unless needed.",function() return A.db.nativeTrackerRepair end,function(v) A:SetNativeRepair(v) end)
+    check("repair","Refresh stale Blizzard tracker counts","Enabled by default. Refreshes confirmed count mismatches outside combat and pauses if the result is blank or cannot be verified. You can disable it here.",function() return A.db.nativeTrackerRepair end,function(v) A:SetNativeRepair(v) end)
     actions("redraw","Refresh Blizzard tracker now",function() A:QueueNativeTracker("manual",true) end)
     text("Troubleshooting",true)
     actions("shareApiProbe","Inspect share APIs",function() A:StartShareApiProbe() end)
