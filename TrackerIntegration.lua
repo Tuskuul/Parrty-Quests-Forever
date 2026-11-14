@@ -275,8 +275,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
             if e.kind=="member" then
                 if used>0 then y=y+10 end
                 row((e.closed and "+ " or "- ")..e.title,"header",nativeColor("Header"),0,e)
-                local status=e.syncedAt and "Full log synced" or "Discovered quests only (partial)"
-                if not e.syncedAt and e.sweepAt then status="Native catalog list (partial)" end
+                local status=e.syncedAt and "Full log synced" or "Discovered quests"
                 if e.connected==false then status=status.." - offline, cached" end
                 if not e.closed then row(status,"line",nativeColor("Normal"),8) end
                 previousMember=e.name;previousSource=nil
