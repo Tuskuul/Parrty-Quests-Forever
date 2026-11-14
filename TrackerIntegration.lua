@@ -12,8 +12,7 @@ local function nativeColor(role)
     return {0.8,0.8,0.8}
 end
 local function completeColor()
-    local c=nativeColor("Complete")
-    return string.format("|cff%02x%02x%02x",math.floor(c[1]*255+0.5),math.floor(c[2]*255+0.5),math.floor(c[3]*255+0.5))
+    return "|cff00ff00"
 end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
 local function progress(name,q,remote,connected)
