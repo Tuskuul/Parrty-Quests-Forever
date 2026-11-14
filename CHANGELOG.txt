@@ -1,3 +1,12 @@
+Party Quests Forever 1.1.2
+
+- Party sidebar now follows the live Objective Tracker fonts, text size,
+  outlines, shadows, text colors and scale, alongside its background opacity.
+- Reflows party rows when tracker appearance changes so larger text fits.
+- Ready text uses the native tracker completion color.
+- Appearance changes apply automatically outside combat; combat progress text
+  continues updating without changing frame layout.
+
 Party Quests Forever 1.1.1
 
 - Party tracker background now follows the Objective Tracker opacity setting
