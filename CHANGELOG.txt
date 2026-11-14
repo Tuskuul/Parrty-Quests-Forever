@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.2
+Party Quests Forever 1.1.1
 
 - Party sidebar now follows the live Objective Tracker fonts, text size,
   outlines, shadows, text colors and scale, alongside its background opacity.
@@ -6,8 +6,6 @@ Party Quests Forever 1.1.2
 - Ready text uses the native tracker completion color.
 - Appearance changes apply automatically outside combat; combat progress text
   continues updating without changing frame layout.
-
-Party Quests Forever 1.1.1
 
 - Party tracker background now follows the Objective Tracker opacity setting
   in Blizzard Edit Mode, including fully transparent backgrounds.
