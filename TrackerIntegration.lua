@@ -174,8 +174,10 @@ function A:InitTrackerSidebar()
     -- Match Blizzard's Edit Mode background without applying opacity to text.
     if NineSliceUtil and type(NineSliceUtil.ApplyLayoutByName)=="function" then
         f.trackerBackground=CreateFrame("Frame",nil,f,"NineSlicePanelTemplate")
-        f.trackerBackground:SetFrameLevel(f:GetFrameLevel())
-        f.trackerBackground:SetAllPoints(f)
+        f.trackerBackground:SetFrameLevel(math.max(0,f:GetFrameLevel()-1))
+        f.trackerBackground:ClearAllPoints()
+        f.trackerBackground:SetPoint("TOPLEFT",f,"TOPLEFT",0,0)
+        f.trackerBackground:SetPoint("BOTTOMRIGHT",f,"BOTTOMRIGHT",0,0)
         NineSliceUtil.ApplyLayoutByName(f.trackerBackground,"UniqueCornersLayout","common-opacity-background")
     else
         f.trackerBackground=f:CreateTexture(nil,"BACKGROUND")
@@ -203,7 +205,9 @@ function A:InitTrackerSidebar()
     local glow=f.collapse:CreateTexture(nil,"HIGHLIGHT");glow:SetAtlas("ui-questtrackerbutton-yellow-highlight");glow:SetAllPoints(f.collapse)
     f.collapse:SetHighlightTexture(glow)
     f.collapse:SetSize(16,16);f.collapse:SetPoint("TOPRIGHT",-4,-38)
-    f.settings=button("Settings",56,function() A:OpenSettings() end);f.settings:SetPoint("RIGHT",f.collapse,"LEFT",-6,0)
+    f.collapse:Hide()
+    f.collapse:EnableMouse(false)
+    f.settings=button("Settings",56,function() A:OpenSettings() end);f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-38)
     f.refresh=button("Refresh",54,function() A:RefreshParty() end);f.refresh:SetPoint("RIGHT",f.settings,"LEFT",-6,0)
     f.share=button("Share",42,function()
         local draft=A.questLogShareDraft;A.questLogShareDraft=nil
@@ -246,7 +250,7 @@ function A:SetTrackerSidebarHeaderLayout(nativeVisible)
     f.headerArt:ClearAllPoints()
     f.headerArt:SetPoint("TOPLEFT",f,"TOPLEFT",0,-offset)
     f.headerArt:SetPoint("TOPRIGHT",f,"TOPRIGHT",0,-offset)
-    f.collapse:ClearAllPoints();f.collapse:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-6-offset)
+    f.settings:ClearAllPoints();f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-6-offset)
     f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-36-offset)
     self.integration.dirty=true
 end
@@ -413,7 +417,7 @@ function A:SyncTrackerSidebarOpacity(tracker)
         alpha=background and invoke(background.GetAlpha,background) or nil
     end
     if not self.public(alpha,"number") or alpha~=alpha then return end
-    alpha=math.max(0,math.min(1,alpha))
+    alpha=math.max(0,math.min(0.55,alpha))
     if f.trackerBackgroundAlpha~=alpha then
         f.trackerBackground:SetAlpha(alpha);f.trackerBackgroundAlpha=alpha
     end
@@ -522,11 +526,9 @@ function A:TrackerIntegrationTick()
         s.anchor=anchor;s.side=side;s.nativeVisible=nativeVisible;s.dirty=true
     end
     self:SetTrackerSidebarHeaderLayout(nativeVisible)
-    local collapsed=not not self.db.trackerCollapsed
+    local collapsed=false
     if f:GetWidth()~=width or f.heightLimit~=height then f:SetWidth(width);f.heightLimit=height;s.dirty=true end
-    f.scroll:SetShown(not collapsed)
-    local collapseAtlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
-    f.collapse.normal:SetAtlas(collapseAtlas);f.collapse.pushed:SetAtlas(collapseAtlas.."-pressed")
+    f.scroll:SetShown(true)
     self:SizeTrackerSidebar()
     local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     self:JoinTrackerHeader(tracker,visible and nativeVisible)
