@@ -1,5 +1,6 @@
 Party Quests Forever 1.0.4
 
+- Shows the installed addon version in the settings page header.
 - Continues bounded progress queries and event-triggered refreshes during combat.
 - Updates progress and Ready text in existing sidebar rows during combat.
 - Defers sidebar geometry, row additions/removals and Blizzard header changes
