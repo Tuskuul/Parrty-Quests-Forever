@@ -51,6 +51,9 @@ function A:InitSettings()
     local panel=CreateFrame("Frame","SimplyPartyQuestsSettingsPanel",UIParent)
     panel.name="Party Quests Forever";panel:SetSize(620,560);panel:Hide();self.settingsPanel=panel
     local title=font(panel,"Party Quests Forever","GameFontNormalLarge");title:SetPoint("TOPLEFT",16,-16)
+    local metadata=(C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    local version=metadata and metadata("SimplyPartyQuests","Version") or "Unknown"
+    local versionLabel=font(panel,"Version "..version);versionLabel:SetPoint("TOPRIGHT",-16,-20)
     self.settingsStatus=font(panel,"");self.settingsStatus:SetPoint("TOPLEFT",16,-43)
     local scroll=CreateFrame("ScrollFrame",nil,panel,"UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT",16,-70);scroll:SetPoint("BOTTOMRIGHT",-34,16)
