@@ -265,12 +265,14 @@ function A:RefreshKnown()
         end
     end
 end
-function A:Serialize()
+function A:Serialize(questIDs)
     local lines = {}
     for id, q in pairs(self.own) do
-        lines[#lines+1] = table.concat({"Q",id,encode(q.title),q.ready and "1" or "0"}, "\t")
-        for _, o in ipairs(q.objectives) do
-            lines[#lines+1] = table.concat({"O",id,encode(o.text),o.done or "",o.total or ""}, "\t")
+        if not questIDs or questIDs[id] then
+            lines[#lines+1] = table.concat({"Q",id,encode(q.title),q.ready and "1" or "0"}, "\t")
+            for _, o in ipairs(q.objectives) do
+                lines[#lines+1] = table.concat({"O",id,encode(o.text),o.done or "",o.total or ""}, "\t")
+            end
         end
     end
     return table.concat(lines, "\n")
