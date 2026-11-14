@@ -1,3 +1,11 @@
+Party Quests Forever 1.1.1
+
+- Party tracker background now follows the Objective Tracker opacity setting
+  in Blizzard Edit Mode, including fully transparent backgrounds.
+- Uses Blizzard's background styling while keeping quest text readable.
+- Opacity changes apply automatically without a reload.
+- Keeps the separate window and combat text updates unchanged.
+
 Party Quests Forever 1.1.0
 
 - Added Share to the party tracker header for easier access.
