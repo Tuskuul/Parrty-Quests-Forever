@@ -1,6 +1,6 @@
-# Party Quests Forever 1.1.2 release record
+# Party Quests Forever 1.1.1 release record
 
-- Final version: 1.1.2. Upload the ZIP as a Release.
+- Final version: 1.1.1. Upload the ZIP as a Release.
 - Live font, shadow/outline, palette and scale changes trigger sidebar reflow.
 - Appearance checks cover in-place font updates and combat deferral.
 - Sidebar background follows Forever Edit Mode background opacity; text is unchanged.
