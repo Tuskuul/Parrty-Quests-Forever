@@ -25,6 +25,8 @@ Progress queries and existing sidebar text now update during combat. Sidebar lay
 
 The party sidebar background follows the Objective Tracker opacity in Blizzard Edit Mode. It also follows the tracker's live fonts, size, outline, shadow, colors and scale. Appearance changes reflow rows outside combat.
 
+When Blizzard's tracker is empty or hidden, the party pane uses a compact **Party Quests** header at the tracker position. Empty quest sections are omitted.
+
 ## Quest-log links
 
 Share now offers **Full log** or **Select quests**. Choose one or more quests and click **Share selected** to share just those entries and their objective progress. Cancel or Escape restores the original chat draft.
