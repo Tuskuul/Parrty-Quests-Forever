@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.0.2.zip
+- **Release file:** PartyQuestsForever_1.0.3.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,11 +63,10 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Share opens a Full log / Select quests popup from the tracker, map or settings.
-- Choose one or more quests and share only those entries and their objective progress.
-- Keeps the original chat draft, cursor, channel and recipient across the popup.
-- Cancel or Escape restores the draft without creating a link.
-- Uses the existing snapshot protocol; no recipient update is required to view selected snapshots.
+- Fixed missing Ready tags on other players' natively discovered quests.
+- Matches that player's completed progress against every known requirement.
+- Keeps unknown, partial, incomplete or mismatched progress unmarked.
+- Preserves explicit completion flags, sharing and saved settings.
 
 
 ## Submission references checked 2026-11-13
