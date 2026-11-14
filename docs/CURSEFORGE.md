@@ -53,7 +53,7 @@ WIM sending/receiving and Battle.net transfers have passed user testing. Not eve
 
 Existing **Simply Party Quests** users retain their settings. Keep the addon folder named **SimplyPartyQuests**; only its displayed name changes. Replace files and `/reload`. A first installation may need a full client restart. Disable the obsolete PoofPartyQuests addon if it is still installed.
 
-Settings includes a diagnostic report; the shared-log viewer also has **Transfer diagnostics**. Review names and quest details before sharing reports. Include addon/client versions and the affected quest. Automatic Blizzard tracker recovery is optional and off by default.
+Settings includes a diagnostic report; the shared-log viewer also has **Transfer diagnostics**. Review names and quest details before sharing reports. Include addon/client versions and the affected quest. Guarded Blizzard tracker refresh defaults on for new/unset preferences. It checks confirmed count mismatches outside combat and pauses after blank or unverifiable redraws. Explicit off settings remain saved.
 
 Built for **WoW Forever 1.60.1**. Retail, other Classic clients and raid tracking are not supported.
 
@@ -63,11 +63,17 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Party pane automatically shrinks for short or empty quest lists.
-- Expands up to the Objective Tracker maximum height set in Blizzard Edit Mode.
-- Longer quest lists scroll when they reach that limit.
-- Height changes in Edit Mode apply automatically.
-- Removed separate Shorter/Taller controls so both panes use one height limit.
+- Party pane shrinks for short or empty lists and expands up to the Objective
+  Tracker height set in Blizzard Edit Mode. Longer lists scroll.
+- Removed separate Shorter/Taller controls so both panes share one height limit.
+- Fixed missing Ready status in synced party quest logs.
+- Ready tags and Ready for turn-in text now use bright green.
+- Guarded native refresh defaults on for new/unset preferences; explicit off
+  settings remain saved. Only confirmed numeric mismatches request a redraw.
+- Redraws wait until out of combat and until the native tracker is ready.
+- Verifies redraw results, suppresses duplicate requests, and pauses automatic
+  refresh if watched rows go blank or the result cannot be verified.
+- Removed test build labels and the startup color-check message.
 
 
 ## Submission references checked 2026-11-13
