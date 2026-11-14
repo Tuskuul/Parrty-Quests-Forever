@@ -36,13 +36,13 @@ function A:BuildTrackerEntries()
     local function source(key,name,quests,member)
         sources[#sources+1]={key=key,name=name,quests=quests,member=member}
     end
-    if self.db.combineShared then source("all","Shared quests",view.combined) end
+    if self.db.combineShared and #view.combined>0 then source("all","Shared quests",view.combined) end
     for _,m in ipairs(members) do
         local data=view.sections[m.guid]
         sources[#sources+1]={kind="member",member=m,count=data.count}
         if not (self.db.trackerMembersClosed or {})[m.guid] then
-            if not self.db.combineShared then source(m.guid..":shared",m.name.." — Both on",data.shared,m) end
-            source(m.guid..":other",m.name.." — Other quests",data.other,m)
+            if not self.db.combineShared and #data.shared>0 then source(m.guid..":shared",m.name.." — Both on",data.shared,m) end
+            if #data.other>0 then source(m.guid..":other",m.name.." — Other quests",data.other,m) end
         end
     end
     local closed=self.db.trackerGroupsClosed or {}
@@ -50,6 +50,9 @@ function A:BuildTrackerEntries()
         if s.kind=="member" then
             local m=s.member
             entries[#entries+1]={kind="member",key=m.guid,closed=(self.db.trackerMembersClosed or {})[m.guid],title=m.name.." ("..s.count..")",name=m.name,class=m.class,count=s.count,connected=m.connected,syncedAt=m.syncedAt,sweepAt=m.sweepAt}
+            if s.count==0 and not (self.db.trackerMembersClosed or {})[m.guid] then
+                entries[#entries+1]={kind="empty",title=m.connected==false and "No cached quests." or (m.syncedAt and "No active quests." or "No quests discovered yet.")}
+            end
         else
         local groups=self.db.groupByZone and self:GroupQuestsByZone(s.quests) or {{key="flat",name="",quests=s.quests}}
         if #groups==0 then groups={{key="flat",name="",quests={}}} end
@@ -236,17 +239,21 @@ function A:InitTrackerSidebar()
         f.scroll:SetVerticalScroll(math.max(0,math.min(max,(f.scroll:GetVerticalScroll() or 0)-delta*36)))
     end)
     f.child=CreateFrame("Frame",nil,f.scroll);f.child:SetSize(380,1);f.scroll:SetScrollChild(f.child)
-    -- Blizzard can remove its entire tracker when your own log/watch list is
-    -- empty. Keep a matching header for the party-only case without showing or
-    -- mutating Blizzard's empty container.
-    f.partyOnlyHeader=CreateFrame("Frame",nil,f)
-    f.partyOnlyHeader:SetPoint("TOPLEFT",0,0);f.partyOnlyHeader:SetPoint("TOPRIGHT",0,0);f.partyOnlyHeader:SetHeight(26)
-    f.partyOnlyArt=f.partyOnlyHeader:CreateTexture(nil,"BACKGROUND")
-    f.partyOnlyArt:SetAtlas("UI-QuestTracker-Secondary-Objective-Header");f.partyOnlyArt:SetAllPoints(f.partyOnlyHeader)
-    f.partyOnlyTitle=text(f.partyOnlyHeader,"header",nativeColor("Header"))
-    f.partyOnlyTitle:SetPoint("LEFT",7,0);f.partyOnlyTitle:SetText("All Objectives")
-    f.partyOnlyHeader:Hide()
     f.rows={};f.contentHeight=1;f.heightLimit=420;f.maxScroll=0;f:Hide()
+end
+function A:SetTrackerSidebarHeaderLayout(nativeVisible)
+    local f=self.sidebar
+    local offset=nativeVisible and 32 or 0
+    if f.headerOffset==offset then return end
+    f.headerOffset=offset
+    -- Only reserve an All Objectives row when Blizzard actually displays it.
+    f.title:ClearAllPoints();f.title:SetPoint("TOPLEFT",f,"TOPLEFT",7,-6-offset)
+    f.headerArt:ClearAllPoints()
+    f.headerArt:SetPoint("TOPLEFT",f,"TOPLEFT",0,-offset)
+    f.headerArt:SetPoint("TOPRIGHT",f,"TOPRIGHT",0,-offset)
+    f.collapse:ClearAllPoints();f.collapse:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-6-offset)
+    f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-36-offset)
+    self.integration.dirty=true
 end
 function A:RenderTrackerSidebar(entries,memberCount)
     local f=self.sidebar;local width=f:GetWidth()-8
@@ -326,12 +333,13 @@ function A:SizeTrackerSidebar()
     local f=self.sidebar
     local limit=f.heightLimit or 420
     local content=f.contentHeight or 1
-    local overflow=content+76>limit
-    local viewport=math.min(content,limit-(overflow and 90 or 76))
+    local padding=44+(f.headerOffset or 32)
+    local overflow=content+padding>limit
+    local viewport=math.min(content,limit-padding-(overflow and 14 or 0))
     f.scroll:SetSize(f:GetWidth()-6,math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
     f.hint:SetShown(overflow and not self.db.trackerCollapsed)
-    f:SetHeight(self.db.trackerCollapsed and 62 or math.min(limit,content+(overflow and 90 or 76)))
+    f:SetHeight(self.db.trackerCollapsed and (padding-14) or math.min(limit,content+padding+(overflow and 14 or 0)))
     local offset=f.scroll:GetVerticalScroll() or 0
     if offset>f.maxScroll then f.scroll:SetVerticalScroll(f.maxScroll) end
 end
@@ -493,32 +501,27 @@ function A:TrackerIntegrationTick()
     local side=self.db.trackerSide=="right" and "right" or "left"
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
     local height=math.max(240,math.min(self.db.sidebarHeight or 420,tracker:GetHeight() or 540))
-    local anchor=self.readable(tracker.Header) and tracker.Header or tracker
-    if s.anchor~=anchor or s.side~=side then
+    local header=self.readable(tracker.Header) and tracker.Header or nil
+    local nativeVisible=tracker:IsShown() and (not header or header:IsShown())
+    local anchor=nativeVisible and header or tracker
+    if s.anchor~=anchor or s.side~=side or s.nativeVisible~=nativeVisible then
         f:ClearAllPoints()
         f:SetParent(UIParent);f:SetFrameLevel(tracker:GetFrameLevel()+2)
-        f:SetClampedToScreen(false)
-        if side=="right" then f:SetPoint("TOPLEFT",anchor,"TOPRIGHT",0,0)
+        f:SetClampedToScreen(not nativeVisible)
+        if not nativeVisible then f:SetPoint("TOPLEFT",anchor,"TOPLEFT",0,0)
+        elseif side=="right" then f:SetPoint("TOPLEFT",anchor,"TOPRIGHT",0,0)
         else f:SetPoint("TOPRIGHT",anchor,"TOPLEFT",0,0) end
-        s.anchor=anchor;s.side=side;s.dirty=true
+        s.anchor=anchor;s.side=side;s.nativeVisible=nativeVisible;s.dirty=true
     end
+    self:SetTrackerSidebarHeaderLayout(nativeVisible)
     local collapsed=not not self.db.trackerCollapsed
     if f:GetWidth()~=width or f.heightLimit~=height then f:SetWidth(width);f.heightLimit=height;s.dirty=true end
     f.scroll:SetShown(not collapsed)
     local collapseAtlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
     f.collapse.normal:SetAtlas(collapseAtlas);f.collapse.pushed:SetAtlas(collapseAtlas.."-pressed")
     self:SizeTrackerSidebar()
-    local header=self.readable(tracker.Header) and tracker.Header or nil
-    local nativeVisible=tracker:IsShown() and (not header or header:IsShown())
     local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     self:JoinTrackerHeader(tracker,visible and nativeVisible)
-    f.partyOnlyHeader:SetShown(visible and not nativeVisible)
-    if visible and not nativeVisible and header and self.readable(header.Background) then
-        local atlas=invoke(header.Background.GetAtlas,header.Background)
-        if self.public(atlas,"string") and atlas~="" and f.partyOnlyAtlas~=atlas then
-            f.partyOnlyArt:SetAtlas(atlas);f.partyOnlyAtlas=atlas
-        end
-    end
     local allCollapsed=nativeVisible and invoke(tracker.IsCollapsed,tracker)==true
     f:SetShown(visible and not allCollapsed)
     self.window:Hide();s.attached=true
