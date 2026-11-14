@@ -1,4 +1,4 @@
-Party Quests Forever 1.0.2
+Party Quests Forever 1.0.3
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -26,6 +26,9 @@ minimap button to open it manually. Left-click toggles, right-click opens settin
 and Shift-click refreshes. Drag the minimap button to reposition it.
 
 QUEST INFORMATION
+Ready tags use explicit completion flags or, for native party observations,
+complete reported progress matching every known requirement. Unknown or partial
+progress is not treated as ready. Your own counts never fill another player's.
 Other party members do not need the addon for native discovery. Information is
 limited to what Forever exposes; proximity, quest type and client restrictions
 can affect completeness and update timing. Cached or unknown progress can occur
