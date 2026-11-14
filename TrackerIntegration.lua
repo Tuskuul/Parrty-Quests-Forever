@@ -237,7 +237,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
     local f=self.sidebar;local width=f:GetWidth()-8
     f.child:SetWidth(width)
     local used,y=0,0
-    local function row(label,role,color,indent,entry)
+    local function row(label,role,color,indent,entry,liveQuestKey,liveLine)
         used=used+1
         local b=f.rows[used]
         if not b then
@@ -251,7 +251,8 @@ function A:RenderTrackerSidebar(entries,memberCount)
             end)
             f.rows[used]=b
         end
-        b.entry=entry;applyFont(b.label,role);b.label:SetTextColor(unpack(color))
+        b.entry=entry;b.liveQuestKey=liveQuestKey;b.liveLine=liveLine
+        applyFont(b.label,role);b.label:SetTextColor(unpack(color))
         local heading=entry and (entry.kind=="member" or entry.kind=="group")
         if heading and not b.headerBackground then
             b.headerBackground=b:CreateTexture(nil,"BACKGROUND")
@@ -294,15 +295,15 @@ function A:RenderTrackerSidebar(entries,memberCount)
                 local heading=(e.zone and e.zone~="" and e.zone or e.section).." ("..e.count..")"
                 row((e.closed and "+ " or "- ")..heading,"header",nativeColor("Header"),8,e)
             else
-                row((e.open and "- " or "+ ")..e.title,"line",nativeColor("Header"),20,e)
+                row((e.open and "- " or "+ ")..e.title,"line",nativeColor("Header"),20,e,e.key,0)
                 if e.open then
                     for _,r in ipairs(e.requirements or {}) do row(r.text,"line",nativeColor("Normal"),34) end
-                    for _,line in ipairs(e.lines or {}) do row(line,"line",nativeColor("Normal"),34) end
+                    for i,line in ipairs(e.lines or {}) do row(line,"line",nativeColor("Normal"),34,nil,e.key,i) end
                 end
             end
         end
     end
-    for i=used+1,#f.rows do f.rows[i].entry=nil;f.rows[i]:Hide() end
+    for i=used+1,#f.rows do f.rows[i].entry=nil;f.rows[i].liveQuestKey=nil;f.rows[i].liveLine=nil;f.rows[i]:Hide() end
     f.child:SetHeight(math.max(1,y))
     f.contentHeight=y
     self:SizeTrackerSidebar()
@@ -358,8 +359,34 @@ function A:JoinTrackerHeader(tracker,enabled)
     end
     self.integration.joinedHeader=state
 end
+function A:UpdateTrackerSidebarCombat()
+    local f,s=self.sidebar,self.integration
+    if not f or not f:IsShown() or not s.dirty or (s.due and GetTime()<s.due) then return end
+    -- The sidebar's existing FontStrings belong to our own non-secure rows.
+    -- Never create/move/resize frames or touch Blizzard's tracker while locked.
+    local ok,err=pcall(function()
+        local byKey={}
+        for _,e in ipairs(self:BuildTrackerEntries()) do
+            if e.kind=="quest" then byKey[e.key]=e end
+        end
+        for _,row in ipairs(f.rows) do
+            local e=row.liveQuestKey and byKey[row.liveQuestKey]
+            if e and row:IsShown() then
+                local value=row.liveLine==0 and ((e.open and "- " or "+ ")..e.title)
+                    or (e.lines or {})[row.liveLine]
+                if value then row.label:SetText(value) end
+            end
+        end
+    end)
+    if ok then s.dirty=false;s.due=nil
+    else
+        s.lastError=self.public(err,"string") and err:sub(1,180) or "combat text refresh failed"
+        s.due=GetTime()+1
+    end
+end
 function A:TrackerIntegrationTick()
-    if not self.db or combat() then return end
+    if not self.db then return end
+    if combat() then self:UpdateTrackerSidebarCombat();return end
     if self.UpdateMinimapButton then self:UpdateMinimapButton() end
     local s=self.integration
     if ObjectiveTrackerFrame then self:EnsurePartyTrackerButton(ObjectiveTrackerFrame)
