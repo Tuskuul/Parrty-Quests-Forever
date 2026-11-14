@@ -23,13 +23,13 @@ function A:Changed()
     if self.batchNative then self.liveDirty=true elseif self.Render then self:Render() end
 end
 function A:QuestDisplayChanged(old,q)
-    if not old or old.title~=q.title or old.ready~=q.ready then return true end
+    if not old or old.title~=q.title or old.ready~=q.ready or old.readyKnown~=q.readyKnown then return true end
     for _,field in ipairs({"objectives","requirements"}) do
         local a,b=old[field] or {},q[field] or {}
         if #a~=#b then return true end
         for i,o in ipairs(a) do
             local n=b[i]
-            if o.text~=n.text or o.done~=n.done or o.total~=n.total then return true end
+            if o.text~=n.text or o.done~=n.done or o.total~=n.total or o.finished~=n.finished then return true end
         end
     end
     return false
@@ -137,10 +137,23 @@ function A:ReadOwn()
                             q.objectives[#q.objectives+1] = {text=o.text,
                                 done=public(o.numFulfilled,"number") and o.numFulfilled or nil,
                                 total=public(o.numRequired,"number") and o.numRequired or nil}
+                            if public(o.finished,"boolean") then q.objectives[#q.objectives].finished=o.finished end
                         end
                     end
                 end
-                q.ready = not secret(info.isComplete) and (info.isComplete == true or info.isComplete == 1)
+                -- GetInfo does not reliably provide isComplete on Forever.
+                -- A missing flag must not become an authoritative false value.
+                local complete
+                local function known(value)
+                    return public(value,"boolean") or (public(value,"number") and (value==0 or value==1 or value==-1))
+                end
+                if type(C_QuestLog.IsComplete)=="function" then
+                    local ok,value=pcall(C_QuestLog.IsComplete,q.id)
+                    if ok and known(value) then complete=value end
+                end
+                if not known(complete) and known(info.isComplete) then complete=info.isComplete end
+                q.readyKnown=known(complete)
+                if q.readyKnown then q.ready=complete==true or complete==1 end
                 quests[q.id] = q
             end
         end
@@ -269,7 +282,11 @@ function A:Serialize(questIDs)
     local lines = {}
     for id, q in pairs(self.own) do
         if not questIDs or questIDs[id] then
-            lines[#lines+1] = table.concat({"Q",id,encode(q.title),q.ready and "1" or "0"}, "\t")
+            -- Legacy 0 did not distinguish unknown from confirmed incomplete.
+            -- N preserves a confirmed false without adding fields/record types;
+            -- older receivers already treat any value other than 1 as false.
+            local ready=q.ready and "1" or (q.readyKnown and "N" or "0")
+            lines[#lines+1] = table.concat({"Q",id,encode(q.title),ready}, "\t")
             for _, o in ipairs(q.objectives) do
                 lines[#lines+1] = table.concat({"O",id,encode(o.text),o.done or "",o.total or ""}, "\t")
             end
@@ -286,7 +303,8 @@ function A:Deserialize(payload)
         if f[1] == "Q" and #f == 4 then
             count = count+1
             if count > 100 or quests[id] then return nil end
-            quests[id] = {id=id,title=f[3],ready=f[4]=="1",objectives={}}
+            if f[4]~="0" and f[4]~="1" and f[4]~="N" then return nil end
+            quests[id] = {id=id,title=f[3],ready=f[4]=="1",readyKnown=(f[4]=="1" or f[4]=="N") or nil,objectives={}}
         elseif f[1] == "O" and #f == 5 and quests[id] then
             local q = quests[id]
             if #q.objectives >= 30 then return nil end
@@ -350,6 +368,7 @@ frame:SetScript("OnEvent",function(_,event,...)
         A.db.trackerGroupsClosed=A.db.trackerGroupsClosed or {}
         if A.db.displayMode==nil then A.db.displayMode="blizzard" end
         if A.db.groupByZone==nil then A.db.groupByZone=true end
+        if A.db.nativeTrackerRepair==nil then A.db.nativeTrackerRepair=true end
         if A.InitUI then A:InitUI() end
         if A.InitSettings then A:InitSettings() end
     elseif event=="PLAYER_LOGIN" then
