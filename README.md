@@ -29,6 +29,8 @@ When Blizzard's tracker is empty or hidden, the party pane uses a compact **Part
 
 The party pane shrinks to its contents and expands up to the Objective Tracker height set in Blizzard Edit Mode. Longer lists scroll; there is no separate sidebar height setting.
 
+Ready tags and turn-in text are bright green. Guarded Blizzard tracker refresh defaults on for new or unset preferences; explicit off settings are preserved. It requests redraws only for confirmed numeric mismatches outside combat, checks the result, and pauses after blank or unverifiable results. Settings can disable it.
+
 ## Quest-log links
 
 Share now offers **Full log** or **Select quests**. Choose one or more quests and click **Share selected** to share just those entries and their objective progress. Cancel or Escape restores the original chat draft.
