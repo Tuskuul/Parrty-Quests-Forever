@@ -1,3 +1,13 @@
+Party Quests Forever 1.0.3
+
+- Fixed missing Ready tags for other players' natively discovered quests when
+  every known objective has complete reported progress but no turn-in flag.
+- Checks the party member's own counts against all known requirements.
+- Unknown progress, incomplete steps, missing requirements and mismatched counts
+  remain unmarked. Explicit snapshot completion flags remain authoritative.
+- Applies the same Ready display to the tracker sidebar and separate window.
+- No change to quest sharing, communication protocols or saved settings.
+
 Party Quests Forever 1.0.2
 
 - Share opens a popup with Full log and Select quests.
