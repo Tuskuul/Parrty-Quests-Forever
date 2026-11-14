@@ -34,6 +34,7 @@ assert(A:IsQuestReady(partial),'completed non-count step ignored')
 foul.ready=false
 assert(A:IsQuestReady(foul),'old native incomplete flag hid later complete counts')
 foul.lastNativeSource=nil
+foul.readyKnown=true
 assert(not A:IsQuestReady(foul),'explicit full-log incomplete flag was overridden')
 foul.ready=true;foul.objectives={}
 assert(A:IsQuestReady(foul),'explicit turn-in flag ignored')
