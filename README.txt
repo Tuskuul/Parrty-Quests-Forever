@@ -78,7 +78,10 @@ Basic transfer counters work without enabling broader diagnostic capture.
 Reports may contain names, quest IDs and routing IDs; review before sharing.
 Include addon/client versions, the affected quest and the other player's addon
 version. Detailed capture is optional, bounded, off by default, and kept in memory.
-Automatic Blizzard tracker recovery remains optional and off by default.
+Guarded Blizzard tracker refresh defaults on for new or unset preferences;
+explicit off settings remain saved. It requests redraws only for confirmed
+numeric mismatches outside combat, verifies the result, and pauses after blank
+or unverifiable results. Settings can disable it. /spq report includes details.
 Retail, other Classic clients, and raid tracking are not supported.
 
 CREDITS AND LICENSE
