@@ -1,3 +1,11 @@
+Party Quests Forever 1.1.2
+
+- Party pane automatically shrinks for short or empty quest lists.
+- Expands up to the Objective Tracker maximum height set in Blizzard Edit Mode.
+- Longer quest lists scroll when they reach that limit.
+- Height changes in Edit Mode apply automatically.
+- Removed separate Shorter/Taller controls so both panes use one height limit.
+
 Party Quests Forever 1.1.1
 
 - When Blizzard's tracker is empty or hidden, Party Quests uses a compact
