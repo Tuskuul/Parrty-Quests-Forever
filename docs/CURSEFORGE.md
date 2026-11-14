@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.0.3.zip
+- **Release file:** PartyQuestsForever_1.0.4.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,10 +63,10 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Fixed missing Ready tags on other players' natively discovered quests.
-- Matches that player's completed progress against every known requirement.
-- Keeps unknown, partial, incomplete or mismatched progress unmarked.
-- Preserves explicit completion flags, sharing and saved settings.
+- Progress queries and event refreshes now continue during combat.
+- Existing sidebar rows update counts and Ready text without moving frames.
+- Layout changes, discovery, membership validation and native tracker repair remain deferred until combat ends.
+- Restricted or unavailable client data is never interpreted as progress.
 
 
 ## Submission references checked 2026-11-13
