@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.1
+Party Quests Forever 1.1.2
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
