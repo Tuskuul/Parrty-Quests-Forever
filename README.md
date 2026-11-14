@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.0.3**, a maintenance update. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.0.4**, a maintenance update. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
 
 ## Install
 
@@ -20,6 +20,8 @@ Existing Simply Party Quests users keep their settings. Replace files and `/relo
 Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click the minimap button. `/spq` remains supported.
 
 Native party quests show **Ready** when the member's reported progress completes every known requirement, even without an explicit turn-in flag. Unknown or partial progress remains unmarked.
+
+Progress queries and existing sidebar text now update during combat. Sidebar layout changes, discovery, membership checks and native tracker repair wait until combat ends. Client restrictions still affect available data.
 
 ## Quest-log links
 
