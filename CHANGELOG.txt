@@ -1,5 +1,8 @@
 Party Quests Forever 1.1.1
 
+- When Blizzard's tracker is empty or hidden, Party Quests uses a compact
+  header at the tracker position without an extra All Objectives heading.
+- Empty party members show one clear status instead of two empty sections.
 - Party sidebar now follows the live Objective Tracker fonts, text size,
   outlines, shadows, text colors and scale, alongside its background opacity.
 - Reflows party rows when tracker appearance changes so larger text fits.
