@@ -1,10 +1,16 @@
 Party Quests Forever 1.1.2
 
-- Party pane automatically shrinks for short or empty quest lists.
-- Expands up to the Objective Tracker maximum height set in Blizzard Edit Mode.
-- Longer quest lists scroll when they reach that limit.
-- Height changes in Edit Mode apply automatically.
-- Removed separate Shorter/Taller controls so both panes use one height limit.
+- Party pane shrinks for short or empty lists and expands up to the Objective
+  Tracker height set in Blizzard Edit Mode. Longer lists scroll.
+- Removed separate Shorter/Taller controls so both panes share one height limit.
+- Fixed missing Ready status in synced party quest logs.
+- Ready tags and Ready for turn-in text now use bright green.
+- Guarded native refresh defaults on for new/unset preferences; explicit off
+  settings remain saved. Only confirmed numeric mismatches request a redraw.
+- Redraws wait until out of combat and until the native tracker is ready.
+- Verifies redraw results, suppresses duplicate requests, and pauses automatic
+  refresh if watched rows go blank or the result cannot be verified.
+- Removed test build labels and the startup color-check message.
 
 Party Quests Forever 1.1.1
 
