@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.1_CurseForge_Release.zip
+- **Release file:** PartyQuestsForever_1.1.2_CurseForge_Release.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,14 +63,11 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Cleaned up the party-only empty state: compact Party Quests heading, tracker-position anchoring, and no duplicate empty sections.
-
-- Party sidebar now follows the live Objective Tracker fonts, text size,
-  outlines, shadows, text colors and scale, alongside its background opacity.
-- Reflows party rows when tracker appearance changes so larger text fits.
-- Ready text uses the native tracker completion color.
-- Appearance changes apply automatically outside combat; combat progress text
-  continues updating without changing frame layout.
+- Party pane automatically shrinks for short or empty quest lists.
+- Expands up to the Objective Tracker maximum height set in Blizzard Edit Mode.
+- Longer quest lists scroll when they reach that limit.
+- Height changes in Edit Mode apply automatically.
+- Removed separate Shorter/Taller controls so both panes use one height limit.
 
 
 ## Submission references checked 2026-11-13
