@@ -1,6 +1,10 @@
 # Party Quests Forever 1.1.2 release record
 
 - Final version: 1.1.2. Upload the ZIP as a Release.
+- Promotes user-tested green Ready labels and synced completion correction.
+- Guarded native refresh defaults on for unset preferences; opt-outs persist.
+- Retains native refresh result checks, duplicate suppression and pause behavior.
+- Test identifiers and startup color sample removed.
 - Auto height uses the shared Edit Mode cap; small/empty lists stay compact.
 - Height tests cover configuration changes, contraction, scrolling and fallbacks.
 - Live font, shadow/outline, palette and scale changes trigger sidebar reflow.
