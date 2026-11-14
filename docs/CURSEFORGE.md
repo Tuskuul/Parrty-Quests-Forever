@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.0.1.zip
+- **Release file:** PartyQuestsForever_1.0.2.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -23,6 +23,8 @@
 See available party quests beside Blizzard's objective tracker or in a separate movable, resizable window. Collapse players, zones and quests, combine shared quests, and compare available objective progress without crowding your own tracker.
 
 ### Features
+
+- Choose **Full log** or **Select quests** when sharing; select one or more quests to include only those entries.
 
 - Discover quest information Forever exposes for party members, even when they do not have the addon.
 - Exchange fuller quest-log snapshots when party members also have it installed.
@@ -61,7 +63,12 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Adds a Share button to the party tracker header between Party Quests and Refresh. Includes collapsible party/zone/quest tracking, combined shared quests, native tracker styling, full surnames, minimap/settings controls, clickable active-log snapshots, WIM integration, Battle.net snapshot transport, and transfer diagnostics. Existing installation folders and settings are preserved.
+- Share opens a Full log / Select quests popup from the tracker, map or settings.
+- Choose one or more quests and share only those entries and their objective progress.
+- Keeps the original chat draft, cursor, channel and recipient across the popup.
+- Cancel or Escape restores the draft without creating a link.
+- Uses the existing snapshot protocol; no recipient update is required to view selected snapshots.
+
 
 ## Submission references checked 2026-11-13
 
