@@ -1,3 +1,12 @@
+Party Quests Forever 1.0.2
+
+- Share opens a popup with Full log and Select quests.
+- Select one or more active quests to share only their entries and objectives.
+- Applies to the tracker Share button, map Share Quest Log button and settings.
+- Preserves chat draft, cursor, channel and recipient across the popup.
+- Cancel or Escape restores the draft without creating a link.
+- Keeps the existing snapshot protocol for older receiving addon versions.
+
 Party Quests Forever 1.0.1
 
 - Added Share between Party Quests and Refresh in the tracker sidebar header.
