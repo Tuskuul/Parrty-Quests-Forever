@@ -1,6 +1,8 @@
-# Party Quests Forever 1.1.0 release record
+# Party Quests Forever 1.1.1 release record
 
-- Final version: 1.1.0. Upload the ZIP as a Release.
+- Final version: 1.1.1. Upload the ZIP as a Release.
+- Sidebar background follows Forever Edit Mode background opacity; text is unchanged.
+- Opacity checks cover zero/full values, slider changes and unavailable settings.
 - Consolidates the 1.0.1–1.0.4 changes and the settings/status wording updates.
 - Install directory: SimplyPartyQuests; saved preferences and protocols preserved.
 - Approved full-resolution artwork and matching 256 × 256 TGA included.
