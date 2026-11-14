@@ -1,4 +1,41 @@
 local _, A = ...
+-- Native party tooltips can expose complete counts without a ready-for-turn-in
+-- line. Compare only that player's observations against every known step.
+local function readinessKey(text)
+    return text:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+        :gsub("%d+%s*/%s*%d+",""):lower():gsub("required","")
+        :gsub("[%s%p%d]",""):lower()
+end
+function A:IsQuestReady(q)
+    if not q then return false end
+    if q.ready then return true end
+    -- Full addon snapshots and our own log have an explicit completion flag.
+    -- A native tooltip's earlier false flag may instead be a cached incomplete count.
+    if q.ready==false and not q.lastNativeSource then return false end
+    local objectives,requirements=q.objectives or {},q.requirements or {}
+    if #objectives==0 or #requirements==0 then return false end
+    local observed={}
+    for _,o in ipairs(objectives) do
+        if not self.public(o.text,"string") or self:IsGenericObjective(o.text) then return false end
+        if o.finished~=true and not (self.public(o.done,"number") and self.public(o.total,"number")
+            and o.total>0 and o.done>=o.total) then return false end
+        local k=readinessKey(o.text)
+        if k=="" or observed[k] then return false end
+        observed[k]=o
+    end
+    local required={}
+    for _,r in ipairs(requirements) do
+        if not self.public(r.text,"string") or self:IsGenericObjective(r.text) then return false end
+        local k=readinessKey(r.text)
+        if k=="" or not observed[k] or required[k] then return false end
+        local expected=tonumber(r.text:match("(%d+)%s+required"))
+        if expected and observed[k].total~=nil and observed[k].total~=expected then return false end
+        required[k]=true
+    end
+    -- Never declare a partial tooltip complete when a known step is missing.
+    for k in pairs(observed) do if not required[k] then return false end end
+    return true
+end
 function A:ObjectiveKey(text)
     return text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
         :gsub("%d+%s*/%s*%d+", ""):gsub("[%s%p]", ""):lower()
