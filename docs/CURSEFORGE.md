@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.0_CurseForge_Release.zip
+- **Release file:** PartyQuestsForever_1.1.1_CurseForge_Release.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,17 +63,11 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Added Share to the party tracker header for easier access.
-- Sharing offers Full log or Select quests; choose one or more active quests.
-- Preserves chat drafts, cursor, channel and recipient through sharing choices.
-- Fixed Ready tags for other players when their complete progress matches every
-  known requirement; unknown or incomplete progress remains unmarked.
-- Progress queries and existing sidebar text update during combat. Layout,
-  discovery, membership checks and native tracker repair wait until combat ends.
-- Settings displays the installed addon version.
-- Simplified party status wording to Discovered quests.
-- Includes the final adventure artwork and matching in-game icon.
-- Preserves existing installation folder, saved settings and sharing protocols.
+- Party tracker background now follows the Objective Tracker opacity setting
+  in Blizzard Edit Mode, including fully transparent backgrounds.
+- Uses Blizzard's background styling while keeping quest text readable.
+- Opacity changes apply automatically without a reload.
+- Keeps the separate window and combat text updates unchanged.
 
 
 ## Submission references checked 2026-11-13
