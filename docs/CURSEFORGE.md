@@ -65,26 +65,21 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 Party Quests Forever 1.1.5
 
+- Highlights the focused quest with a soft gold background in the party tracker,
+  including during combat.
+- Added Collapse tracker during combat in Display settings, enabled by default.
+  Keeps the compact header visible and restores your previous view afterward.
+- Expanding the collapsed tracker during combat shows a warning and queues
+  reopening until combat ends, without switching to the separate window.
+- Fixed blank Blizzard quest contents when reopening or restoring the tracker.
+- Added green [Ready] tags to combined quest headings when you and every listed
+  party member are ready for turn-in. Unknown or mixed progress stays unmarked.
+- Fixed the expanded background overlapping Quest Timers in Blizzard-only and
+  combined tracker views.
+
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-
-- Highlights the quest focused in Blizzard's Objective Tracker with a soft gold
-  background and accent in the party tracker, including during combat.
-- Adds Collapse tracker during combat in Display settings, enabled by default.
-  Keeps the compact header visible and restores the prior view after combat.
-  An existing saved off choice remains off.
-- Attempts to expand the compact docked tracker during combat show a warning
-  and queue expansion until combat ends, preserving the docked display mode.
-- Fixes blank Blizzard quest contents when reopening or restoring the tracker.
-- Adds a green [Ready] tag to combined quest headings when your quest and every
-  listed party participant are ready. Unknown or mixed progress stays unmarked.
-- Fixes the expanded tracker background overlapping the separate Quest Timers
-  panel in Blizzard-only and combined views, without moving the timer itself.
-- Preserves per-quest + You choices, player objective rows, shared styling,
-  quest-log sharing and guarded native refresh.
-
-Combat restoration and timer layout were verified in-game by the user before
-stable promotion. Discovery, membership checks and guarded native repair remain
-deferred until combat ends.
+Discovery, membership validation and guarded native repair remain deferred
+until combat ends.
 
 ## Submission references checked 2026-11-13
 
