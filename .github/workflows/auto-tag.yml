@@ -1,0 +1,44 @@
+name: Check and tag addon version
+
+on:
+  push:
+    branches: [beta, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-tag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check-and-tag:
+    if: github.ref == 'refs/heads/beta' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the exact pushed commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Lua test runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblua5.4-0
+      - name: Check addon syntax and regressions
+        run: python3 run_checks.py
+      - name: Check automatic tagging behavior
+        run: python3 -m unittest discover -s tests -p 'test_auto_tag.py' -v
+      - name: Publish missing version tag
+        env:
+          RELEASE_BRANCH: ${{ github.ref_name }}
+          RELEASE_COMMIT: ${{ github.sha }}
+          PREVIOUS_COMMIT: ${{ github.event.before }}
+        run: >-
+          python3 tools/auto_tag.py
+          --branch "$RELEASE_BRANCH"
+          --commit "$RELEASE_COMMIT"
+          --previous "$PREVIOUS_COMMIT"

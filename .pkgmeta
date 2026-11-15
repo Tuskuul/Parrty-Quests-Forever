@@ -3,3 +3,4 @@ manual-changelog: docs/RELEASE-1.1.6-beta2.txt
 ignore:
     - tests
     - run_checks.py
+    - tools/auto_tag.py
