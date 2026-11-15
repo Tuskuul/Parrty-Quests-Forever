@@ -14,13 +14,23 @@ local function frame(shown)
  function f:GetFrameRef(k) return self.refs[k] end
  function f:SetScript(k,v) self.scripts[k]=v end
  function f:RegisterEvent() end
+ function f:RegisterForClicks() end
+ function f:SetParent(v) self.parent=v end
+ function f:ClearAllPoints() end
+ function f:SetAllPoints(v) self.anchor=v end
+ function f:GetFrameLevel() return 1 end
+ function f:SetFrameLevel(v) self.level=v end
  function f:CallMethod(k,...)
   local before=restricted;restricted=false
   local result=self[k](self,...);restricted=before;return result
  end
  return f
 end
-CreateFrame=function() return frame() end
+CreateFrame=function(_,_,parent,template)
+ local f=frame();f.parent=parent
+ f.protected=template and template:find('SecureHandler',1,true)~=nil
+ return f
+end
 local function snippet(body,self,newstate,control)
  local before=restricted;restricted=true
  local result=assert(load('return function(self,newstate,control) '..body..' end'))()(self,newstate,control)
@@ -54,13 +64,20 @@ function A:ShouldShowPartyView() return true end
 A:SyncCombatAutoHide()
 local c=A.integration.combatController
 assert(c and module.wrapped.OnShow and A.partyTrackerButton.wrapped.OnClick,'secure setup incomplete')
+local main=A.integration.combatMainButton
+assert(main and main.wrapped.OnClick and main.anchor==native.Header.MinimizeButton,'native +/- has no dedicated secure click surface')
+assert(not main.shown and not native.Header.MinimizeButton.wrapped.OnClick,'outside-combat native button should remain untouched')
 local function state(v)
  c:SetAttribute('state-combat',v);snippet(c:GetAttribute('_onstate-combat'),c,v)
 end
 local function click(f)
+ if f==native.Header.MinimizeButton then f=main end
  local w=f.wrapped.OnClick;return snippet(w.body,f,nil,w.controller)
 end
 locked=true;state(1);A:SyncCombatAutoHide()
+assert(main.shown,'combat main control was not activated')
+-- Native handler replacement must not remove the independent combat control.
+native.Header.MinimizeButton:SetScript('OnClick',function() error('native handler ran in combat') end)
 assert(native.shown and not module.shown and native.Header.closed,'whole native tracker failed to collapse to header')
 assert(not A.sidebar.shown and not A.sidebar.trackerBackground.shown)
 assert(not native.closed and not A.db.trackerHidden,'visual collapse altered native/saved state')
@@ -89,6 +106,7 @@ click(native.Header.MinimizeButton)
 A:TogglePartyTracker()
 assert(A.integration.expandAfterCombat and not module.shown,'unsecured expansion did not use fallback queue')
 locked=false;state(0);A:SyncCombatAutoHide()
+assert(not main.shown,'combat overlay obscures native button outside combat')
 assert(native.shown and module.shown and not native.Header.closed and A.integration.restoreNativeLayout)
 A.db.trackerHidden=true;native.closed=true
 A:ApplyPendingTrackerRestore()
@@ -105,5 +123,6 @@ locked=true;state(1);locked=false;state(0);A:SyncCombatAutoHide()
 assert(native.closed and not module.shown,'automatic cycle expanded a previously collapsed native view')
 A.db.combatAutoHide=false;A:SyncCombatAutoHide();locked=true;state(1)
 assert(not c:GetAttribute('combat-collapsed'),'explicit option off was ignored')
+assert(not main.shown,'option off still intercepts native button clicks')
 print('PASS: restricted combat reopen/collapse, no protected addon-Lua writes or native rebuild, no empty modules, redraw/manual-open persistence, queued fallback and saved state/opt-out')
 

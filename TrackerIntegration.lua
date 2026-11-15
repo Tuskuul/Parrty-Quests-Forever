@@ -29,6 +29,11 @@ local combatApply=[[
             else frame:Hide() end
         end
     end
+    local main=self:GetFrameRef("main-control")
+    if main then
+        if newstate==1 and self:GetAttribute("enabled") then main:Show()
+        else main:Hide() end
+    end
     self:CallMethod("ApplyCombatVisual", collapsed and true or false)
 ]]
 local combatClick=[[
@@ -113,11 +118,31 @@ function A:PrepareCombatCollapse()
     local function button(frame,party)
         if not frame or s.combatButtons[frame] then return end
         if party then frame:SetAttribute("party-launcher",true)
-        else s.combatGuards[frame]=CreateFrame("Frame",nil,frame,"SecureHandlerBaseTemplate") end
+        end
         SecureHandlerWrapScript(frame,"OnClick",c,combatClick)
         s.combatButtons[frame]=true
     end
-    button(native and native.Header and native.Header.MinimizeButton,false)
+    local minimize=native and native.Header and native.Header.MinimizeButton
+    if minimize then
+        -- Use an addon-owned secure click surface, just like Party Quests.
+        -- The native control remains visible beneath it and is used normally
+        -- outside combat; native OnClick replacements cannot remove our handler.
+        local main=s.combatMainButton
+        if not main then
+            main=CreateFrame("Button","SimplyPartyQuestsCombatMinimize",minimize,"SecureHandlerClickTemplate")
+            main:RegisterForClicks("LeftButtonUp")
+            main:Hide();s.combatMainButton=main
+        end
+        if s.combatMainTarget~=minimize then
+            main:SetParent(minimize);main:ClearAllPoints();main:SetAllPoints(minimize)
+            main:SetFrameLevel((invoke(minimize.GetFrameLevel,minimize) or 0)+1)
+            main:SetScript("OnEnter",function() if minimize.LockHighlight then minimize:LockHighlight() end end)
+            main:SetScript("OnLeave",function() if minimize.UnlockHighlight then minimize:UnlockHighlight() end end)
+            s.combatMainTarget=minimize
+        end
+        c:SetFrameRef("main-control",main)
+        button(main,false)
+    end
     button(self.partyTrackerButton,true)
     if not s.combatDriverReady then
         RegisterStateDriver(c,"combat","[combat] 1; 0");s.combatDriverReady=true
