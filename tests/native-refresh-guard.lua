@@ -55,4 +55,11 @@ hidden=true;now=now+10;A:NativeTrackerTick()
 assert(A.nativeTracker.suspended and not A.db.nativeTrackerRepair,'unverifiable hidden result did not time out safely')
 reset('fix');visible='';queue();assert(requests==0,'already blank native pane was force-redrawn')
 reset('fix');logText='progress unavailable';queue();assert(requests==0,'unreadable progress forced a redraw')
+reset('fix');combat=true
+A.db.displayMode='blizzard';A.integration={attached=true}
+local invalidations=0
+function A:InvalidateTrackerIntegration() invalidations=invalidations+1 end
+A.nativeTrackerEvents.scripts.OnEvent(nil,'ADDON_ACTION_BLOCKED','SimplyPartyQuests','test expansion')
+assert(A.db.displayMode=='blizzard' and A.integration.blockedRestore and invalidations==1,'blocked action changed docked mode')
+assert(A.nativeTracker.suspended and not A.db.nativeTrackerRepair,'blocked action lost repair suspension')
 print('PASS: mismatch-only requests, result verification, duplicate suppression, blank/error pauses, busy/combat deferral and no progress guessing')

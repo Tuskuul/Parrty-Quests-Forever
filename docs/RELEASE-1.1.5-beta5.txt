@@ -1,0 +1,16 @@
+Party Quests Forever 1.1.5-beta5
+
+Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
+
+- Attempts to expand the compact tracker during combat now queue expansion
+  until combat ends instead of reopening protected native frames immediately.
+- Shows a standard in-combat warning when expansion is deferred.
+- Applies the queued expansion to the combined docked tracker after combat.
+- Blocked-action notifications no longer change the saved display mode to the
+  separate window; the current docked view is preserved for restoration.
+- Keeps combat auto-collapse, focused highlights, shared Ready tags and saved
+  per-quest progress expansion choices.
+
+If a previous build already switched your saved view to the separate window,
+use Dock beside tracker once (or /spq tracker) outside combat to select docking.
+No existing intentional separate-window preference is overridden.

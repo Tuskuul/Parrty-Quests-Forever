@@ -35,7 +35,11 @@ local combatClick=[[
     if control:GetAttribute("state-combat") == 1 and control:GetAttribute("enabled") then
         local collapsed=control:GetAttribute("combat-collapsed")
         if self:GetAttribute("party-launcher") and not collapsed then return end
-        collapsed=not collapsed
+        if collapsed then
+            control:CallMethod("QueueTrackerExpand")
+            return false
+        end
+        collapsed=true
         control:SetAttribute("combat-collapsed",collapsed)
         control:SetAttribute("manual-open",not collapsed)
         for i=1,control:GetAttribute("count") or 0 do
@@ -60,6 +64,7 @@ function A:PrepareCombatCollapse()
         c=CreateFrame("Frame",nil,UIParent,"SecureHandlerStateTemplate")
         s.combatController=c;s.combatModules={};s.combatButtons={};s.combatGuards={}
         c:SetAttribute("count",0)
+        c.QueueTrackerExpand=function() A:QueueTrackerExpand() end
         c.ApplyCombatVisual=function(_,collapsed)
             s.combatVisualCollapsed=collapsed
             if combat() then
@@ -300,7 +305,38 @@ end
 function A:ShouldShowPartyView()
     return self.demo or next(self.members)~=nil or self.soloOverride==true
 end
+function A:QueueTrackerExpand()
+    local s=self.integration
+    if combat() and UIErrorsFrame and type(UIErrorsFrame.AddMessage)=="function"
+        and (not s.expandNoticeAt or GetTime()-s.expandNoticeAt>=1) then
+        UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT or "You can't expand the tracker during combat.",1,0.1,0.1)
+        s.expandNoticeAt=GetTime()
+    end
+    self.integration.expandAfterCombat=true
+    self:InvalidateTrackerIntegration()
+end
+function A:ApplyPendingTrackerRestore()
+    local s=self.integration
+    if combat() or not self.db or self.db.displayMode~="blizzard" then return end
+    if not s.expandAfterCombat and not s.blockedRestore then return end
+    local native=ObjectiveTrackerFrame
+    if not native then return end
+    if s.expandAfterCombat then
+        self.db.trackerHidden=false;self.db.trackerCollapsed=false
+        if invoke(native.IsCollapsed,native)==true and type(native.SetCollapsed)=="function" then
+            local ok,err=pcall(native.SetCollapsed,native,false)
+            if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "queued tracker expansion failed";return end
+        end
+    end
+    s.expandAfterCombat=nil;s.blockedRestore=nil;s.restoreNativeLayout=true
+    self:InvalidateTrackerIntegration()
+end
 function A:TogglePartyTracker()
+    if combat() and self.db.displayMode=="blizzard" then
+        if self.integration.combatVisualCollapsed or self.integration.nativeCollapsed then
+            self:QueueTrackerExpand();return
+        end
+    end
     if self.db.displayMode=="blizzard" and not combat() then
         local native=ObjectiveTrackerFrame
         if native and invoke(native.IsCollapsed,native)==true then
@@ -968,6 +1004,7 @@ end
 function A:TrackerIntegrationTick()
     if not self.db then return end
     if self:SyncCombatAutoHide() then return end
+    self:ApplyPendingTrackerRestore()
     self:RestoreNativeExpandedLayout(ObjectiveTrackerFrame)
     self:UpdateTrackerQuestFocus()
     if combat() then

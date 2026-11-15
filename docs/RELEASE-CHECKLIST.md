@@ -1,12 +1,11 @@
-# Party Quests Forever 1.1.5-beta4 beta build record
+# Party Quests Forever 1.1.5-beta5 beta build record
 
-- Secure state handler hides native modules while keeping the main header visible.
-- Secure click wrappers reopen both columns from the compact Party Quests/main
-  controls during combat; normal Party Quests toggling remains when expanded.
-- Normal full native collapse/Update is not invoked from combat auto-collapse.
-- Regression executes the actual secure snippet bodies for state transitions,
-  module redraw suppression and click handling, using mocked frame handles.
-- Prior native collapsed state and opt-out remain covered.
-- Out-of-combat Party Quests clicks expand a genuinely collapsed native tracker.
+- Collapsed combat clicks queue a request without opening protected frames.
+- Queued expansion is applied out of combat to the existing docked tracker.
+- Addon block events preserve displayMode and schedule docked recovery.
+- Regression covers the secure click queue, post-combat expansion and blocked
+  notification mode preservation. Native repair still suspends on relevant blocks.
 - All 22 root Lua files parse; all 15 regression suites pass.
+- Existing popout preferences require explicit user docking rather than guessing.
+- Beta changes are published to beta; main remains stable 1.1.4.
 - In-game verification pending. No CurseForge publication performed.

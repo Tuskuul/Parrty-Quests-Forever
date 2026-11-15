@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5-beta4.zip
+- **Release file:** PartyQuestsForever_1.1.5-beta5.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,22 +63,22 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5-beta4
+Party Quests Forever 1.1.5-beta5
 
 Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
 
-- Combat auto-collapse now hides native module contents through secure handlers,
-  leaving the compact header visible with both quest columns folded away.
-- Clicking Party Quests on a fully collapsed tracker expands both columns.
-  In combat, the secure click handler can reopen the complete tracker.
-- While expanded, Party Quests continues to toggle only the party pane.
-- The main +/- button can also expand or collapse the combat view.
-- Native redraws respect the automatic collapsed state; prior visibility and
-  collapse choices are restored after combat.
-- Retains focused quest highlighting, shared green Ready tags and reopening fixes.
+- Attempts to expand the compact tracker during combat now queue expansion
+  until combat ends instead of reopening protected native frames immediately.
+- Shows a standard in-combat warning when expansion is deferred.
+- Applies the queued expansion to the combined docked tracker after combat.
+- Blocked-action notifications no longer change the saved display mode to the
+  separate window; the current docked view is preserved for restoration.
+- Keeps combat auto-collapse, focused highlights, shared Ready tags and saved
+  per-quest progress expansion choices.
 
-Collapse tracker during combat remains enabled by default and can be disabled
-in Display settings. In-game verification of these changes is pending.
+If a previous build already switched your saved view to the separate window,
+use Dock beside tracker once (or /spq tracker) outside combat to select docking.
+No existing intentional separate-window preference is overridden.
 
 ## Submission references checked 2026-11-13
 

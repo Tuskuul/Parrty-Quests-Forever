@@ -203,8 +203,9 @@ frame:SetScript("OnEvent",function(_,event,addon,action)
         if A.db then
             A.db.nativeTrackerRepair=false
             if A.integration and A.integration.attached then
-                A.db.displayMode="window";A.db.hidden=false
-                A.integration.lastError="addon block notification; integration disabled"
+                -- A blocked combat click must not permanently change the chosen view.
+                A.integration.lastError="addon block notification; docked restore queued"
+                A.integration.blockedRestore=true
                 A:InvalidateTrackerIntegration()
             end
         end;s.due=nil;s.verify=nil;s.suspended=true

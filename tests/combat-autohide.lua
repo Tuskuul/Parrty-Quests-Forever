@@ -57,14 +57,17 @@ assert(native.shown and not module.shown and native.Header.closed,'whole native 
 assert(not A.sidebar.shown and not A.sidebar.trackerBackground.shown)
 assert(not native.closed and not A.db.trackerHidden,'visual collapse altered native/saved state')
 assert(click(A.partyTrackerButton)==false,'collapsed Party Quests click was not handled')
-assert(module.shown and A.sidebar.shown and A.sidebar.trackerBackground.shown and not native.Header.closed,'Party Quests failed to expand both columns in combat')
-assert(click(native.Header.MinimizeButton)==false and not module.shown,'main button did not collapse both columns')
+assert(not module.shown and not A.sidebar.shown and A.integration.expandAfterCombat,'combat click must queue expansion without reopening frames')
+assert(click(native.Header.MinimizeButton)==false and not module.shown,'main expansion did not remain safely queued')
 -- A native redraw trying to show its module must respect the secure collapsed state.
 module.shown=true
 snippet(module.wrapped.OnShow.body,module,nil,c)
 assert(not module.shown,'native redraw resurrected combat-collapsed module')
 locked=false;state(0);A:SyncCombatAutoHide()
 assert(native.shown and module.shown and not native.Header.closed and A.integration.restoreNativeLayout)
+A.db.trackerHidden=true;native.closed=true
+A:ApplyPendingTrackerRestore()
+assert(not A.integration.expandAfterCombat and not native.closed and not A.db.trackerHidden,'queued post-combat docked expansion failed')
 -- Outside combat the party launcher must expand an actually collapsed native view.
 native.closed=true;A.db.trackerHidden=true
 function A:SetViewShown(v) self.db.trackerHidden=not v end

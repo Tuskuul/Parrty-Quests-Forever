@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.5-beta4
-BETA: secure whole-tracker combat collapse and compact Party Quests button expansion.
+Party Quests Forever 1.1.5-beta5
+BETA: combat expansion waits until combat ends; blocked actions preserve docked mode.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
