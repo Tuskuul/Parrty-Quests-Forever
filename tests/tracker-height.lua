@@ -29,6 +29,6 @@ configured=500;f.heightLimit=A:TrackerSidebarHeightLimit(tracker);A:SizeTrackerS
 assert(f.height==500 and f.maxScroll>0,'new Edit Mode cap was not applied')
 f.scroll.position=900;f.contentHeight=1;f.headerOffset=0;A:SizeTrackerSidebar()
 assert(f.height==45 and f.maxScroll==0 and f.scroll.position==0,'empty view did not shrink/reset scrolling')
-A.db.trackerCollapsed=true;A:SizeTrackerSidebar()
+f.viewCollapsed=true;A:SizeTrackerSidebar()
 assert(f.height==30 and not f.hint.shown,'collapsed header did not stay compact')
 print('PASS: shared Edit Mode height cap, live changes, small/empty contraction, overflow scrolling, legacy setting ignored and fallbacks')

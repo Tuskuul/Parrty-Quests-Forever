@@ -115,8 +115,10 @@ function A:ShouldShowPartyView()
     return self.demo or next(self.members)~=nil or self.soloOverride==true
 end
 function A:TogglePartyTracker()
-    local frame=self.db.displayMode=="blizzard" and self.sidebar or self.window
-    self:SetViewShown(not (frame and frame:IsShown()))
+    local frame=self.window
+    local shown=self.db.displayMode=="blizzard" and not self.db.trackerHidden
+        or self.db.displayMode~="blizzard" and frame and frame:IsShown()
+    self:SetViewShown(not shown)
     self:TrackerIntegrationTick()
 end
 function A:EnsurePartyTrackerButton(tracker)
@@ -145,19 +147,76 @@ function A:EnsurePartyTrackerButton(tracker)
 end
 function A:TrackerEntryClick(row,button)
     if row.kind=="quest" then self.shareProbeSelected=row.id end
-    if combat() then return end
-    if IsShiftKeyDown and IsShiftKeyDown() then self:RefreshParty();return end
+    if IsShiftKeyDown and IsShiftKeyDown() then
+        if not combat() then self:RefreshParty() end
+        return
+    end
     if row.kind=="member" then
         self.db.trackerMembersClosed=self.db.trackerMembersClosed or {}
         self.db.trackerMembersClosed[row.key]=not self.db.trackerMembersClosed[row.key]
     elseif row.kind=="group" then self.db.trackerGroupsClosed[row.key]=not self.db.trackerGroupsClosed[row.key]
     elseif row.kind=="quest" then
-        if button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
+        if not combat() and button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
             QuestMapFrame_OpenToQuestDetails(row.id);return
         end
         self.db.questExpanded[row.key]=not self.db.questExpanded[row.key]
     end
-    self:Render();self:InvalidateTrackerIntegration()
+    self:InvalidateTrackerIntegration()
+    if combat() then
+        self:RenderCombatTrackerSidebar()
+        return
+    end
+    self:Render()
+end
+function A:RenderCombatTrackerSidebar()
+    local f=self.sidebar
+    if not f or not f.scroll then return end
+    local ok,err=pcall(function()
+        -- Rebuild even after a hide/collapse; text-only ticks cannot restore rows.
+        local entries,count=self:BuildTrackerEntries()
+        self:RenderTrackerSidebar(entries,count)
+        f.scroll:SetShown(not f.viewCollapsed)
+        f.child:Show()
+        self:ResizeCombatTrackerBackground()
+        self.integration.entries=entries;self.integration.memberCount=count
+    end)
+    if ok then self.integration.lastError=nil
+    else
+        self.integration.lastError=self.public(err,"string") and err:sub(1,180) or "combat expansion failed"
+        print("Party Quests Forever: combat expansion failed; layout will retry after combat. /spq report for details.")
+    end
+end
+function A:RefreshCombatTrackerPane()
+    if not combat() or self.db.displayMode~="blizzard" then return end
+    local f,s=self.sidebar,self.integration
+    if not f then return end
+    local visible=not s.nativeCollapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    f.viewCollapsed=not s.nativeVisible and not not self.db.trackerCollapsed
+    f:SetShown(visible)
+    if visible then self:RenderCombatTrackerSidebar() end
+    self:ResizeCombatTrackerBackground()
+    self:InvalidateTrackerIntegration()
+end
+function A:ResizeCombatTrackerBackground()
+    local f=self.sidebar
+    if not f or not f.trackerBackground then return end
+    local bounds=f.combatBackgroundBounds
+    if not bounds then return end
+    local native=self.integration.nativeBackdrop and bounds.native
+    local party=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    local background=f.trackerBackground
+    if self.integration.nativeCollapsed or (not native and not party) then background:Hide();return end
+    local left,right,top,bottom=0,f:GetWidth(),0,f:GetHeight()
+    if native then
+        if party then
+            left=math.min(left,native.left);right=math.max(right,native.right)
+            top=math.min(top,native.top);bottom=math.max(bottom,native.bottom)
+        else left,right,top,bottom=native.left,native.right,native.top,native.bottom end
+    end
+    f.joinedExpandedHeight=bottom-top
+    background:ClearAllPoints();background:SetPoint("TOPLEFT",f,"TOPLEFT",left,-top)
+    background:SetWidth(right-left);background:SetHeight(f.joinedExpandedHeight);background:Show()
+    f.backgroundJoinSignature=nil
 end
 local function applyFont(f,role)
     f:SetFontObject(role=="header" and (ObjectiveTrackerHeaderFont or GameFontNormal) or (ObjectiveTrackerLineFont or GameFontHighlightSmall))
@@ -171,11 +230,20 @@ function A:InitTrackerSidebar()
     if self.sidebar then return end
     local f=CreateFrame("Frame","SimplyPartyQuestsSidebar",UIParent,"BackdropTemplate")
     self.sidebar=f;f:SetSize(420,540);f:SetClampedToScreen(true);f:SetFrameStrata("MEDIUM")
-    -- Keep the party sidebar background strictly inside our own frame.
-    -- A simple texture avoids NineSlice edge bleed into Blizzard's tracker.
-    f.trackerBackground=f:CreateTexture(nil,"BACKGROUND")
-    f.trackerBackground:SetAllPoints(f)
-    f.trackerBackground:SetColorTexture(0,0,0,1)
+    -- A sibling backdrop spans both columns, so its alpha is applied once.
+    -- It stays visible behind the main header when the content frame is hidden.
+    f.trackerBackground=CreateFrame("Frame",nil,UIParent)
+    f.trackerBackground:SetFrameStrata("LOW")
+    local art
+    if NineSliceUtil and type(NineSliceUtil.ApplyLayoutByName)=="function" then
+        art=CreateFrame("Frame",nil,f.trackerBackground,"NineSlicePanelTemplate")
+        NineSliceUtil.ApplyLayoutByName(art,"UniqueCornersLayout","common-opacity-background")
+    else
+        art=CreateFrame("Frame",nil,f.trackerBackground)
+        art.fill=art:CreateTexture(nil,"BACKGROUND");art.fill:SetAllPoints(art);art.fill:SetColorTexture(0,0,0,1)
+    end
+    art:SetAllPoints(f.trackerBackground);f.trackerBackground.art=art
+    f.trackerBackground:Hide()
     f.trackerBackground:SetAlpha(0)
     f.title=text(f,"header",nativeColor("Header"));f.title:SetPoint("TOPLEFT",7,-38);f.title:SetText("Party Quests")
     local headerArt=f:CreateTexture(nil,"BACKGROUND");f.headerArt=headerArt
@@ -190,8 +258,16 @@ function A:InitTrackerSidebar()
         b:SetScript("OnLeave",function() labelFont:SetTextColor(unpack(nativeColor("Header"))) end)
         return b
     end
-    -- Blizzard's native tracker minimize button is the only master collapse control.
-    f.settings=button("Settings",56,function() A:OpenSettings() end);f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-38)
+    f.collapse=button("-",18,function() A:SetViewCollapsed(not A.db.trackerCollapsed);A:SyncSettings() end)
+    f.collapse.caption:Hide()
+    f.collapse.normal=f.collapse:CreateTexture(nil,"ARTWORK");f.collapse.normal:SetAllPoints(f.collapse)
+    f.collapse.pushed=f.collapse:CreateTexture(nil,"ARTWORK");f.collapse.pushed:SetAllPoints(f.collapse)
+    f.collapse:SetNormalTexture(f.collapse.normal);f.collapse:SetPushedTexture(f.collapse.pushed)
+    local glow=f.collapse:CreateTexture(nil,"HIGHLIGHT");glow:SetAtlas("ui-questtrackerbutton-yellow-highlight");glow:SetAllPoints(f.collapse)
+    f.collapse:SetHighlightTexture(glow)
+    f.collapse:SetSize(16,16);f.collapse:SetPoint("TOPRIGHT",-4,-38)
+    f.settings=button("Settings",56,function() A:OpenSettings() end)
+    f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-6,-35)
     f.refresh=button("Refresh",54,function() A:RefreshParty() end);f.refresh:SetPoint("RIGHT",f.settings,"LEFT",-6,0)
     f.share=button("Share",42,function()
         local draft=A.questLogShareDraft;A.questLogShareDraft=nil
@@ -216,6 +292,7 @@ function A:InitTrackerSidebar()
     f.hint=text(f,"line",nativeColor("Normal"));f.hint:SetPoint("BOTTOMLEFT",4,0);f.hint:SetText("Mouse wheel to scroll")
     f.scroll=CreateFrame("ScrollFrame",nil,f)
     f.scroll:SetPoint("TOPLEFT",7,-68)
+    f.scroll:SetClipsChildren(true)
     f.scroll:EnableMouseWheel(true)
     f.scroll:SetScript("OnMouseWheel",function(_,delta)
         local max=f.maxScroll or 0
@@ -226,7 +303,7 @@ function A:InitTrackerSidebar()
 end
 function A:SetTrackerSidebarHeaderLayout(nativeVisible)
     local f=self.sidebar
-    local offset=nativeVisible and 32 or 0
+    local offset=nativeVisible and 38 or 0
     if f.headerOffset==offset then return end
     f.headerOffset=offset
     -- Only reserve an All Objectives row when Blizzard actually displays it.
@@ -234,7 +311,10 @@ function A:SetTrackerSidebarHeaderLayout(nativeVisible)
     f.headerArt:ClearAllPoints()
     f.headerArt:SetPoint("TOPLEFT",f,"TOPLEFT",0,-offset)
     f.headerArt:SetPoint("TOPRIGHT",f,"TOPRIGHT",0,-offset)
-    f.settings:ClearAllPoints();f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-6-offset)
+    f.collapse:ClearAllPoints();f.collapse:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-6-offset)
+    if f.settings then
+        f.settings:ClearAllPoints();f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",nativeVisible and -6 or -28,-3-offset)
+    end
     f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-36-offset)
     self.integration.dirty=true
 end
@@ -316,13 +396,13 @@ function A:SizeTrackerSidebar()
     local f=self.sidebar
     local limit=f.heightLimit or 420
     local content=f.contentHeight or 1
-    local padding=44+(f.headerOffset or 32)
+    local padding=44+(f.headerOffset or 38)
     local overflow=content+padding>limit
     local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
     f.scroll:SetSize(f:GetWidth()-6,math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
-    f.hint:SetShown(overflow)
-    f:SetHeight(math.min(limit,content+padding+(overflow and 14 or 0)))
+    f.hint:SetShown(overflow and not f.viewCollapsed)
+    f:SetHeight(f.viewCollapsed and (padding-14) or math.min(limit,content+padding+(overflow and 14 or 0)))
     local offset=f.scroll:GetVerticalScroll() or 0
     if offset>f.maxScroll then f.scroll:SetVerticalScroll(f.maxScroll) end
 end
@@ -332,6 +412,7 @@ function A:RestoreJoinedTrackerHeader()
     local saved=self.integration.joinedHeader
     if not saved then return end
     for _,item in ipairs(saved.items) do
+        if item.justifyH then item.region:SetJustifyH(item.justifyH) end
         item.region:ClearAllPoints()
         for _,point in ipairs(item.points) do item.region:SetPoint(unpack(point)) end
     end
@@ -349,20 +430,33 @@ function A:JoinTrackerHeader(tracker,enabled)
     local function save(region)
         local points={}
         for i=1,region:GetNumPoints() do points[#points+1]={region:GetPoint(i)} end
-        state.items[#state.items+1]={region=region,points=points}
+        state.items[#state.items+1]={region=region,points=points,justifyH=invoke(region.GetJustifyH,region)}
         region:ClearAllPoints()
     end
     local left=side=="left" and self.sidebar or header
     local right=side=="right" and self.sidebar or header
     if background then
         save(background)
-        background:SetPoint("TOPLEFT",left,"TOPLEFT",0,0)
-        background:SetPoint("BOTTOMRIGHT",right,"TOPRIGHT",0,-26)
+        background:SetPoint("TOPLEFT",left,"TOPLEFT",-24,0)
+        background:SetPoint("BOTTOMRIGHT",right,"TOPRIGHT",8,-32)
     end
     if title then
-        save(title);title:SetPoint("LEFT",left,"TOPLEFT",7,-13)
+        save(title)
+        state.title=title;state.background=background;state.left=left
     end
     self.integration.joinedHeader=state
+    self:PositionJoinedTrackerTitle(invoke(tracker.IsCollapsed,tracker)==true)
+end
+function A:PositionJoinedTrackerTitle(collapsed)
+    local state=self.integration.joinedHeader
+    if not state or not state.title then return end
+    local centered=not collapsed and state.background~=nil
+    if state.titleCentered==centered then return end
+    state.title:ClearAllPoints()
+    if type(state.title.SetJustifyH)=="function" then state.title:SetJustifyH(centered and "CENTER" or "LEFT") end
+    if centered then state.title:SetPoint("CENTER",state.background,"CENTER",0,0)
+    else state.title:SetPoint("LEFT",state.left,"TOPLEFT",32,-16) end
+    state.titleCentered=centered
 end
 function A:UpdateTrackerSidebarCombat()
     local f,s=self.sidebar,self.integration
@@ -396,11 +490,144 @@ function A:SyncTrackerSidebarOpacity(tracker)
     -- ObjectiveTrackerManager:SetOpacity, not the whole frame's text alpha.
     local manager=ObjectiveTrackerManager
     local alpha=self.readable(manager) and manager.backgroundAlpha or nil
-    if not self.public(alpha,"number") or alpha~=alpha then alpha=0.28 end
-    alpha=math.max(0.12,math.min(0.38,alpha))
+    if not self.public(alpha,"number") then
+        local background=tracker and self.readable(tracker.NineSlice) and tracker.NineSlice
+        alpha=background and invoke(background.GetAlpha,background) or nil
+    end
+    if not self.public(alpha,"number") or alpha~=alpha then return end
+    alpha=math.max(0,math.min(1,alpha))
     if f.trackerBackgroundAlpha~=alpha then
         f.trackerBackground:SetAlpha(alpha);f.trackerBackgroundAlpha=alpha
     end
+end
+-- Only visual regions are suppressed; native quest layout/update code is untouched.
+function A:RestoreTrackerJoinVisuals()
+    local s=self.integration
+    local saved=s.nativeBackdrop;s.nativeBackdrop=nil
+    if saved and saved.shown then saved.frame:Show() end
+    local buttons=s.moduleButtons;s.moduleButtons=nil
+    if buttons then
+        for button,state in pairs(buttons) do
+            if state.shown then button:Show() end
+        end
+    end
+    if self.sidebar and self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+end
+function A:SetJoinedCollapseVisual(collapsed)
+    self:PositionJoinedTrackerTitle(collapsed)
+    self.integration.nativeCollapsed=not not collapsed
+    local f=self.sidebar
+    if not f or not self.integration.nativeBackdrop then return end
+    f:SetShown(not collapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView())
+    if f.trackerBackground and f.joinedExpandedHeight then
+        f.trackerBackground:SetHeight(collapsed and 26 or f.joinedExpandedHeight)
+        -- The primary header already supplies its own art when fully collapsed.
+        f.trackerBackground:SetShown(not collapsed)
+    end
+    if combat() then self:RefreshCombatTrackerPane() end
+    self:InvalidateTrackerIntegration()
+end
+function A:PrepareTrackerJoinVisuals(tracker)
+    local s=self.integration
+    local native=self.readable(tracker.NineSlice) and tracker.NineSlice
+    if s.nativeBackdrop and s.nativeBackdrop.frame~=native then self:RestoreTrackerJoinVisuals() end
+    if native and not s.nativeBackdrop then
+        s.nativeBackdrop={frame=native,shown=native:IsShown()}
+        s.backdropHooks=s.backdropHooks or {}
+        if not s.backdropHooks[native] then
+            native:HookScript("OnShow",function(frame)
+                local state=A.integration.nativeBackdrop
+                if state and state.frame==frame then state.shown=true;frame:Hide() end
+            end)
+            s.backdropHooks[native]=true
+        end
+    end
+    if native then native:Hide() end
+    s.moduleButtons=s.moduleButtons or {};s.moduleButtonHooks=s.moduleButtonHooks or {}
+    local seen={}
+    local function prepareModule(module)
+        if not self.readable(module) or seen[module] then return end
+        seen[module]=true
+        local header=self.readable(module.Header) and module.Header
+        local button=header and self.readable(header.MinimizeButton) and header.MinimizeButton
+        if button and not s.moduleButtons[button] then
+            s.moduleButtons[button]={shown=button:IsShown()}
+            if not s.moduleButtonHooks[button] then
+                button:HookScript("OnShow",function(frame)
+                    local state=A.integration.moduleButtons and A.integration.moduleButtons[frame]
+                    if state then state.shown=true;frame:Hide() end
+                end)
+                s.moduleButtonHooks[button]=true
+            end
+            -- An independently collapsed module must not stay stuck behind a hidden button.
+            if invoke(module.IsCollapsed,module)==true then invoke(module.SetCollapsed,module,false) end
+        end
+        if button then button:Hide() end
+    end
+    -- Use the container's iterator, with its list as a fallback for client variants.
+    invoke(tracker.ForEachModule,tracker,prepareModule)
+    for _,module in pairs(tracker.modules or {}) do prepareModule(module) end
+    s.collapseHooks=s.collapseHooks or {}
+    if not s.collapseHooks[tracker] and type(hooksecurefunc)=="function" and type(tracker.SetCollapsed)=="function" then
+        hooksecurefunc(tracker,"SetCollapsed",function(_,collapsed) A:SetJoinedCollapseVisual(collapsed) end)
+        s.collapseHooks[tracker]=true
+    end
+end
+function A:SyncTrackerBackgroundJoin(tracker,nativeVisible)
+    if combat() then return end
+    local f=self.sidebar
+    if not f or not f.trackerBackground then return end
+    local partyVisible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    if self.db.displayMode~="blizzard" or (not nativeVisible and not partyVisible) then
+        self:RestoreTrackerJoinVisuals();return
+    end
+    local background=f.trackerBackground
+    local width,height=f:GetWidth(),f:GetHeight()
+    local left,right,top,bottom=0,width,0,height
+    local nativeBounds
+    local native=nativeVisible and tracker and self.readable(tracker.NineSlice) and tracker.NineSlice
+    local function number(value) return self.public(value,"number") and value==value and math.abs(value)<math.huge end
+    local scale=invoke(f.GetEffectiveScale,f)
+    if native then
+        local nativeScale=invoke(native.GetEffectiveScale,native)
+        local ownLeft,ownTop=invoke(f.GetLeft,f),invoke(f.GetTop,f)
+        local l,r,t,b=invoke(native.GetLeft,native),invoke(native.GetRight,native),invoke(native.GetTop,native),invoke(native.GetBottom,native)
+        if not (number(scale) and scale>0 and number(nativeScale) and nativeScale>0
+            and number(ownLeft) and number(ownTop) and number(l) and number(r) and number(t) and number(b)) then
+            -- Do not suppress native art before we can replace it with valid bounds.
+            self:RestoreTrackerJoinVisuals();return
+        end
+        local nl=(l*nativeScale-ownLeft*scale)/scale
+        local nr=(r*nativeScale-ownLeft*scale)/scale
+        local nt=(ownTop*scale-t*nativeScale)/scale
+        local nb=(ownTop*scale-b*nativeScale)/scale
+        nativeBounds={left=nl,right=nr,top=nt,bottom=nb}
+        if partyVisible then
+            left=math.min(left,nl);right=math.max(right,nr)
+            top=math.min(top,nt);bottom=math.max(bottom,nb)
+        else left,right,top,bottom=nl,nr,nt,nb end
+        -- Keep the one-button policy even when Party Quests is toggled off.
+        self:PrepareTrackerJoinVisuals(tracker)
+    elseif self.integration.nativeBackdrop then self:RestoreTrackerJoinVisuals() end
+    local parentScale=UIParent and invoke(UIParent.GetEffectiveScale,UIParent)
+    if number(scale) and number(parentScale) and parentScale>0 then background:SetScale(scale/parentScale) end
+    -- Frame levels cannot put a MEDIUM-strata backdrop below Blizzard's LOW text.
+    background:SetFrameStrata(invoke(tracker.GetFrameStrata,tracker) or "LOW")
+    background:SetFrameLevel(math.max(0,tracker:GetFrameLevel()-1))
+    if background.art then background.art:SetFrameLevel(background:GetFrameLevel()) end
+    local collapsed=nativeVisible and invoke(tracker.IsCollapsed,tracker)==true
+    self.integration.nativeCollapsed=collapsed
+    f.combatBackgroundBounds={native=nativeBounds}
+    f.joinedExpandedHeight=bottom-top
+    local drawHeight=collapsed and 26 or f.joinedExpandedHeight
+    local signature=table.concat({left,right,top,drawHeight},":")
+    if f.backgroundJoinSignature~=signature then
+        background:ClearAllPoints();background:SetPoint("TOPLEFT",f,"TOPLEFT",left,-top)
+        background:SetWidth(right-left);background:SetHeight(drawHeight)
+        f.backgroundJoinSignature=signature
+    end
+    -- Avoid a second rounded panel protruding beyond the primary header art.
+    background:SetShown(not collapsed)
 end
 function A:SyncTrackerSidebarAppearance(tracker)
     if combat() then return end
@@ -444,7 +671,7 @@ function A:SyncTrackerSidebarAppearance(tracker)
     end
     refresh(f.title,"header","Header");refresh(f.partyOnlyTitle,"header","Header")
     refresh(f.hint,"line","Normal")
-    for _,name in ipairs({"share","refresh","settings"}) do
+    for _,name in ipairs({"share","refresh","settings","collapse"}) do
         local button=f[name]
         if button then refresh(button.caption,"line","Header") end
     end
@@ -471,6 +698,7 @@ function A:TrackerIntegrationTick()
     elseif self.partyTrackerButton then self.partyTrackerButton:Hide() end
     if self.db.displayMode~="blizzard" then
         self:RestoreJoinedTrackerHeader()
+        self:RestoreTrackerJoinVisuals()
         if self.sidebar then self.sidebar:Hide() end
         s.attached=false;s.status="pop-out window"
         if self.window then self.window:SetShown(not self.db.hidden and self:ShouldShowPartyView()) end
@@ -479,6 +707,7 @@ function A:TrackerIntegrationTick()
     local tracker=ObjectiveTrackerFrame
     if not tracker then
         self:RestoreJoinedTrackerHeader()
+        self:RestoreTrackerJoinVisuals()
         if self.sidebar then self.sidebar:Hide() end
         s.attached=false;s.status="Blizzard tracker unavailable; using pop-out"
         if self.window then self.window:SetShown(not self.db.hidden and not self.db.trackerHidden and self:ShouldShowPartyView()) end
@@ -506,8 +735,13 @@ function A:TrackerIntegrationTick()
         s.anchor=anchor;s.side=side;s.nativeVisible=nativeVisible;s.dirty=true
     end
     self:SetTrackerSidebarHeaderLayout(nativeVisible)
+    local collapsed=not nativeVisible and not not self.db.trackerCollapsed
+    f.viewCollapsed=collapsed
     if f:GetWidth()~=width or f.heightLimit~=height then f:SetWidth(width);f.heightLimit=height;s.dirty=true end
-    f.scroll:SetShown(true)
+    f.scroll:SetShown(not collapsed)
+    f.collapse:SetShown(not nativeVisible)
+    local collapseAtlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
+    f.collapse.normal:SetAtlas(collapseAtlas);f.collapse.pushed:SetAtlas(collapseAtlas.."-pressed")
     self:SizeTrackerSidebar()
     local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     self:JoinTrackerHeader(tracker,visible and nativeVisible)
@@ -524,9 +758,10 @@ function A:TrackerIntegrationTick()
         else
             s.lastError=self.public(err,"string") and err:sub(1,180) or "unreadable error"
             s.status="sidebar layout failed; using pop-out";self.db.displayMode="window"
-            f:Hide();self:RestoreJoinedTrackerHeader();self.db.hidden=false;self.window:Show();s.attached=false
+            f:Hide();self:RestoreJoinedTrackerHeader();self:RestoreTrackerJoinVisuals();self.db.hidden=false;self.window:Show();s.attached=false
         end
     end
+    self:SyncTrackerBackgroundJoin(tracker,nativeVisible)
 end
 local events=CreateFrame("Frame")
 A.integrationEvents=events

@@ -53,11 +53,21 @@ assert(f.point[1]=='TOPLEFT' and f.point[2]==ObjectiveTrackerFrame and f.point[3
 assert(not joined and f.partyOnlyHeader==nil,'synthetic All Objectives header remained')
 ObjectiveTrackerFrame.shown=true
 A:TrackerIntegrationTick()
-assert(f.headerOffset==32 and f.title.point[5]==-38,'normal sidebar spacing was not restored')
+assert(f.headerOffset==38 and f.title.point[5]==-44,'normal sidebar spacing was not restored')
 assert(f.point[1]=='TOPRIGHT' and f.point[2]==ObjectiveTrackerFrame.Header and f.point[3]=='TOPLEFT','normal left attachment was not restored')
 assert(joined)
+A.db.trackerCollapsed=true
+ObjectiveTrackerFrame.IsCollapsed=function() return false end
+A:TrackerIntegrationTick()
+assert(f.scroll.shown and not f.collapse.shown and not f.viewCollapsed,'legacy party collapse overrode the main tracker')
+ObjectiveTrackerFrame.IsCollapsed=function() return true end
+A:TrackerIntegrationTick()
+assert(not f.shown and not f.collapse.shown,'main collapse left party content or a duplicate button')
+ObjectiveTrackerFrame.IsCollapsed=function() return false end
+A:TrackerIntegrationTick();assert(f.shown and f.scroll.shown,'main expand did not restore party')
 ObjectiveTrackerFrame.Header.shown=false
 A:TrackerIntegrationTick()
 assert(f.headerOffset==0 and not joined,'hidden native header did not return to compact mode')
+assert(f.collapse.shown and not f.scroll.shown and f.viewCollapsed,'party-only collapse fallback did not retain a single control')
 assert(A.db.displayMode=='blizzard' and A.db.trackerSide=='left','empty state changed saved preferences')
 print('PASS: empty/offline/synced states, no empty sections or fake heading, compact standalone anchoring and restored native sidebar')

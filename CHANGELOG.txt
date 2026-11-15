@@ -1,3 +1,62 @@
+Party Quests Forever 1.1.3
+
+- Centers All Objectives across the joined header while expanded.
+- Uses one continuous background for party and Blizzard quests, following
+  Edit Mode opacity, appearance, scale and height.
+- Uses Blizzard's main collapse button for both columns and removes redundant
+  module collapse controls; party-only views retain a fallback control.
+- Fixes native-only collapse, empty backgrounds and collapsed header protrusion.
+- Allows player, zone and quest expansion/collapse during combat from known data.
+- Makes the Party Quests button work during combat and restores content when
+  reopening the pane or expanding the whole tracker.
+- Keeps bright green Ready labels, guarded native refresh and quest-log sharing.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Discovery, membership validation and native tracker repair wait until combat ends.
+
+Party Quests Forever 1.1.3-beta2
+
+Combat-expansion testing revision:
+- Party Quests button now applies visibility immediately during combat.
+- Reopening after main collapse or party toggle rebuilds rows and restores the
+  scroll viewport during combat; shared backdrop follows party visibility.
+- Player, zone and quest sections can expand/collapse during combat, including
+  details not previously opened. Reuses known quest data and creates rows as needed.
+- Clicks reflow only the addon panel and resize its shared background using cached
+  native bounds. Automatic combat updates retain their existing text-only path.
+- Discovery, native repair and native layout remain deferred until combat ends.
+
+Collapse-fix testing revision:
+- Extends joined header artwork 24 units left to fill the leading transparent
+  inset, while preserving title and control positions.
+- Joined title bar is slightly taller/wider to contain its controls; All Objectives
+  has a larger left inset and is vertically aligned with the buttons.
+- Fully collapsed tracker shows only the native header art, without a protruding
+  rounded backdrop. Expanding restores the shared background automatically.
+- Keeps secondary native collapse buttons hidden when Party Quests is closed.
+- Main collapse shrinks the background to the header in joined and native-only views.
+- Toggling Party Quests while collapsed preserves the main collapse state.
+- Shared background now draws behind Blizzard text at the native frame strata.
+- Retains full Edit Mode opacity, shared height cap and green Ready text.
+
+- Uses one continuous Blizzard-style background across both columns, with
+  one opacity layer and a shared lower edge instead of a visible center seam.
+- Blizzard's main collapse button collapses both columns to the header.
+- Removes the separate party and native module collapse buttons while joined.
+  Member, zone and individual quest expanders remain available.
+- The Party Quests toggle changes panel visibility independently of collapse.
+- Empty native trackers retain a compact party-only panel with one collapse button.
+- Restores the native background and module buttons when the panel is detached.
+- Clips party text to its scrolling column.
+
+Party Quests Forever 1.1.3-beta1
+
+- Fixes the dark overlap strip between party and Blizzard tracker backgrounds.
+- Clips only the overlapping backdrop area, retaining full background coverage
+  above or below the native pane when their heights differ.
+- Follows tracker positioning, side changes, resizing and UI scale.
+- Keeps existing opacity behavior and does not reposition Blizzard's backdrop.
+
 Party Quests Forever 1.1.2
 
 - Party pane shrinks for short or empty lists and expands up to the Objective

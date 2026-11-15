@@ -1,0 +1,15 @@
+Party Quests Forever 1.1.3
+
+- Centers All Objectives across the joined header while expanded.
+- Uses one continuous background for party and Blizzard quests, following
+  Edit Mode opacity, appearance, scale and height.
+- Uses Blizzard's main collapse button for both columns and removes redundant
+  module collapse controls; party-only views retain a fallback control.
+- Fixes native-only collapse, empty backgrounds and collapsed header protrusion.
+- Allows player, zone and quest expansion/collapse during combat from known data.
+- Makes the Party Quests button work during combat and restores content when
+  reopening the pane or expanding the whole tracker.
+- Keeps bright green Ready labels, guarded native refresh and quest-log sharing.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Discovery, membership validation and native tracker repair wait until combat ends.

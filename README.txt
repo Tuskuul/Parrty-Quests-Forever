@@ -1,4 +1,5 @@
-Party Quests Forever 1.1.2
+Party Quests Forever 1.1.3
+Release 1.1.3: shared tracker background, centered expanded heading and combat expansion.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -18,6 +19,9 @@ QUICK START
 The tracker sidebar background follows Blizzard Edit Mode's Objective Tracker
 opacity setting and its live fonts, text size, outlines, shadows, colors and
 scale. Appearance changes apply outside combat without needing a reload.
+Joined columns use one background. Blizzard's main collapse button controls
+both columns; Party Quests toggles the party panel. Player/zone/quest expanders
+remain available. An empty native tracker uses one compact party-only control.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
 Choose a left/right tracker sidebar or the separate window. Settings contain
@@ -30,8 +34,9 @@ and Shift-click refreshes. Drag the minimap button to reposition it.
 
 QUEST INFORMATION
 Progress queries continue during combat. Existing sidebar rows update their
-counts and Ready text; sidebar layout changes and new rows wait until combat
-ends. Discovery, membership checks and native tracker repair also wait. Client
+counts and Ready text. Player, zone and quest expansion, party visibility and
+reopening work during combat using known data, creating rows when needed.
+Discovery, membership checks and native tracker repair still wait. Client
 restrictions can still limit the information available during combat.
 Ready tags use explicit completion flags or, for native party observations,
 complete reported progress matching every known requirement. Unknown or partial

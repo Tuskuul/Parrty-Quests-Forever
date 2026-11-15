@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.2_CurseForge_Release.zip
+- **Release file:** PartyQuestsForever_1.1.3_CurseForge_Release.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,18 +63,21 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-- Party pane shrinks for short or empty lists and expands up to the Objective
-  Tracker height set in Blizzard Edit Mode. Longer lists scroll.
-- Removed separate Shorter/Taller controls so both panes share one height limit.
-- Fixed missing Ready status in synced party quest logs.
-- Ready tags and Ready for turn-in text now use bright green.
-- Guarded native refresh defaults on for new/unset preferences; explicit off
-  settings remain saved. Only confirmed numeric mismatches request a redraw.
-- Redraws wait until out of combat and until the native tracker is ready.
-- Verifies redraw results, suppresses duplicate requests, and pauses automatic
-  refresh if watched rows go blank or the result cannot be verified.
-- Removed test build labels and the startup color-check message.
+Party Quests Forever 1.1.3
 
+- Centers All Objectives across the joined header while expanded.
+- Uses one continuous background for party and Blizzard quests, following
+  Edit Mode opacity, appearance, scale and height.
+- Uses Blizzard's main collapse button for both columns and removes redundant
+  module collapse controls; party-only views retain a fallback control.
+- Fixes native-only collapse, empty backgrounds and collapsed header protrusion.
+- Allows player, zone and quest expansion/collapse during combat from known data.
+- Makes the Party Quests button work during combat and restores content when
+  reopening the pane or expanding the whole tracker.
+- Keeps bright green Ready labels, guarded native refresh and quest-log sharing.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Discovery, membership validation and native tracker repair wait until combat ends.
 
 ## Submission references checked 2026-11-13
 
