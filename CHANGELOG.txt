@@ -1,3 +1,21 @@
+Party Quests Forever 1.1.4
+
+- Cleaner quest progress: each player has a separate heading, with one objective
+  per indented line instead of long wrapped lists.
+- Your own progress starts collapsed under + You. Expand it per quest; your
+  choice is remembered across updates and reloads. Party progress stays open.
+- Main collapse hides both quest columns and leaves a compact header. Expanding
+  restores the full tracker and previously opened sections, in or out of combat.
+- Fixed background resizing when collapsing sections or hiding the party pane
+  during combat.
+- Party rows now reflow automatically during combat as objective details change.
+- Fixed repeated quest-log events postponing local quest-data reads, and added
+  a bounded combat fallback for those reads.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Discovery, membership validation and guarded native repair remain deferred
+until combat ends.
+
 Party Quests Forever 1.1.4-beta4
 
 Beta readability update for WoW Forever 1.60.1 (interface 16001).

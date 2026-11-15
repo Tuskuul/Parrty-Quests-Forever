@@ -1,4 +1,4 @@
-# Party Quests Forever 1.1.4-beta4 beta build record
+# Party Quests Forever 1.1.4 release record
 
 - Own progress is independently collapsible and defaults closed; party progress
   remains expanded. Combat toggles and per-quest state are regression checked.
@@ -10,4 +10,5 @@
 - Existing native redraw guards, opt-outs and combat deferral preserved.
 - All 22 root Lua files parse; all 13 regression suites pass.
 - Existing SavedVariables and install-folder identity retained.
-- Live-client confirmation pending. No CurseForge publication performed.
+- User confirmed compact collapse/restore in-game and approved the readability
+  changes for a small stable update. No CurseForge publication performed.

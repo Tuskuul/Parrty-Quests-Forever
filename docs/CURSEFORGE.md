@@ -9,8 +9,8 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.4-beta4.zip
-- **Release type:** Beta
+- **Release file:** PartyQuestsForever_1.1.4_CurseForge_Release.zip
+- **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
 - **Optional integration:** WIM. Do not mark it as a required dependency.
@@ -63,17 +63,23 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.4-beta4
+Party Quests Forever 1.1.4
 
-Beta readability update for WoW Forever 1.60.1 (interface 16001).
+- Cleaner quest progress: each player has a separate heading, with one objective
+  per indented line instead of long wrapped lists.
+- Your own progress starts collapsed under + You. Expand it per quest; your
+  choice is remembered across updates and reloads. Party progress stays open.
+- Main collapse hides both quest columns and leaves a compact header. Expanding
+  restores the full tracker and previously opened sections, in or out of combat.
+- Fixed background resizing when collapsing sections or hiding the party pane
+  during combat.
+- Party rows now reflow automatically during combat as objective details change.
+- Fixed repeated quest-log events postponing local quest-data reads, and added
+  a bounded combat fallback for those reads.
 
-- Your own progress starts collapsed under a clickable + You heading.
-- Expand or collapse your progress separately for each quest, including in combat.
-- Remembers your chosen state per quest across updates and reloads.
-- Party members' objective lists stay expanded beneath their player headings.
-- Retains separate objective rows, compact main collapse and combat resizing fixes.
-
-Existing settings are preserved; quests without a saved choice start closed.
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Discovery, membership validation and guarded native repair remain deferred
+until combat ends.
 
 ## Submission references checked 2026-11-13
 

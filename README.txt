@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.4-beta4
-BETA: your progress starts collapsed under + You; party progress stays expanded.
+Party Quests Forever 1.1.4
+Release 1.1.4: clearer progress rows, collapsed + You details and combat resizing fixes.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
