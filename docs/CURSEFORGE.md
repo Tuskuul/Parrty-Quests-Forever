@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.4-beta1.zip
+- **Release file:** PartyQuestsForever_1.1.4-beta2.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,16 +63,24 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.4-beta1
+Party Quests Forever 1.1.4-beta2
 
 Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
 
-- Keeps All Objectives centered across the joined header when expanded or collapsed.
-- Preserves centering through combat collapse and party-pane toggles.
-- Restores the native header when hiding Party Quests, in or out of combat.
-- Retains the existing combat expansion, scrolling, shared backdrop and Ready fixes.
+- Main collapse hides both quest columns and restores the compact native header.
+  Expanding restores the joined header with centered All Objectives text.
+- Keeps that behavior in and out of combat and through party-pane toggles.
+- Fixes shared-background resizing after collapsing sections or hiding the party
+  pane during combat by measuring current native bounds instead of retaining
+  the last out-of-combat height.
+- Refreshes party rows and their layout automatically during combat, including
+  changed objective lines, Ready status, wrapping and scroll height.
+- Prevents repeated quest-log events from postponing the player's quest reads.
+- Adds a bounded combat fallback that schedules local quest-data reads.
+- Preserves native repair guards, scrolling, shared art and saved opt-outs.
 
-Existing settings are preserved. This is a beta for in-game verification.
+Discovery, membership validation and guarded native redraws remain deferred until
+out of combat. Live-client confirmation is pending.
 
 ## Submission references checked 2026-11-13
 

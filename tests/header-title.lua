@@ -31,12 +31,14 @@ for _,side in ipairs({'left','right'}) do
  assert(title.points[1][1]=='CENTER','re-expanding did not restore centered title')
  A.integration.nativeCollapsed=true
  A:RefreshCombatTrackerPane()
- assert(A.integration.joinedHeader and title.points[1][1]=='CENTER','combat main collapse unjoined the header')
+ assert(not A.integration.joinedHeader and background.points[1][2]=='original','combat collapse did not restore compact header')
  A.db.trackerHidden=true;A:RefreshCombatTrackerPane()
  assert(not A.integration.joinedHeader,'hidden party pane kept its joined header')
  A.db.trackerHidden=false;A:RefreshCombatTrackerPane()
- assert(A.integration.joinedHeader and title.points[1][1]=='CENTER','combat reopen while collapsed lost centered header')
+ assert(not A.integration.joinedHeader and title.points[1][2]=='original','party toggle widened a collapsed header')
  A.integration.nativeCollapsed=false
+ A:RefreshCombatTrackerPane()
+ assert(A.integration.joinedHeader and title.points[1][1]=='CENTER','main expand did not restore centered full-width header')
  A:SyncCombatTrackerHeader(false)
  assert(title.points[1][2]=='original' and background.points[1][2]=='original','combat hide left the header stretched')
  A:SyncCombatTrackerHeader(true)
@@ -44,7 +46,13 @@ for _,side in ipairs({'left','right'}) do
  A:SyncCombatTrackerHeader(false)
  A:SyncCombatTrackerHeader(true)
  assert(title.points[1][2]==background,'repeated combat toggle lost centered title')
+ tracker.IsCollapsed=function() return true end
+ A:JoinTrackerHeader(tracker,true)
+ assert(not A.integration.joinedHeader and background.points[1][2]=='original','out-of-combat layout kept wide collapsed header')
+ tracker.IsCollapsed=function() return false end
+ A:JoinTrackerHeader(tracker,true)
+ assert(title.points[1][1]=='CENTER','expanded layout failed to restore joined header')
  A:JoinTrackerHeader(tracker,false)
  assert(title.points[1][2]=='original' and title.points[1][4]==7,'native title anchors not restored')
 end
-print('PASS: expanded/collapsed title center, combat collapse and party toggles, both sidebar sides and native anchor restoration')
+print('PASS: expanded title center, compact collapsed header, combat collapse and party toggles, both sidebar sides and native anchor restoration')

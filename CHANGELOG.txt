@@ -1,3 +1,22 @@
+Party Quests Forever 1.1.4-beta2
+
+Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
+
+- Main collapse hides both quest columns and restores the compact native header.
+  Expanding restores the joined header with centered All Objectives text.
+- Keeps that behavior in and out of combat and through party-pane toggles.
+- Fixes shared-background resizing after collapsing sections or hiding the party
+  pane during combat by measuring current native bounds instead of retaining
+  the last out-of-combat height.
+- Refreshes party rows and their layout automatically during combat, including
+  changed objective lines, Ready status, wrapping and scroll height.
+- Prevents repeated quest-log events from postponing the player's quest reads.
+- Adds a bounded combat fallback that schedules local quest-data reads.
+- Preserves native repair guards, scrolling, shared art and saved opt-outs.
+
+Discovery, membership validation and guarded native redraws remain deferred until
+out of combat. Live-client confirmation is pending.
+
 Party Quests Forever 1.1.4-beta1
 
 Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).

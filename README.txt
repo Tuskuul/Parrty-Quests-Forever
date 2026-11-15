@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.4-beta1
-BETA: bug-fix testing build for header alignment and combat visibility.
+Party Quests Forever 1.1.4-beta2
+BETA: compact main collapse, combat resizing and automatic party layout updates.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -36,7 +36,8 @@ QUEST INFORMATION
 Progress queries continue during combat. Existing sidebar rows update their
 counts and Ready text. Player, zone and quest expansion, party visibility and
 reopening work during combat using known data, creating rows when needed.
-Discovery, membership checks and native tracker repair still wait. Client
+Automatic party updates also reflow changed rows during combat. Discovery and
+membership checks and native repair still wait. Client
 restrictions can still limit the information available during combat.
 Ready tags use explicit completion flags or, for native party observations,
 complete reported progress matching every known requirement. Unknown or partial

@@ -352,7 +352,17 @@ function A:Receive(message, sender)
     end
     self.incoming[m.guid]=nil
 end
-function A:ScheduleOwn() self.ownDue=GetTime()+0.7 end
+function A:ScheduleOwn()
+    -- Preserve the first deadline: continuous quest-log events must not starve reads.
+    self.ownDue=self.ownDue or (GetTime()+0.7)
+end
+function A:CombatOwnTick()
+    if self.demo or not (InCombatLockdown and InCombatLockdown()) then return end
+    local now=GetTime()
+    if self.combatOwnDue and now<self.combatOwnDue then return end
+    self.combatOwnDue=now+1
+    self:ScheduleOwn()
+end
 local elapsed, refreshElapsed = 0, 0
 local frame=CreateFrame("Frame")
 A.events=frame
@@ -420,6 +430,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     elapsed=0
     if A.layoutDirty then A.layoutDirty=nil;A:Render() end
     local now=GetTime()
+    A:CombatOwnTick()
     if A.PollTick then A:PollTick() end
     if A.TriggerTick then A:TriggerTick() end
     if A.NativeTrackerTick then A:NativeTrackerTick() end

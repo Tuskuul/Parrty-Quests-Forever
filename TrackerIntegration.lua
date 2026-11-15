@@ -170,7 +170,7 @@ function A:TrackerEntryClick(row,button)
 end
 function A:RenderCombatTrackerSidebar()
     local f=self.sidebar
-    if not f or not f.scroll then return end
+    if not f or not f.scroll then return false end
     local ok,err=pcall(function()
         -- Rebuild even after a hide/collapse; text-only ticks cannot restore rows.
         local entries,count=self:BuildTrackerEntries()
@@ -185,6 +185,7 @@ function A:RenderCombatTrackerSidebar()
         self.integration.lastError=self.public(err,"string") and err:sub(1,180) or "combat expansion failed"
         print("Party Quests Forever: combat expansion failed; layout will retry after combat. /spq report for details.")
     end
+    return ok
 end
 function A:RefreshCombatTrackerPane()
     if not combat() or self.db.displayMode~="blizzard" then return end
@@ -194,12 +195,29 @@ function A:RefreshCombatTrackerPane()
     f.viewCollapsed=not s.nativeVisible and not not self.db.trackerCollapsed
     f:SetShown(visible)
     local joined=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
-    self:SyncCombatTrackerHeader(joined and s.nativeVisible)
+    self:SyncCombatTrackerHeader(joined and s.nativeVisible and not s.nativeCollapsed)
     if visible then self:RenderCombatTrackerSidebar() end
     self:ResizeCombatTrackerBackground()
     self:InvalidateTrackerIntegration()
 end
+function A:MeasureCombatTrackerBackground()
+    local f,s=self.sidebar,self.integration
+    local native=s.nativeBackdrop and s.nativeBackdrop.frame
+    if not f or not native then return end
+    local function number(v) return self.public(v,"number") and v==v and math.abs(v)<math.huge end
+    -- Read current screen bounds only. No native anchors, modules or layout writes.
+    local scale=invoke(f.GetEffectiveScale,f)
+    local nativeScale=invoke(native.GetEffectiveScale,native)
+    local ownLeft,ownTop=invoke(f.GetLeft,f),invoke(f.GetTop,f)
+    local left,right,top,bottom=invoke(native.GetLeft,native),invoke(native.GetRight,native),invoke(native.GetTop,native),invoke(native.GetBottom,native)
+    if not (number(scale) and scale>0 and number(nativeScale) and nativeScale>0
+        and number(ownLeft) and number(ownTop) and number(left) and number(right) and number(top) and number(bottom)) then return end
+    f.combatBackgroundBounds={native={left=(left*nativeScale-ownLeft*scale)/scale,
+        right=(right*nativeScale-ownLeft*scale)/scale,top=(ownTop*scale-top*nativeScale)/scale,
+        bottom=(ownTop*scale-bottom*nativeScale)/scale}}
+end
 function A:ResizeCombatTrackerBackground()
+    self:MeasureCombatTrackerBackground()
     local f=self.sidebar
     if not f or not f.trackerBackground then return end
     local bounds=f.combatBackgroundBounds
@@ -216,9 +234,13 @@ function A:ResizeCombatTrackerBackground()
         else left,right,top,bottom=native.left,native.right,native.top,native.bottom end
     end
     f.joinedExpandedHeight=bottom-top
-    background:ClearAllPoints();background:SetPoint("TOPLEFT",f,"TOPLEFT",left,-top)
-    background:SetWidth(right-left);background:SetHeight(f.joinedExpandedHeight);background:Show()
-    f.backgroundJoinSignature=nil
+    local signature=table.concat({left,right,top,f.joinedExpandedHeight},":")
+    if f.backgroundJoinSignature~=signature then
+        background:ClearAllPoints();background:SetPoint("TOPLEFT",f,"TOPLEFT",left,-top)
+        background:SetWidth(right-left);background:SetHeight(f.joinedExpandedHeight)
+        f.backgroundJoinSignature=signature
+    end
+    background:Show()
 end
 local function applyFont(f,role)
     f:SetFontObject(role=="header" and (ObjectiveTrackerHeaderFont or GameFontNormal) or (ObjectiveTrackerLineFont or GameFontHighlightSmall))
@@ -440,6 +462,10 @@ function A:SyncCombatTrackerHeader(joined)
     end
 end
 function A:JoinTrackerHeader(tracker,enabled)
+    if invoke(tracker.IsCollapsed,tracker)==true then
+        self:SyncCombatTrackerHeader(false)
+        return
+    end
     self.integration.combatJoinedHeader=nil
     local header=self.readable(tracker.Header) and tracker.Header or nil
     local side=self.db.trackerSide=="right" and "right" or "left"
@@ -487,27 +513,11 @@ end
 function A:UpdateTrackerSidebarCombat()
     local f,s=self.sidebar,self.integration
     if not f or not f:IsShown() or not s.dirty or (s.due and GetTime()<s.due) then return end
-    -- The sidebar's existing FontStrings belong to our own non-secure rows.
-    -- Never create/move/resize frames or touch Blizzard's tracker while locked.
-    local ok,err=pcall(function()
-        local byKey={}
-        for _,e in ipairs(self:BuildTrackerEntries()) do
-            if e.kind=="quest" then byKey[e.key]=e end
-        end
-        for _,row in ipairs(f.rows) do
-            local e=row.liveQuestKey and byKey[row.liveQuestKey]
-            if e and row:IsShown() then
-                local value=row.liveLine==0 and ((e.open and "- " or "+ ")..e.title)
-                    or (e.lines or {})[row.liveLine]
-                if value then row.label:SetText(value) end
-            end
-        end
-    end)
-    if ok then s.dirty=false;s.due=nil
-    else
-        s.lastError=self.public(err,"string") and err:sub(1,180) or "combat text refresh failed"
-        s.due=GetTime()+1
-    end
+    -- Use the same full addon-owned reflow as a user click. Objective completion
+    -- can change line count, wrapping, Ready labels and the scrollable height.
+    if self:RenderCombatTrackerSidebar() then
+        s.dirty=false;s.due=nil
+    else s.due=GetTime()+1 end
 end
 function A:SyncTrackerSidebarOpacity(tracker)
     local f=self.sidebar
@@ -540,8 +550,9 @@ function A:RestoreTrackerJoinVisuals()
     if self.sidebar and self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
 end
 function A:SetJoinedCollapseVisual(collapsed)
-    self:PositionJoinedTrackerTitle(collapsed)
     self.integration.nativeCollapsed=not not collapsed
+    local joined=not collapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    self:SyncCombatTrackerHeader(joined and self.integration.nativeVisible)
     local f=self.sidebar
     if not f or not self.integration.nativeBackdrop then return end
     f:SetShown(not collapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView())
@@ -717,7 +728,12 @@ function A:TrackerSidebarHeightLimit(tracker)
 end
 function A:TrackerIntegrationTick()
     if not self.db then return end
-    if combat() then self:UpdateTrackerSidebarCombat();return end
+    if combat() then
+        self:UpdateTrackerSidebarCombat()
+        -- Native content can contract without changing our quest data.
+        if self.db.displayMode=="blizzard" then self:ResizeCombatTrackerBackground() end
+        return
+    end
     if self.UpdateMinimapButton then self:UpdateMinimapButton() end
     local s=self.integration
     if ObjectiveTrackerFrame then self:EnsurePartyTrackerButton(ObjectiveTrackerFrame)

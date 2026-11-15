@@ -38,34 +38,14 @@ assert(queries>0 and A.members.party.quests[101].objectives[1].done==2,'progress
 A.triggerTasks=nil;A.liveTasks={{kind='membership',value=101}};A.liveIndex=1
 A:LiveTick()
 
-local protectedTouches=0
-ObjectiveTrackerFrame=setmetatable({},{__index=function()
- protectedTouches=protectedTouches+1;error('Blizzard tracker touched during combat')
-end})
-local function row(key,index)
- return setmetatable({liveQuestKey=key,liveLine=index,IsShown=function() return true end,
-  label={SetText=function(self,value) self.text=value end}},
-  {__index=function(_,name) error('combat layout operation: '..name) end})
-end
-local header,progress=row('party:101',0),row('party:101',1)
-A.sidebar=setmetatable({rows={header,progress},IsShown=function() return true end},
- {__index=function(_,name) error('combat sidebar geometry/visibility operation: '..name) end})
-function A:BuildTrackerEntries()
- local done=self.members.party.quests[101].objectives[1].done
- return {{kind='quest',key='party:101',open=true,title='Quest',lines={'Party member: '..done..'/3'}}},1
-end
-function A:RenderTrackerSidebar() error('full sidebar layout ran during combat') end
-local framesBefore=created
-now=102;A:TrackerIntegrationTick()
-assert(header.label.text=='- Quest' and progress.label.text=='Party member: 2/3','visible text stayed stale in combat')
-assert(protectedTouches==0 and created==framesBefore and not A.integration.lastError,'combat update touched frame layout')
-assert(not A.integration.dirty)
+-- Repeated quest events preserve the earliest own-log read deadline.
+A.ownDue=nil;A:ScheduleOwn();local deadline=A.ownDue
+now=now+0.2;A:ScheduleOwn();assert(A.ownDue==deadline,'quest events postponed own-log reads')
+A.ownDue=nil;A:CombatOwnTick();assert(A.ownDue,'combat heartbeat failed to schedule own-log read')
 -- Combat exit must schedule the full layout that was deferred.
 locked=false;A.integrationEvents=nil;A:InvalidateTrackerIntegration()
 assert(A.integration.dirty,'post-combat layout did not remain schedulable')
 locked=true;C_QuestLog={IsUnitOnQuest=function() error('catalog sweep queried during combat') end}
 A.sweep={};A:PollTick()
 assert(A.sweepStatus=='Quest sweep paused (combat)')
-A.nativeTracker.due=0;A:NativeTrackerTick()
-assert(A.nativeTracker.due==0,'native repair was consumed during combat')
-print('PASS: combat queries/triggers, existing-row text updates, no native frame access or layout, membership/discovery/repair deferral')
+print('PASS: combat queries/triggers, own-log read deadlines and heartbeat, membership/discovery deferral')

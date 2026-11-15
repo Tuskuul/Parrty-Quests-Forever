@@ -65,6 +65,39 @@ for _,entry in ipairs({{kind='member',key='m'},{kind='group',key='g'}}) do
  A:TrackerEntryClick(entry,'LeftButton')
 end
 assert(not A.integration.lastError and A.integration.dirty,'post-combat reconciliation lost')
+-- Automatic combat refresh must reflow changed line counts without a user click.
+A:TrackerEntryClick(q,'LeftButton')
+local baseBuild=A.BuildTrackerEntries
+function A:BuildTrackerEntries()
+ local entries,count=baseBuild(self)
+ for _,e in ipairs(entries) do if e.kind=='quest' then e.lines={'Updated 2/3','New objective 1/2'} end end
+ return entries,count
+end
+A.integration.due=0;A:TrackerIntegrationTick()
+local found=false
+for _,row in ipairs(f.rows) do
+ if row:IsShown() and row.label.text=='New objective 1/2' then found=true end
+end
+assert(found and not A.integration.dirty,'automatic combat refresh did not add changed objective rows')
+A.BuildTrackerEntries=baseBuild
+A:TrackerEntryClick(q,'LeftButton')
+-- Native bounds must follow live shrinking/expansion without data invalidation.
+local nativeBottom=80
+local native={GetEffectiveScale=function() return 1 end,GetLeft=function() return 412 end,
+ GetRight=function() return 680 end,GetTop=function() return 1000 end,
+ GetBottom=function() return nativeBottom end}
+A.integration.nativeBackdrop.frame=native
+function f:GetEffectiveScale() return 1 end
+function f:GetLeft() return 0 end
+function f:GetTop() return 1000 end
+A.integration.dirty=false
+A:TrackerIntegrationTick()
+assert(f.trackerBackground.height==920,'combat backdrop did not follow native expansion')
+nativeBottom=900
+A:TrackerIntegrationTick()
+assert(f.trackerBackground.height==math.max(f.height,100),'combat backdrop retained stale native height')
+A.integration.nativeBackdrop.frame=nil
+f.combatBackgroundBounds={native={left=412,right=680,top=-5,bottom=120}}
 -- The actual top button uses SetViewShown then the combat tick.
 A:TogglePartyTracker()
 assert(A.db.trackerHidden and not f:IsShown(),'party button did not hide immediately')
