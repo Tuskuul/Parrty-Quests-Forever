@@ -1,3 +1,14 @@
+Party Quests Forever 1.1.6-beta4
+
+- Reserved a footer below the shared quest log for Transfer diagnostics.
+- Quest rows and the scrollbar now stop above that button, with a clear gap.
+- Clips scrolling quest contents to the list viewport so text cannot spill
+  over the footer.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Retains beta3's visible copy/import fields and earlier sharing fixes.
+Live-client verification of the footer spacing is pending.
+
 Party Quests Forever 1.1.6-beta3
 
 - Added a visible bordered text box to Copy Share link and Import, with a dark

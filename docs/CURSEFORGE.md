@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta3.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta4.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,16 +63,16 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta3
+Party Quests Forever 1.1.6-beta4
 
-- Added a visible bordered text box to Copy Share link and Import, with a dark
-  background, readable white text and padding.
-- Labels show where to copy or paste. Empty imports display a paste hint.
-- Clicking the field focuses it; copied links remain selected for Ctrl+C.
-- Retains beta2's window switching, dragging and selection/draft preservation.
+- Reserved a footer below the shared quest log for Transfer diagnostics.
+- Quest rows and the scrollbar now stop above that button, with a clear gap.
+- Clips scrolling quest contents to the list viewport so text cannot spill
+  over the footer.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Live-client verification of the revised text fields is pending.
+Retains beta3's visible copy/import fields and earlier sharing fixes.
+Live-client verification of the footer spacing is pending.
 
 ## Submission references checked 2026-11-13
 
