@@ -1,10 +1,13 @@
-# Party Quests Forever 1.1.5-beta6 beta build record
+# Party Quests Forever 1.1.6-beta1 beta build record
 
-- Visible Quest Timers clamps the joined canvas top to the native main header.
-- Shared geometry is checked for party-on, party-off and combat measurements,
-  with different effective scales and restoration when timers disappear.
-- No native timer positions, anchors or countdown behavior are modified.
-- Compact collapse and beta5 queued combat expansion remain intact.
-- User confirmed beta5 combat click/restore in-game.
-- All 22 root Lua files parse; all 15 regression suites pass.
-- Timer layout visual confirmation pending. No CurseForge publication performed.
+- Continues from stable 1.1.5; main remains stable.
+- Sharing adds three actions with full-log and selected-quest scope.
+- Copy uses a bounded owner-bearing in-game marker; Import never evaluates code
+  or merges foreign quests into the player log or party caches.
+- Tests cover forwarded-owner routing through request/response transfer,
+  selected-only payloads, Ready and event completion flags, invalid imports,
+  cache conflicts, 15-minute expiry and chat-draft/recipient preservation.
+- All 23 root Lua files parse; all 15 regression suites pass.
+- Packaging ignores test infrastructure and uses this beta's release notes.
+- Live-client layout, clipboard shortcuts, forwarding and import remain untested.
+- No stable promotion or manual CurseForge file upload is part of this beta.

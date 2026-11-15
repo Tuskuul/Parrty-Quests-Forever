@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5-beta6.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta1.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,20 +63,24 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5-beta6
+Party Quests Forever 1.1.6-beta1
 
-Beta visual fix for WoW Forever 1.60.1 (interface 16001).
+- Added Share to chat, Copy Share link and Import to the sharing screen.
+- Full log and Select quests now choose what to share before choosing an action.
+- Share to chat prepares the existing short quest-log link in your chat draft.
+- Copy Share link shows selectable text for Ctrl+C and pasting into WoW character
+  chats. Forwarded links retain the original snapshot owner.
+- Import accepts a copied in-game string and opens the existing shared-log viewer.
+- Preserves selected quests, completion flags, chat drafts and recipient routing.
 
-- Keeps the expanded tracker background below the separate Quest Timers panel,
-  removing the extra backdrop/empty strip behind the timer area.
-- Applies to Blizzard-only and combined party tracker views, including combat
-  geometry checks when combat auto-collapse is disabled.
-- Preserves the compact collapsed header and the native timer's own position,
-  countdown, border and padding.
-- Retains beta5's confirmed combat expansion queue and docked restoration.
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Copied links require this beta or newer on the receiving client. They use the
+existing in-game transfer system: the owner must stay online with the addon,
+links expire after 15 minutes, and reloading clears the owner's snapshots.
+Direct character-whisper restrictions still apply. Existing Battle.net sharing
+remains available through Share to chat; copied links use character routing.
 
-The combat click/restore sequence was confirmed in-game. The new timer alignment
-still needs in-game visual confirmation. Existing settings are preserved.
+In-game layout, Ctrl+C/Ctrl+V, forwarding and import need beta verification.
 
 ## Submission references checked 2026-11-13
 

@@ -134,6 +134,7 @@ end
 function A:ObserveQuestLogLink(message,sender,event,senderGUID)
     if not self.public(message,"string") or not self.public(sender,"string") or sender=="" then return message end
     local s=self:QuestLinkState();self:PruneQuestLinks()
+    if self.ObserveCopiedQuestLogLinks then message=self:ObserveCopiedQuestLogLinks(message) end
     return (message:gsub("%[Party Quests Log:([%x%-]+)%]",function(token)
         if not tokenOK(token) then return nil end
         local mine=s.published[token]

@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.5-beta6
-BETA: separates expanded tracker background from Quest Timers; combat restore retained.
+Party Quests Forever 1.1.6-beta1
+BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -24,7 +24,9 @@ The tracker sidebar background follows Blizzard Edit Mode's Objective Tracker
 opacity setting and its live fonts, text size, outlines, shadows, colors and
 scale. Appearance changes apply outside combat without needing a reload.
 Joined columns use one background. Blizzard's main collapse button controls
-both columns; Party Quests toggles the party panel. Player/zone/quest expanders
+both columns; Party Quests toggles the party panel while expanded. Expanding
+the compact docked tracker during combat shows a warning and queues reopening
+until combat ends. Player/zone/quest expanders
 remain available. An empty native tracker uses one compact party-only control.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
@@ -38,8 +40,9 @@ and Shift-click refreshes. Drag the minimap button to reposition it.
 
 QUEST INFORMATION
 Progress queries continue during combat. Existing sidebar rows update their
-counts and Ready text. Player, zone and quest expansion, party visibility and
-reopening work during combat using known data, creating rows when needed.
+counts and Ready text. Player, zone and quest sections can expand during combat
+using known data while the party pane is open, creating rows when needed.
+Expanding the fully collapsed docked tracker waits until combat ends.
 Automatic party updates also reflow changed rows during combat. Discovery and
 membership checks and native repair still wait. Client
 restrictions can still limit the information available during combat.
@@ -58,19 +61,23 @@ that its owner share it. A single click expands it. Unknown eligibility sends
 nothing; actual quest acceptance and manual sharing remain server/player decisions.
 
 SHARE A QUEST LOG
-Share opens a popup: choose Full log or Select quests. Select quests lets you
-check one or more active quests, then Share selected drafts a link containing
-only those quests. Cancel or Escape returns to your original chat draft.
-Click Share in the Party Quests tracker header, between its title and Refresh.
-Click Share Quest Log in the main Map & Quest Log title bar, left of fullscreen.
-It captures your active quests, objective counts/completion and turn-in status,
-then inserts a marker at your current chat cursor. Your draft/channel/recipient
-are preserved. You choose when to send. Settings also contains the share action.
-Recipients with a compatible addon click to view a timestamped, collapsible log.
-It is a fixed snapshot, not a live view or lifetime completed-quest history.
-The owner must stay online with the addon for a first fetch. Links last fifteen
-minutes; the six newest local snapshots are retained. Reload clears published
-snapshots. Already received copies remain cached for thirty minutes.
+Choose Full log or Select quests, then choose an action:
+- Share to chat prepares the existing short link in your original chat draft.
+- Copy Share link shows a string to select and copy with Ctrl+C. Paste it into
+  WoW character chat; receivers with this beta or newer can click it. The link
+  carries its original owner when forwarded by another character.
+- Import opens a box for Ctrl+V. Paste a complete copied string, then Import
+  opens the shared-log viewer and requests data from the original owner.
+These actions do not send ordinary chat messages automatically. Cancel/Escape
+restores your draft and recipient. The Copy screen does not change that draft.
+Sharing is available in the party header, map/quest-log header and Settings.
+The snapshot includes selected active quests, objective counts/completion and
+turn-in status. It is a fixed snapshot, not a live view or lifetime history.
+The owner must remain online with the addon for a first fetch. Links last
+fifteen minutes, the six newest local snapshots are retained, and reload clears
+published snapshots. Received copies remain cached for thirty minutes.
+Copied links use character routing and remain subject to the client's whisper
+restrictions. Use Share to chat for existing Battle.net snapshot sharing.
 
 WIM character sending/receiving and Battle.net transfer were confirmed in user
 testing. Battle.net uses its own addon-data route for cross-faction/realm use;

@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.5-beta6**, a testing build that separates the expanded tracker background from Quest Timers, retaining queued combat expansion and docked restoration. Focused quest highlighting is retained. Your own progress starts collapsed under **+ You**. Party members retain separate headings and objective rows. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.1.6-beta1**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes.
 
 Combat auto-collapse is under **Display → Collapse tracker during combat**. It leaves the compact header visible and restores the previous expanded or collapsed view afterward; disable it to leave the tracker expanded during combat. Changes to this setting during combat apply afterward.
 

@@ -1,0 +1,17 @@
+Party Quests Forever 1.1.5
+
+- Highlights the focused quest with a soft gold background in the party tracker,
+  including during combat.
+- Added Collapse tracker during combat in Display settings, enabled by default.
+  Keeps the compact header visible and restores your previous view afterward.
+- Expanding the collapsed tracker during combat shows a warning and queues
+  reopening until combat ends, without switching to the separate window.
+- Fixed blank Blizzard quest contents when reopening or restoring the tracker.
+- Added green [Ready] tags to combined quest headings when you and every listed
+  party member are ready for turn-in. Unknown or mixed progress stays unmarked.
+- Fixed the expanded background overlapping Quest Timers in Blizzard-only and
+  combined tracker views.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Discovery, membership validation and guarded native repair remain deferred
+until combat ends.
