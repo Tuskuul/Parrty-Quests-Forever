@@ -15,42 +15,51 @@ local function completeColor()
     return "|cff00ff00"
 end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
--- The secure visibility driver hides Blizzard's frame in combat. Its out-of-
--- combat value is nil, so it never forces an otherwise empty/hidden tracker open.
+-- Temporarily collapse to the normal compact header; never hide Blizzard's frame.
 function A:SyncCombatAutoHide()
     local s=self.integration
     if not self.db then return false end
+    if s.autoCollapseApplying then return combat() end
+    local function collapseNative(value)
+        local native=s.autoCollapseNative
+        if native and type(native.SetCollapsed)=="function" then
+            s.autoCollapseApplying=true
+            local ok,err=pcall(native.SetCollapsed,native,value)
+            s.autoCollapseApplying=nil
+            if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "automatic combat collapse failed" end
+        end
+    end
     if combat() then
         if not s.autoHideArmed then return false end
         s.autoHideActive=true
-        if self.sidebar then
-            self.sidebar:Hide()
-            if self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+        if s.autoCollapseNativeShown and invoke(s.autoCollapseNative.IsCollapsed,s.autoCollapseNative)~=true then collapseNative(true) end
+        self:SyncCombatTrackerHeader(false)
+        local f=self.sidebar
+        if f then
+            if f.trackerBackground then f.trackerBackground:Hide() end
+            if not s.autoCollapseNativeShown and f.scroll and not self.db.trackerHidden and self:ShouldShowPartyView() then
+                -- Empty native log: retain our compact party-only header instead.
+                f.viewCollapsed=true;f.scroll:Hide();f.hint:Hide()
+                f:SetHeight(30+(f.headerOffset or 0));f:Show()
+            else f:Hide() end
         end
-        if self.window then self.window:Hide() end
+        if self.window and self.db.displayMode=="window" and self.SetCollapsed then
+            local saved=self.db.collapsed
+            self:SetCollapsed(true);self.db.collapsed=saved
+        end
         return true
     end
     if s.autoHideActive then
         s.autoHideActive=nil
-        if s.autoHideNative then
-            if type(s.autoHideNative.SetAttribute)=="function" then s.autoHideNative:SetAttribute("statehidden",nil) end
-            if s.autoHideNativeShown then s.autoHideNative:Show() end
-        end
+        if s.autoCollapseNativeShown and type(s.autoCollapseBefore)=="boolean" then collapseNative(s.autoCollapseBefore) end
+        if self.window and self.db.displayMode=="window" and self.SetCollapsed then self:SetCollapsed(not not self.db.collapsed) end
         s.restoreNativeLayout=true
         self:InvalidateTrackerIntegration()
     end
-    local native=ObjectiveTrackerFrame
-    local enabled=self.db.combatAutoHide~=false
-    if s.autoHideNative and (s.autoHideNative~=native or not enabled) then
-        if type(UnregisterStateDriver)=="function" then UnregisterStateDriver(s.autoHideNative,"visibility") end
-        s.autoHideNative=nil;s.autoHideNativeShown=nil
-    end
-    if enabled and native and s.autoHideNative~=native and type(RegisterStateDriver)=="function" then
-        RegisterStateDriver(native,"visibility","[combat] hide; nil")
-        s.autoHideNative=native
-    end
-    s.autoHideArmed=enabled
-    if s.autoHideNative then s.autoHideNativeShown=s.autoHideNative:IsShown() end
+    s.autoHideArmed=self.db.combatAutoHide~=false
+    s.autoCollapseNative=ObjectiveTrackerFrame
+    s.autoCollapseNativeShown=s.autoCollapseNative and invoke(s.autoCollapseNative.IsShown,s.autoCollapseNative)==true
+    s.autoCollapseBefore=s.autoCollapseNative and invoke(s.autoCollapseNative.IsCollapsed,s.autoCollapseNative)
     return false
 end
 function A:RestoreNativeExpandedLayout(tracker)

@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.5-beta2
-BETA: default-on whole-tracker combat auto-hide and reopening restoration.
+Party Quests Forever 1.1.5-beta3
+BETA: default-on combat collapse to the compact header and reopening restoration.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -16,8 +16,9 @@ need a full client restart before the addon appears in the AddOns list.
 Disable the older PoofPartyQuests addon if it is still installed.
 
 QUICK START
-Display > Hide tracker during combat defaults ON and restores your prior view
-after combat. Turn it off to keep the tracker visible. Changes during combat
+Display > Collapse tracker during combat defaults ON, keeps the compact header
+visible and restores your prior expanded/collapsed view afterward. Turn it off
+to leave the tracker expanded during combat. Changes during combat
 apply after combat ends. Focused quest highlighting is retained.
 The tracker sidebar background follows Blizzard Edit Mode's Objective Tracker
 opacity setting and its live fonts, text size, outlines, shadows, colors and

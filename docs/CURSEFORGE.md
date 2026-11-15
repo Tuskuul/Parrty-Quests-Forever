@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5-beta2.zip
+- **Release file:** PartyQuestsForever_1.1.5-beta3.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,26 +63,21 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5-beta2
+Party Quests Forever 1.1.5-beta3
 
-Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
+Beta behavior correction for WoW Forever 1.60.1 (interface 16001).
 
-- Adds Hide tracker during combat in Display settings, enabled by default.
-- Hides both Blizzard and party quest columns, the header and shared background
-  during combat; separate-window mode also hides its party window.
-- Restores the previous view after combat without changing saved pane visibility,
-  main-collapse state, or expanded player/zone/quest sections.
-- Turning auto-hide off keeps the tracker available in combat. Setting changes
-  made during combat apply when combat ends.
-- Adds an out-of-combat layout restore after main expansion and combat exit to
-  address Blizzard quest contents remaining blank when reopening.
-- Adds a green [Ready] tag to a combined quest heading when your quest and
-  every listed party participant are ready for turn-in. Mixed, missing or unknown
-  participant progress does not mark the shared heading ready.
-- Retains the focused-quest highlight from beta1 and all existing preferences.
+- Combat behavior now collapses the tracker to its compact header instead of
+  hiding the whole tracker. All Objectives, Party Quests and the main + remain.
+- Renames the Display option to Collapse tracker during combat; enabled by
+  default and preserves an existing saved off choice.
+- Restores the previous expanded or collapsed state after combat without
+  changing quest/player expansion choices.
+- Separate-window mode keeps its title bar during combat as well.
+- Retains focused-quest highlighting, reopening restoration and shared Ready tags.
 
-Existing unset auto-hide preferences default on; an explicit off remains off.
-In-game verification of the new visibility and reopening behavior is pending.
+Changes to this setting during combat take effect after combat ends.
+In-game confirmation of the corrected collapse behavior is pending.
 
 ## Submission references checked 2026-11-13
 
