@@ -94,9 +94,9 @@ function A:PrepareCombatCollapse()
         local i=s.combatModules[module]
         if not i then
             count=count+1;i=count;s.combatModules[module]=i
-            -- A secure child makes the target eligible for restricted combat operations,
-            -- including logs without a protected quest-item button of their own.
-            s.combatGuards[module]=CreateFrame("Frame",nil,module,"SecureHandlerBaseTemplate")
+            -- Frame references permit restricted visibility operations without adding
+            -- secure children to native modules. Such children propagate protection
+            -- to Blizzard's layout frames and can block their normal combat redraws.
             c:SetFrameRef("module"..i,module)
             SecureHandlerWrapScript(module,"OnShow",c,[[if control:GetAttribute("combat-collapsed") then self:Hide() end]])
             SecureHandlerWrapScript(module,"OnHide",c,[[
@@ -639,7 +639,7 @@ function A:UpdateTrackerQuestFocus()
     end
 end
 function A:RenderTrackerSidebar(entries,memberCount)
-    local f=self.sidebar;local width=f:GetWidth()-8
+    local f=self.sidebar;local width=math.max(1,f:GetWidth()-22)
     f.child:SetWidth(width)
     local used,y=0,0
     local function row(label,role,color,indent,entry,liveQuestKey,liveLine)
@@ -651,7 +651,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
             -- Allocate once with the pooled row; focus changes only toggle art.
             b.focusFill=b:CreateTexture(nil,"BACKGROUND",nil,1)
             b.focusFill:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
-            b.focusFill:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",1,-1)
+            b.focusFill:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",-7,-1)
             b.focusFill:SetColorTexture(1,0.76,0.08,0.18);b.focusFill:Hide()
             b.focusAccent=b:CreateTexture(nil,"BACKGROUND",nil,2)
             b.focusAccent:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
@@ -737,7 +737,7 @@ function A:SizeTrackerSidebar()
     local padding=44+(f.headerOffset or 38)
     local overflow=content+padding>limit
     local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
-    f.scroll:SetSize(f:GetWidth()-6,math.max(1,viewport))
+    f.scroll:SetSize(math.max(1,f:GetWidth()-14),math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
     f.hint:SetShown(overflow and not f.viewCollapsed)
     f:SetHeight(f.viewCollapsed and (padding-14) or math.min(limit,content+padding+(overflow and 14 or 0)))

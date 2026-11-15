@@ -98,6 +98,8 @@ function A:NormalizePartyProgress(data,id)
         if member then
             local done=public(line.numFulfilled,"number") and line.numFulfilled or nil
             local total=public(line.numRequired,"number") and line.numRequired or nil
+            local completed
+            if public(line.completed,"boolean") then completed=line.completed end
             local memberLabel=named==member.name or named==member.fullName or named==member.firstName
             local body=left
             if right~="" then body=(identity and memberLabel) and right or (left.." "..right) end
@@ -108,10 +110,10 @@ function A:NormalizePartyProgress(data,id)
             if done and total and total>0 and done>=0 then
                 if body=="" or (identity and memberLabel and right=="") then body="Unnamed objective: "..done.."/"..total end
                 rows[#rows+1]={type=kinds.QuestPlayer,guid=member.guid,leftText=member.name}
-                rows[#rows+1]={type=kinds.QuestObjective,leftText=body,numFulfilled=done,numRequired=total}
+                rows[#rows+1]={type=kinds.QuestObjective,leftText=body,numFulfilled=done,numRequired=total,completed=completed}
             elseif line.type==kinds.QuestObjective and left~="" then
                 rows[#rows+1]={type=kinds.QuestPlayer,guid=member.guid,leftText=member.name}
-                rows[#rows+1]={type=kinds.QuestObjective,leftText=left}
+                rows[#rows+1]={type=kinds.QuestObjective,leftText=left,completed=completed}
             elseif not identity and line.type~=kinds.QuestPlayer and left~="" then
                 member=nil -- Unknown headings must not leak the previous member's ownership.
             end
@@ -195,7 +197,20 @@ function A:LiveQuery(source,fn,id,...)
         if cache then cache.empty=hasData and 0 or ((cache.empty or 0)+1) end
     end
     local added=0
-    if ok then added=self:RecordLiveData(source,data,id) or 0
+    if ok then
+        if readable(data) and public(data.dataInstanceID,"number") then
+            self.tooltipQueries=self.tooltipQueries or {}
+            -- Replace by source identity, bounding this map to queried sources.
+            local key=source:gsub("^event%[.-%]:","")..":"..tostring(id or select(1,...) or "")
+            local count,oldest,oldestAt=0,nil,math.huge
+            for k,q in pairs(self.tooltipQueries) do
+                count=count+1
+                if q.at<oldestAt then oldest,oldestAt=k,q.at end
+            end
+            if count>=64 and not self.tooltipQueries[key] then self.tooltipQueries[oldest]=nil end
+            self.tooltipQueries[key]={instance=data.dataInstanceID,at=GetTime(),source=source:gsub("^event%[.-%]:",""),fn=fn,id=id,args={...}}
+        end
+        added=self:RecordLiveData(source,data,id) or 0
     else self.liveStats.errors=self.liveStats.errors+1;self:Diag(source.." error="..printable(data)) end
     local state=id and self.questQueryState[id]
     if state and source:find("party-progress",1,true) then state.rows=added end
@@ -213,13 +228,35 @@ function A:LiveQuery(source,fn,id,...)
 end
 function A:QueryPartyProgress(id,force)
     local now,cache=GetTime(),self.partyQueryCache[id]
-    local interval=self.liveTriggerContext and 2 or 10
-    if cache and (cache.empty or 0)>=2 then interval=math.max(interval,self.own[id] and 15 or 60) end
+    local urgent=self.liveTriggerContext~=nil
+    local interval=urgent and 0.35 or 2
+    if not urgent and cache and (cache.empty or 0)>=2 then interval=self.own[id] and 5 or 10 end
     if not force and cache and now-cache.at<interval then
         self.liveStats.skipped=(self.liveStats.skipped or 0)+1;return 0
     end
     self.partyQueryCache[id]=cache or {empty=0};self.partyQueryCache[id].at=now
     if C_TooltipInfo then return self:LiveQuery("party-progress",C_TooltipInfo.GetQuestPartyProgress,id,id,false,true) end
+end
+-- Cache-resolution notifications are hints to re-query, never quest credit.
+function A:TooltipDataUpdated(instance)
+    if instance~=nil and not public(instance,"number") then return end
+    local now=GetTime()
+    for key,q in pairs(self.tooltipQueries or {}) do
+        if now-q.at>30 then self.tooltipQueries[key]=nil
+        elseif instance==nil or instance==q.instance then q.pending=true end
+    end
+end
+function A:TooltipRetryTick()
+    if not next(self.members) then self.tooltipQueries={};return end
+    local now=GetTime()
+    if self.tooltipRetryAt and now<self.tooltipRetryAt then return end
+    for key,q in pairs(self.tooltipQueries or {}) do
+        if now-q.at>30 then self.tooltipQueries[key]=nil
+        elseif q.pending then
+            q.pending=nil;self.tooltipRetryAt=now+0.2
+            self:LiveQuery(q.source,q.fn,q.id,unpack(q.args));break
+        end
+    end
 end
 function A:BuildLiveTasks(forEvent)
     local tasks,seen={},{}
@@ -278,6 +315,7 @@ function A:LiveTick()
     if self.demo or not next(self.members) then self.liveTasks=nil;return end
     local inCombat=InCombatLockdown and InCombatLockdown()
     local now=GetTime()
+    self:TooltipRetryTick()
     if not self.liveTasks and (not self.liveDue or now>=self.liveDue) then self:BuildLiveTasks() end
     if not self.triggerTasks and not self.liveTasks then return end
     local previous=self.batchNative;self.batchNative=true
@@ -289,7 +327,7 @@ function A:LiveTick()
         if triggered then task=self.triggerTasks[self.triggerIndex]
         else task=self.liveTasks and self.liveTasks[self.liveIndex] end
         if not task then
-            if triggered then self:FinishTriggeredRefresh() else self.liveTasks=nil;self.liveDue=now+10 end
+            if triggered then self:FinishTriggeredRefresh() else self.liveTasks=nil;self.liveDue=now+1 end
             break
         end
         if triggered then self.triggerIndex=self.triggerIndex+1;self.liveEventStreak=(self.liveEventStreak or 0)+1
@@ -354,7 +392,7 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.1.6-beta7", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.1.6-beta8", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),

@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta7.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta8.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,12 +63,15 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta7
+Party Quests Forever 1.1.6-beta8
 
-- Updated the main +/- button's combat click handling to use a dedicated secure
-  control, matching the working Party Quests reopening path.
-- Leaves the original Blizzard button in control outside combat and when combat
-  auto-collapse is disabled.
+- Faster party progress updates, with small quest updates between full-log syncs.
+- More responsive checks for party members without the addon, including retries
+  when Blizzard tooltip data becomes available.
+- Recognizes objective completion flags supplied by native party tooltips.
+- Adjusted combat visibility handling to reduce interference with Blizzard's
+  quest tracker refreshes.
+- Keeps the selected-quest highlight inside the party tracker pane.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
 

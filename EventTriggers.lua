@@ -2,7 +2,7 @@ local _, A = ...
 local public=A.public
 A.triggerStats={events={},units={},batches=0,registered={}}
 local triggers={"UNIT_QUEST_LOG_CHANGED","PARTY_KILL","CHAT_MSG_LOOT","BAG_UPDATE_DELAYED",
-    "QUEST_LOG_UPDATE","QUEST_WATCH_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED","QUEST_TURNED_IN","PLAYER_REGEN_ENABLED"}
+    "QUEST_LOG_UPDATE","QUEST_WATCH_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED","QUEST_TURNED_IN","PLAYER_REGEN_ENABLED","TOOLTIP_DATA_UPDATE"}
 function A:TriggerLog(line)
     self:Diag(line)
     if not (self.db and self.db.diag) then return end
@@ -14,7 +14,7 @@ end
 function A:QueueTriggeredRefresh(event,member,followup)
     if not next(self.members) or self.demo then return end
     local priority=followup and 1 or (member and 2 or 0)
-    local due=GetTime()+(followup and 1.5 or (member and 0.25 or 0.8))
+    local due=GetTime()+(followup and 0.75 or (member and 0.1 or 0.25))
     local job=self.triggerPending
     if not job then job={due=due,reasons={},members={},all=false,followup=followup,priority=priority};self.triggerPending=job
     elseif priority<job.priority then return
@@ -26,6 +26,10 @@ function A:QueueTriggeredRefresh(event,member,followup)
 end
 function A:HandleTrigger(event,...)
     if not self.db or self.demo then return end
+    if event=="TOOLTIP_DATA_UPDATE" then
+        if self.TooltipDataUpdated then self:TooltipDataUpdated(...) end
+        return
+    end
     local stats=self.triggerStats
     stats.events[event]=(stats.events[event] or 0)+1
     local member,unit
@@ -64,7 +68,7 @@ function A:TriggerTick()
     end
     if self.triggerTasks or not self.triggerPending then return end
     local now=GetTime()
-    local cooldown=self.triggerPending.priority==2 and 1 or (self.triggerPending.followup and 2 or 4)
+    local cooldown=self.triggerPending.priority==2 and 0.35 or (self.triggerPending.followup and 0.75 or 1)
     if now<self.triggerPending.due or (self.triggerLastAt and now-self.triggerLastAt<cooldown) then return end
     local job=self.triggerPending;self.triggerPending=nil
     -- Reuse available native sources, while preserving the periodic queue's

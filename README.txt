@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta7
+Party Quests Forever 1.1.6-beta8
 BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -109,3 +109,10 @@ Code is distributed under GPLv3. Static fallback data adapts QuestieDB snapshot
 0f7d8adc92b28ac6594f4ad8745257f4d9784edf and historic Questie contributions.
 Full upstream attribution, licensing statement and historical caveat remain in
 third_party. This project is not affiliated with Questie.
+
+BETA8 UPDATES
+Compact quest changes are sent between full-log snapshots. Older addon versions
+continue receiving full snapshots. Native polling reacts sooner to party quest
+events and tooltip cache resolution. Blizzard data availability still varies.
+Combat setup no longer adds protected children to native module layout frames.
+The selected-quest highlight stays inset from the adjacent tracker pane.

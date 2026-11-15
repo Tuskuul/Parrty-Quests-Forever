@@ -62,6 +62,7 @@ function A:RefreshCombatTrackerPane()
 end
 function A:ShouldShowPartyView() return true end
 A:SyncCombatAutoHide()
+assert(next(A.integration.combatGuards)==nil,'native module was protected by an addon-owned secure child')
 local c=A.integration.combatController
 assert(c and module.wrapped.OnShow and A.partyTrackerButton.wrapped.OnClick,'secure setup incomplete')
 local main=A.integration.combatMainButton

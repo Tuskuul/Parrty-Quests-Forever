@@ -1,7 +1,7 @@
 local _, A = ...
 A.members, A.own, A.queue, A.incoming = {}, {}, {}, {}
 A.prefix = "SPQ1"
-local serial, lastSend, lastRequest = 0, -100, -100
+local serial, lastSend, lastRequest, lastDelta = 0, -100, -100, -100
 local types = Enum and Enum.TooltipDataLineType or {}
 local function secret(v) return issecretvalue and issecretvalue(v) end
 local function readable(v) return not secret(v) and type(v) == "table" and not (issecrettable and issecrettable(v)) end
@@ -98,6 +98,7 @@ function A:Roster()
     self.questQueryState={}
     -- A new roster invalidates incomplete transmissions and queued old-group data.
     self.incoming, self.queue = {}, {}
+    self.publishedQuests=nil;self.progressPending=nil
     self:Changed()
 end
 function A:MemberFromSender(sender)
@@ -163,7 +164,11 @@ function A:ReadOwn()
         if previous[id] and self:QuestDisplayChanged(previous[id],q) then ownChanged=true;break end
     end
     if ownChanged and self.QueueNativeTracker then self:QueueNativeTracker("local objective change") end
+    local changed=false
+    for id,q in pairs(quests) do if self:QuestDisplayChanged(previous[id],q) then changed=true;break end end
+    if not changed then for id in pairs(previous) do if not quests[id] then changed=true;break end end end
     self.own = quests
+    if changed then self.progressPending=true;self.sendPending=true end
     if self.partyQueryCache then
         for id in pairs(quests) do if not previous[id] then self.partyQueryCache[id]=nil end end
     end
@@ -209,8 +214,10 @@ function A:Consume(data, knownID, source)
                 if readyText=="Ready for turn-in" or (QUEST_WATCH_QUEST_READY and readyText==QUEST_WATCH_QUEST_READY) then
                     entry.q.ready=true;entry.q.readyAt=now
                 else
-                    if done and total and done<total then entry.q.ready=false end
-                    entry.q.objectives[#entry.q.objectives+1] = {text=text,done=done,total=total,observedAt=now}
+                    local finished=public(line.completed,"boolean") and line.completed
+                    if not public(line.completed,"boolean") then finished=nil end
+                    if finished==false or (done and total and done<total) then entry.q.ready=false end
+                    entry.q.objectives[#entry.q.objectives+1] = {text=text,done=done,total=total,finished=finished,observedAt=now}
                 end
                 end
             end
@@ -294,15 +301,18 @@ function A:Serialize(questIDs)
     end
     return table.concat(lines, "\n")
 end
-function A:Deserialize(payload)
-    local quests, count = {}, 0
+function A:Deserialize(payload,delta)
+    local quests, count, removed = {}, 0, {}
     for line in payload:gmatch("[^\n]+") do
         local f = fields(line)
         local id = tonumber(f[2])
         if not id or id < 1 or id%1 ~= 0 then return nil end
-        if f[1] == "Q" and #f == 4 then
+        if delta and f[1]=="R" and #f==2 then
+            if quests[id] or removed[id] then return nil end
+            removed[id]=true
+        elseif f[1] == "Q" and #f == 4 then
             count = count+1
-            if count > 100 or quests[id] then return nil end
+            if count > 100 or quests[id] or removed[id] then return nil end
             if f[4]~="0" and f[4]~="1" and f[4]~="N" then return nil end
             quests[id] = {id=id,title=f[3],ready=f[4]=="1",readyKnown=(f[4]=="1" or f[4]=="N") or nil,objectives={}}
         elseif f[1] == "O" and #f == 5 and quests[id] then
@@ -311,16 +321,38 @@ function A:Deserialize(payload)
             q.objectives[#q.objectives+1] = {text=f[3],done=tonumber(f[4]),total=tonumber(f[5])}
         else return nil end
     end
-    return quests
+    return quests,removed
+end
+function A:RememberPublishedQuests()
+    self.publishedQuests={}
+    for id in pairs(self.own) do self.publishedQuests[id]=self:Serialize({[id]=true}) end
+end
+function A:QueueProgressPayload(payload,delta)
+    if #payload>60000 then return false end
+    serial=serial+1
+    local total=math.max(1,math.ceil(#payload/180))
+    self.queue={}
+    for i=1,total do self.queue[i]=(delta and "D" or "")..serial..":"..i..":"..total..":"..payload:sub((i-1)*180+1,i*180) end
+    self:RememberPublishedQuests();self.progressPending=nil
+    return true
+end
+function A:SendProgressDelta()
+    if not next(self.members) or not self.comms or #self.queue>0 or GetTime()-lastDelta<0.35 then return end
+    if not self.publishedQuests then self.sendPending=true;return end
+    local lines={}
+    for id in pairs(self.own) do
+        local body=self:Serialize({[id]=true})
+        if body~=self.publishedQuests[id] then lines[#lines+1]=body end
+    end
+    for id in pairs(self.publishedQuests) do if not self.own[id] then lines[#lines+1]="R\t"..id end end
+    self.progressPending=nil
+    if #lines>0 and self:QueueProgressPayload(table.concat(lines,"\n"),true) then lastDelta=GetTime() end
 end
 function A:SendSnapshot()
     if not next(self.members) or not self.comms or GetTime()-lastSend < 5 then return end
     local payload = self:Serialize()
     if #payload > 60000 then return end
-    lastSend, serial = GetTime(), serial+1
-    local total = math.max(1,math.ceil(#payload/180))
-    self.queue = {}
-    for i=1,total do self.queue[i] = serial..":"..i..":"..total..":"..payload:sub((i-1)*180+1,i*180) end
+    if self:QueueProgressPayload(payload,false) then lastSend=GetTime() end
 end
 function A:Request()
     if not self.comms or not next(self.members) or GetTime()-lastRequest < 5 then return end
@@ -331,30 +363,46 @@ function A:Receive(message, sender)
     if not public(message,"string") or #message>255 then return end
     local m = self:MemberFromSender(sender)
     if not m then return end
-    if message == "REQ" then self.sendPending = true; return end
+    if message == "REQ" then
+        self.sendPending=true;m.progressSequence=nil
+        self.incoming[m.guid]=nil;self.incoming[m.guid..":delta"]=nil
+        return
+    end
+    local delta=message:sub(1,1)=="D"
+    if delta then message=message:sub(2) end
     local seq, index, total, part = message:match("^(%d+):(%d+):(%d+):(.*)$")
     seq,index,total = tonumber(seq),tonumber(index),tonumber(total)
     if not seq or total<1 or total>334 or index<1 or index>total or #part>180 then return end
-    local p = self.incoming[m.guid]
-    if not p or p.seq~=seq then p={seq=seq,total=total,parts={},at=GetTime()};self.incoming[m.guid]=p end
+    local key=m.guid..(delta and ":delta" or "")
+    if delta and m.progressSequence and seq<=m.progressSequence then return end
+    local p = self.incoming[key]
+    if not p or p.seq~=seq then
+        if p and seq<p.seq then return end
+        p={seq=seq,total=total,parts={},at=GetTime()};self.incoming[key]=p
+    end
     if p.total~=total then return end
     p.parts[index]=part
     for i=1,total do if p.parts[i]==nil then return end end
-    local quests=self:Deserialize(table.concat(p.parts))
+    local quests,removed=self:Deserialize(table.concat(p.parts),delta)
     if quests then
-        m.removedQuests={}
+        m.removedQuests=delta and (m.removedQuests or {}) or {}
         for _,q in pairs(quests) do
+            m.removedQuests[q.id]=nil
             for _,o in ipairs(q.objectives) do o.observedAt=GetTime() end
             if self.PopulateRequirements then self:PopulateRequirements(q) end
         end
-        m.quests,m.syncedAt=quests,GetTime()
+        if delta then
+            for id,q in pairs(quests) do m.quests[id]=q end
+            for id in pairs(removed) do m.quests[id]=nil;m.removedQuests[id]=GetTime() end
+        else m.quests,m.syncedAt=quests,GetTime() end
+        m.progressSequence=seq;m.progressAt=GetTime()
         self:Changed()
     end
-    self.incoming[m.guid]=nil
+    self.incoming[key]=nil
 end
 function A:ScheduleOwn()
     -- Preserve the first deadline: continuous quest-log events must not starve reads.
-    self.ownDue=self.ownDue or (GetTime()+0.7)
+    self.ownDue=self.ownDue or (GetTime()+0.2)
 end
 function A:CombatOwnTick()
     if self.demo or not (InCombatLockdown and InCombatLockdown()) then return end
@@ -438,13 +486,15 @@ frame:SetScript("OnUpdate",function(_,delta)
     if A.TrackerIntegrationTick then A:TrackerIntegrationTick() end
     if A.LiveTick then A:LiveTick() end
     if A.ownDue and now>=A.ownDue then
-        A.ownDue=nil; A:ReadOwn(); A.sendPending=true
+        A.ownDue=nil; A:ReadOwn()
     end
     if A.sendPending and #A.queue==0 and now-lastSend>=5 then A.sendPending=nil;A:SendSnapshot() end
+    if A.progressPending and #A.queue==0 then A:SendProgressDelta() end
     if #A.queue>0 and A.comms and next(A.members) then C_ChatInfo.SendAddonMessage(A.prefix,table.remove(A.queue,1),"PARTY") end
     for guid,p in pairs(A.incoming) do if now-p.at>90 then A.incoming[guid]=nil end end
     if refreshElapsed>=15 then
         refreshElapsed=0
+        A.sendPending=true
         if not A.LiveTick then A:ScanUnit("target");A:RefreshKnown() end
         A:Changed()
     end
