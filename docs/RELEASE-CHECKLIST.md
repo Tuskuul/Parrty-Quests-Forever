@@ -1,5 +1,7 @@
-# Party Quests Forever 1.1.4-beta2 beta build record
+# Party Quests Forever 1.1.4-beta3 beta build record
 
+- Player headings and separate indented objective rows match the approved preview.
+- Regression coverage verifies two players with distinct counts and separate rows.
 - Main collapse restores the compact native header, hides party contents and
   shared backdrop, and expands back to the joined centered header.
 - Combat shared-background resizing measures current native bounds read-only.

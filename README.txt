@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.4-beta2
-BETA: compact main collapse, combat resizing and automatic party layout updates.
+Party Quests Forever 1.1.4-beta3
+BETA: player headings and separate objective rows; compact collapse and combat fixes retained.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,

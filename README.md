@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.4-beta2**, a bug-fix testing build for compact main collapse and combat background resizing. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.1.4-beta3**, a testing build with separate player headings and one indented row per objective, retaining the collapse and combat resizing fixes. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
 
 ## Install
 

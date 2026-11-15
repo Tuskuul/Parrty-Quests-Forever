@@ -15,18 +15,22 @@ local function completeColor()
     return "|cff00ff00"
 end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
-local function progress(name,q,remote,connected)
-    local label=name..(connected==false and " (offline, cached)" or "")..": "
-    if A:IsQuestReady(q) then return label..completeColor().."Ready for turn-in|r" end
-    local parts={}
+local function progress(lines,kinds,name,q,remote,connected)
+    lines[#lines+1]=name..(connected==false and " (offline, cached)" or "")..":"
+    kinds[#lines]="player"
+    if A:IsQuestReady(q) then
+        lines[#lines+1]=completeColor().."Ready for turn-in|r";kinds[#lines]="objective"
+        return
+    end
+    local count=0
     for _,o in ipairs(q.objectives or {}) do
         local text=o.text or "Objective"
         if A:IsGenericObjective(text) then text="Unnamed step" end
         if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." "..(o.done or "?").."/"..o.total end
         if remote and (o.done==nil or o.total==nil) then text=text.." (progress unknown)" end
-        parts[#parts+1]=text
+        lines[#lines+1]=text;kinds[#lines]="objective";count=count+1
     end
-    return label..(#parts>0 and table.concat(parts,"; ") or "progress unknown")
+    if count==0 then lines[#lines+1]="progress unknown";kinds[#lines]="objective" end
 end
 function A:BuildTrackerEntries()
     local view=self:BuildPartyViewData()
@@ -63,11 +67,11 @@ function A:BuildTrackerEntries()
                 if #g.quests==0 then entries[#entries+1]={kind="empty",title=s.member and (s.member.syncedAt and "No quests in this section." or "None discovered yet.") or "No shared quests discovered yet."} end
                 for _,q in ipairs(g.quests) do
                     local key=s.member and (s.member.guid..":"..q.id) or ("all:"..q.id)
-                    local lines={}
-                    if view.own[q.id] then lines[#lines+1]=progress("You",view.own[q.id],false) end
+                    local lines,lineKinds={},{}
+                    if view.own[q.id] then progress(lines,lineKinds,"You",view.own[q.id],false) end
                     local participants=q.participants or {s.member}
                     for _,m in ipairs(participants) do
-                        if m and m.quests[q.id] then lines[#lines+1]=progress(m.name,m.quests[q.id],true,m.connected) end
+                        if m and m.quests[q.id] then progress(lines,lineKinds,m.name,m.quests[q.id],true,m.connected) end
                     end
                     local requirements=q.requirements
                     if not requirements and q.participants then
@@ -78,7 +82,7 @@ function A:BuildTrackerEntries()
                     end
                     local title=q.title..(self:IsQuestReady(q) and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
-                    entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
+                    entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
             end
         end
@@ -406,7 +410,12 @@ function A:RenderTrackerSidebar(entries,memberCount)
                 row((e.open and "- " or "+ ")..e.title,"line",nativeColor("Header"),20,e,e.key,0)
                 if e.open then
                     for _,r in ipairs(e.requirements or {}) do row(r.text,"line",nativeColor("Normal"),34) end
-                    for i,line in ipairs(e.lines or {}) do row(line,"line",nativeColor("Normal"),34,nil,e.key,i) end
+                    for i,line in ipairs(e.lines or {}) do
+                        local kind=e.lineKinds and e.lineKinds[i]
+                        if kind=="player" then y=y+4 end
+                        row(line,"line",nativeColor(kind=="player" and "Header" or "Normal"),
+                            kind=="objective" and 46 or 34,nil,e.key,i)
+                    end
                 end
             end
         end

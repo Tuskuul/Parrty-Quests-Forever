@@ -1,0 +1,12 @@
+Party Quests Forever 1.1.4-beta3
+
+Beta readability update for WoW Forever 1.60.1 (interface 16001).
+
+- Displays each player's name as a separate highlighted heading under a quest.
+- Places each objective on its own indented line, replacing wrapped semicolon lists.
+- Separates player groups with spacing so wrapped objectives have a clear owner.
+- Keeps Ready for turn-in, offline/cached status and unknown progress within
+  the correct player's group.
+- Retains beta2's compact main collapse, restore and combat resizing fixes.
+
+Long objectives can still wrap within their own row. Existing settings are kept.

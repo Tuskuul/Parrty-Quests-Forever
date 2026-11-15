@@ -56,9 +56,31 @@ for _,e in ipairs(entries) do if e.kind=='quest' then found[e.id]=e end end
 for _,id in ipairs({501,502,504}) do
  assert(found[id].title:find('[Ready]',1,true),'party quest title missing Ready')
  assert(found[id].lines[1]:find('Dahlina Shadowfoot:',1,true))
- assert(found[id].lines[1]:find('Ready for turn-in',1,true),'party member line missing Ready')
+ assert(found[id].lines[2]:find('Ready for turn-in',1,true),'party member line missing Ready')
 end
 assert(not found[503].title:find('[Ready]',1,true))
-assert(found[503].lines[1]:find('progress unknown',1,true))
+assert(found[503].lines[2]:find('progress unknown',1,true))
 assert(next(A.own)==nil and foul.ready==nil,'readiness display modified quest state')
+-- Multiple players and objectives must remain separate rows, with no shared counts.
+local localQuest={id=507,title='Encroachment',objectives={
+ {text='Razormane Quillboar slain',done=4,total=4},
+ {text='Razormane Scout slain',done=0,total=4}}}
+local remoteQuest={id=507,title='Encroachment',objectives={
+ {text='Razormane Quillboar slain',done=1,total=4},
+ {text='Razormane Scout slain',done=2,total=4}}}
+A.own={[507]=localQuest};member.quests={[507]=remoteQuest}
+function A:BuildPartyViewData()
+ return {members={member},own=self.own,sections={[member.guid]={count=1,shared={remoteQuest},other={}}}}
+end
+entries=A:BuildTrackerEntries()
+local expanded
+for _,e in ipairs(entries) do if e.kind=='quest' then expanded=e end end
+assert(expanded and #expanded.lines==6,'player/objective grouping merged or dropped rows')
+assert(expanded.lines[1]=='You:' and expanded.lineKinds[1]=='player')
+assert(expanded.lines[4]=='Dahlina Shadowfoot:' and expanded.lineKinds[4]=='player')
+assert(expanded.lines[2]:find('4/4',1,true) and expanded.lines[3]:find('0/4',1,true))
+assert(expanded.lines[5]:find('1/4',1,true) and expanded.lines[6]:find('2/4',1,true),'player counts crossed groups')
+for _,i in ipairs({2,3,5,6}) do
+ assert(expanded.lineKinds[i]=='objective' and not expanded.lines[i]:find(';',1,true),'objective rows are not separate')
+end
 print('PASS: other-player-only Ready tags, complete counts, all-step coverage, unknown/incomplete rejection, authoritative flags and no local progress access')
