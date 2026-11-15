@@ -9,7 +9,9 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.5-beta1**, a testing build that highlights the party quest matching Blizzard's currently focused quest. Your own progress starts collapsed under **+ You**. Party members retain separate headings and objective rows. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.1.5-beta2**, a testing build with default-on combat auto-hide and tracker reopening fixes. Focused quest highlighting is retained. Your own progress starts collapsed under **+ You**. Party members retain separate headings and objective rows. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+
+Combat auto-hide is under **Display → Hide tracker during combat**. It hides the entire tracker and restores its previous view afterward; disable it to keep the tracker visible in combat. Changes to this setting during combat apply afterward.
 
 ## Install
 

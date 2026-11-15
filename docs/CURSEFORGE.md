@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5-beta1.zip
+- **Release file:** PartyQuestsForever_1.1.5-beta2.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,18 +63,26 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5-beta1
+Party Quests Forever 1.1.5-beta2
 
-Beta feature build for WoW Forever 1.60.1 (interface 16001).
+Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
 
-- Highlights the party tracker title matching the quest currently super-tracked
-  in Blizzard's Objective Tracker, using a soft gold background and left accent.
-- Highlight follows focus changes and clears when a quest is no longer focused,
-  including during combat. All visible copies of the same quest are highlighted.
-- Keeps quest expansion, scrolling, Ready labels and your progress preferences.
-- Does not change which quest Blizzard tracks or automatically expand sections.
+- Adds Hide tracker during combat in Display settings, enabled by default.
+- Hides both Blizzard and party quest columns, the header and shared background
+  during combat; separate-window mode also hides its party window.
+- Restores the previous view after combat without changing saved pane visibility,
+  main-collapse state, or expanded player/zone/quest sections.
+- Turning auto-hide off keeps the tracker available in combat. Setting changes
+  made during combat apply when combat ends.
+- Adds an out-of-combat layout restore after main expansion and combat exit to
+  address Blizzard quest contents remaining blank when reopening.
+- Adds a green [Ready] tag to a combined quest heading when your quest and
+  every listed party participant are ready for turn-in. Mixed, missing or unknown
+  participant progress does not mark the shared heading ready.
+- Retains the focused-quest highlight from beta1 and all existing preferences.
 
-Existing settings are preserved. In-game visual confirmation is pending.
+Existing unset auto-hide preferences default on; an explicit off remains off.
+In-game verification of the new visibility and reopening behavior is pending.
 
 ## Submission references checked 2026-11-13
 

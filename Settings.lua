@@ -9,7 +9,13 @@ function A:SetViewShown(shown)
         self.db.trackerHidden=not shown;self:InvalidateTrackerIntegration()
         if self.RefreshCombatTrackerPane then self:RefreshCombatTrackerPane() end
     else self.db.hidden=not shown;self.window:SetShown(shown and self:ShouldShowPartyView()) end
+    if self.SyncCombatAutoHide then self:SyncCombatAutoHide() end
     self:SyncSettings()
+end
+function A:SetCombatAutoHide(value)
+    self.db.combatAutoHide=not not value
+    if self.SyncCombatAutoHide then self:SyncCombatAutoHide() end
+    self:InvalidateTrackerIntegration();self:SyncSettings()
 end
 function A:SetViewCollapsed(value)
     if self.db.displayMode=="blizzard" then
@@ -104,6 +110,7 @@ function A:InitSettings()
     check("blizzard","Beside Blizzard's objective tracker","Adds an independent scrolling list beside the normal tracker, using Blizzard's tracker fonts and colors.",function() return A.db.displayMode=="blizzard" end,function() A:SetDisplayMode("blizzard") end,true)
     check("window","Separate resizable window","Drag the title bar to move it, or the bottom-right corner to resize it.",function() return A.db.displayMode=="window" end,function() A:SetDisplayMode("window") end,true)
     check("visible","Show party quests","Automatically hidden when solo. You can open it anyway with the Party Quests button. Background discovery continues.",function() return A.db.displayMode=="blizzard" and not A.db.trackerHidden or A.db.displayMode=="window" and not A.db.hidden end,function(v) A:SetViewShown(v) end)
+    check("combatAutoHide","Hide tracker during combat","Hides the entire combined tracker (or separate party window) during combat and restores its previous view afterward. Changes made during combat apply when combat ends.",function() return A.db.combatAutoHide~=false end,function(v) A:SetCombatAutoHide(v) end)
     check("collapsed","Collapse tracker / window","In integrated mode, Blizzard's main collapse button controls both columns.",function()
         if A.db.displayMode~="blizzard" then return A.db.collapsed end
         local tracker=ObjectiveTrackerFrame

@@ -36,7 +36,7 @@ end
 local A={}
 assert(loadfile('Core.lua'))('SimplyPartyQuests',A)
 assert(loadfile('TrackerIntegration.lua'))('SimplyPartyQuests',A)
-A.db={displayMode='blizzard'};function A:ShouldShowPartyView() return true end
+A.db={displayMode='blizzard',combatAutoHide=false};function A:ShouldShowPartyView() return true end
 local background=widget();local native=widget({left=980,right=1600,top=2000,bottom=500,scale=0.4})
 local button=widget();local module={Header={MinimizeButton=button},collapsed=true}
 function module:IsCollapsed() return self.collapsed end

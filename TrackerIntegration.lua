@@ -15,6 +15,68 @@ local function completeColor()
     return "|cff00ff00"
 end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
+-- The secure visibility driver hides Blizzard's frame in combat. Its out-of-
+-- combat value is nil, so it never forces an otherwise empty/hidden tracker open.
+function A:SyncCombatAutoHide()
+    local s=self.integration
+    if not self.db then return false end
+    if combat() then
+        if not s.autoHideArmed then return false end
+        s.autoHideActive=true
+        if self.sidebar then
+            self.sidebar:Hide()
+            if self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+        end
+        if self.window then self.window:Hide() end
+        return true
+    end
+    if s.autoHideActive then
+        s.autoHideActive=nil
+        if s.autoHideNative then
+            if type(s.autoHideNative.SetAttribute)=="function" then s.autoHideNative:SetAttribute("statehidden",nil) end
+            if s.autoHideNativeShown then s.autoHideNative:Show() end
+        end
+        s.restoreNativeLayout=true
+        self:InvalidateTrackerIntegration()
+    end
+    local native=ObjectiveTrackerFrame
+    local enabled=self.db.combatAutoHide~=false
+    if s.autoHideNative and (s.autoHideNative~=native or not enabled) then
+        if type(UnregisterStateDriver)=="function" then UnregisterStateDriver(s.autoHideNative,"visibility") end
+        s.autoHideNative=nil;s.autoHideNativeShown=nil
+    end
+    if enabled and native and s.autoHideNative~=native and type(RegisterStateDriver)=="function" then
+        RegisterStateDriver(native,"visibility","[combat] hide; nil")
+        s.autoHideNative=native
+    end
+    s.autoHideArmed=enabled
+    if s.autoHideNative then s.autoHideNativeShown=s.autoHideNative:IsShown() end
+    return false
+end
+function A:RestoreNativeExpandedLayout(tracker)
+    local s=self.integration
+    if combat() or not s.restoreNativeLayout or not tracker then return end
+    s.restoreNativeLayout=nil
+    if invoke(tracker.IsCollapsed,tracker)==true or invoke(tracker.IsShown,tracker)==false then return end
+    -- A main expand must not leave module contents hidden by an earlier collapse.
+    -- Use native module methods, then the same full layout as a native main expand.
+    local seen={}
+    local function restore(module)
+        if not self.readable(module) or seen[module] then return end
+        seen[module]=true
+        if invoke(module.IsCollapsed,module)==true then invoke(module.SetCollapsed,module,false) end
+        local contents=self.readable(module.ContentsFrame) and module.ContentsFrame
+        if contents and type(contents.Show)=="function" then contents:Show() end
+    end
+    if self.db.displayMode=="blizzard" then
+        invoke(tracker.ForEachModule,tracker,restore)
+        for _,module in pairs(tracker.modules or {}) do restore(module) end
+    end
+    if type(tracker.Update)=="function" then
+        local ok,err=pcall(tracker.Update,tracker)
+        if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "native expand layout failed" end
+    end
+end
 local function progress(lines,kinds,name,q,remote,connected,ownKey)
     local expanded=ownKey and (A.db.trackerOwnProgressExpanded or {})[ownKey]
     local prefix=ownKey and (expanded and "- " or "+ ") or ""
@@ -34,6 +96,17 @@ local function progress(lines,kinds,name,q,remote,connected,ownKey)
         lines[#lines+1]=text;kinds[#lines]="objective";count=count+1
     end
     if count==0 then lines[#lines+1]="progress unknown";kinds[#lines]="objective" end
+end
+function A:IsTrackerQuestReady(q,ownQuest)
+    if not q.participants then return self:IsQuestReady(q) end
+    -- A combined entry contains identity/participants, not objective state.
+    -- Mark the shared parent only when every displayed quest holder is ready.
+    if not ownQuest or not self:IsQuestReady(ownQuest) or #q.participants==0 then return false end
+    for _,member in ipairs(q.participants) do
+        local quest=member.quests and member.quests[q.id]
+        if not quest or not self:IsQuestReady(quest) then return false end
+    end
+    return true
 end
 function A:BuildTrackerEntries()
     local view=self:BuildPartyViewData()
@@ -79,11 +152,12 @@ function A:BuildTrackerEntries()
                     local requirements=q.requirements
                     if not requirements and q.participants then
                         for _,m in ipairs(q.participants) do
-                            local r=m.quests[q.id].requirements
+                            local participant=m.quests and m.quests[q.id]
+                            local r=participant and participant.requirements
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=q.title..(self:IsQuestReady(q) and (" "..completeColor().."[Ready]|r") or "")
+                    local title=q.title..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
                     entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
@@ -179,6 +253,7 @@ function A:TrackerEntryClick(row,button)
     self:Render()
 end
 function A:RenderCombatTrackerSidebar()
+    if self:SyncCombatAutoHide() then return false end
     local f=self.sidebar
     if not f or not f.scroll then return false end
     local ok,err=pcall(function()
@@ -198,6 +273,7 @@ function A:RenderCombatTrackerSidebar()
     return ok
 end
 function A:RefreshCombatTrackerPane()
+    if self:SyncCombatAutoHide() then return end
     if not combat() or self.db.displayMode~="blizzard" then return end
     local f,s=self.sidebar,self.integration
     if not f then return end
@@ -227,6 +303,7 @@ function A:MeasureCombatTrackerBackground()
         bottom=(ownTop*scale-bottom*nativeScale)/scale}}
 end
 function A:ResizeCombatTrackerBackground()
+    if self.integration.autoHideActive then return end
     self:MeasureCombatTrackerBackground()
     local f=self.sidebar
     if not f or not f.trackerBackground then return end
@@ -594,10 +671,13 @@ function A:RestoreTrackerJoinVisuals()
     if self.sidebar and self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
 end
 function A:SetJoinedCollapseVisual(collapsed)
+    local wasCollapsed=self.integration.nativeCollapsed
+    if wasCollapsed and not collapsed then self.integration.restoreNativeLayout=true end
     self.integration.nativeCollapsed=not not collapsed
     local joined=not collapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     self:SyncCombatTrackerHeader(joined and self.integration.nativeVisible)
     local f=self.sidebar
+    if self:SyncCombatAutoHide() then return end
     if not f or not self.integration.nativeBackdrop then return end
     f:SetShown(not collapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView())
     if f.trackerBackground and f.joinedExpandedHeight then
@@ -772,6 +852,8 @@ function A:TrackerSidebarHeightLimit(tracker)
 end
 function A:TrackerIntegrationTick()
     if not self.db then return end
+    if self:SyncCombatAutoHide() then return end
+    self:RestoreNativeExpandedLayout(ObjectiveTrackerFrame)
     self:UpdateTrackerQuestFocus()
     if combat() then
         self:UpdateTrackerSidebarCombat()
@@ -852,8 +934,12 @@ function A:TrackerIntegrationTick()
 end
 local events=CreateFrame("Frame")
 A.integrationEvents=events
-for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","PLAYER_REGEN_ENABLED","SUPER_TRACKING_CHANGED"}) do events:RegisterEvent(event) end
+for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","SUPER_TRACKING_CHANGED"}) do events:RegisterEvent(event) end
 events:SetScript("OnEvent",function(_,event)
     if event=="SUPER_TRACKING_CHANGED" then A:UpdateTrackerQuestFocus()
-    else A:InvalidateTrackerIntegration() end
+    else
+        A:SyncCombatAutoHide()
+        if event=="PLAYER_REGEN_ENABLED" then A.integration.restoreNativeLayout=true end
+        A:InvalidateTrackerIntegration()
+    end
 end)

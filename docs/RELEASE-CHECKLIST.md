@@ -1,10 +1,14 @@
-# Party Quests Forever 1.1.5-beta1 beta build record
+# Party Quests Forever 1.1.5-beta2 beta build record
 
-- Gold title highlight and left accent match the approved preview.
-- Reads the current super-tracked quest ID; never modifies Blizzard selection.
-- Focus events and periodic sync update pooled row art, including during combat.
-- Quest-focus regression covers matching/duplicates, changing/clearing focus,
-  row reuse, unavailable APIs and no native/text/layout writes from focus updates.
-- All 22 root Lua files parse; all 14 regression suites pass.
-- Full addon packaging and current version metadata checked.
-- In-game confirmation pending; no CurseForge publication performed.
+- Default-on combat auto-hide setting preserves explicit opt-outs.
+- Native visibility uses Blizzard's secure visibility driver with a combat-only
+  hide condition; out-of-combat visibility is not forced by the driver.
+- Addon contents/background are hidden while auto-hide is active.
+- Prior hidden/collapsed choices are preserved; changes during combat defer.
+- One native full layout on out-of-combat reopen/combat exit restores expanded
+  module contents. Count-mismatch repair guards remain unchanged.
+- Combined-parent readiness aggregates actual holders and rejects mixed/unknown
+  or missing state; parent and per-player tags are regression checked.
+- All 22 root Lua files parse; all 15 regression suites pass.
+- Focus highlighting, readiness and combat opt-out behavior covered.
+- In-game verification pending. No CurseForge publication performed.
