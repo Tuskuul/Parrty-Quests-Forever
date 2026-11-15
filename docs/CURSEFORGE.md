@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta4.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta5.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,16 +63,13 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta4
+Party Quests Forever 1.1.6-beta5
 
-- Reserved a footer below the shared quest log for Transfer diagnostics.
-- Quest rows and the scrollbar now stop above that button, with a clear gap.
-- Clips scrolling quest contents to the list viewport so text cannot spill
-  over the footer.
+- Extended the All Objectives header bars to the left when the party pane is
+  closed or the tracker is collapsed, filling the gap above the background.
+- Preserved title and button positions, the right edge and the joined layout.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Retains beta3's visible copy/import fields and earlier sharing fixes.
-Live-client verification of the footer spacing is pending.
 
 ## Submission references checked 2026-11-13
 

@@ -729,6 +729,44 @@ function A:RestoreJoinedTrackerHeader()
     end
     self.integration.joinedHeader=nil
 end
+-- Native-only headers retain an atlas inset after the party column closes.
+-- Extend just the left artwork edge; preserve native title/control positions
+-- and restore the exact original texture anchors when integration ends.
+function A:FitNativeTrackerHeader(tracker,enabled)
+    local s=self.integration
+    local header=self.readable(tracker) and self.readable(tracker.Header) and tracker.Header
+    local background=header and self.readable(header.Background) and header.Background
+    if enabled and not background then return end
+    local saved=s.nativeHeaderFit
+    if saved and (not enabled or saved.region~=background) then
+        saved.region:ClearAllPoints()
+        if saved.resized then saved.region:SetWidth(saved.width) end
+        for _,point in ipairs(saved.points) do saved.region:SetPoint(unpack(point)) end
+        s.nativeHeaderFit=nil;saved=nil
+    end
+    if not enabled or not background or saved then return end
+    local points,left,right={},false,false
+    for i=1,background:GetNumPoints() do
+        local point={background:GetPoint(i)}
+        if not self.public(point[1],"string") or not self.public(point[4] or 0,"number") then return end
+        left=left or point[1]:find("LEFT",1,true)~=nil
+        right=right or point[1]:find("RIGHT",1,true)~=nil
+        points[#points+1]=point
+    end
+    if #points==0 then return end
+    local width=invoke(background.GetWidth,background)
+    if not (left and right) and (not self.public(width,"number") or width~=width or width<=0 or width==math.huge) then return end
+    saved={region=background,points=points,width=width,resized=not (left and right)}
+    background:ClearAllPoints()
+    if saved.resized then background:SetWidth(width+24) end
+    for _,point in ipairs(points) do
+        local adjusted={unpack(point)}
+        if point[1]:find("LEFT",1,true) then adjusted[4]=(point[4] or 0)-24
+        elseif not right then adjusted[4]=(point[4] or 0)-12 end
+        background:SetPoint(unpack(adjusted))
+    end
+    s.nativeHeaderFit=saved
+end
 function A:SyncCombatTrackerHeader(joined)
     local s=self.integration
     if not joined then
@@ -737,7 +775,10 @@ function A:SyncCombatTrackerHeader(joined)
             s.combatJoinedHeader=s.joinedHeader
             self:RestoreJoinedTrackerHeader()
         end
+        local state=s.combatJoinedHeader
+        if state then self:FitNativeTrackerHeader({Header=state.header},true) end
     elseif not s.joinedHeader and s.combatJoinedHeader then
+        self:FitNativeTrackerHeader(nil,false)
         local state=s.combatJoinedHeader
         for _,item in ipairs(state.items) do
             item.region:ClearAllPoints()
@@ -758,6 +799,7 @@ function A:JoinTrackerHeader(tracker,enabled)
     local side=self.db.trackerSide=="right" and "right" or "left"
     local saved=self.integration.joinedHeader
     if saved and (not enabled or saved.header~=header or saved.side~=side) then self:RestoreJoinedTrackerHeader();saved=nil end
+    self:FitNativeTrackerHeader(tracker,not enabled)
     if not enabled or not header or saved then return end
     local background=self.readable(header.Background) and header.Background or nil
     local title=self.readable(header.Text) and header.Text or nil
@@ -826,6 +868,7 @@ end
 -- Only visual regions are suppressed; native quest layout/update code is untouched.
 function A:RestoreTrackerJoinVisuals()
     local s=self.integration
+    self:FitNativeTrackerHeader(nil,false)
     local saved=s.nativeBackdrop;s.nativeBackdrop=nil
     if saved and saved.shown then saved.frame:Show() end
     local buttons=s.moduleButtons;s.moduleButtons=nil

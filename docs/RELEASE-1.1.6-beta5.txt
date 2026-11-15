@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.6-beta5
+
+- Extended the All Objectives header bars to the left when the party pane is
+  closed or the tracker is collapsed, filling the gap above the background.
+- Preserved title and button positions, the right edge and the joined layout.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
