@@ -1,3 +1,15 @@
+Party Quests Forever 1.1.4-beta4
+
+Beta readability update for WoW Forever 1.60.1 (interface 16001).
+
+- Your own progress starts collapsed under a clickable + You heading.
+- Expand or collapse your progress separately for each quest, including in combat.
+- Remembers your chosen state per quest across updates and reloads.
+- Party members' objective lists stay expanded beneath their player headings.
+- Retains separate objective rows, compact main collapse and combat resizing fixes.
+
+Existing settings are preserved; quests without a saved choice start closed.
+
 Party Quests Forever 1.1.4-beta3
 
 Beta readability update for WoW Forever 1.60.1 (interface 16001).

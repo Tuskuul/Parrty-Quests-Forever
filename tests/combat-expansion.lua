@@ -98,6 +98,11 @@ A:TrackerIntegrationTick()
 assert(f.trackerBackground.height==math.max(f.height,100),'combat backdrop retained stale native height')
 A.integration.nativeBackdrop.frame=nil
 f.combatBackgroundBounds={native={left=412,right=680,top=-5,bottom=120}}
+-- The local progress subheading is independently toggleable during combat.
+A:TrackerEntryClick({kind='ownProgress',key='q'},'LeftButton')
+assert(A.db.trackerOwnProgressExpanded.q and not A.db.questExpanded.q,'own-progress click toggled the quest')
+A:TrackerEntryClick({kind='ownProgress',key='q'},'LeftButton')
+assert(not A.db.trackerOwnProgressExpanded.q,'own-progress section did not close')
 -- The actual top button uses SetViewShown then the combat tick.
 A:TogglePartyTracker()
 assert(A.db.trackerHidden and not f:IsShown(),'party button did not hide immediately')

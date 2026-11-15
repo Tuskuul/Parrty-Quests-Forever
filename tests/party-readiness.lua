@@ -75,8 +75,13 @@ end
 entries=A:BuildTrackerEntries()
 local expanded
 for _,e in ipairs(entries) do if e.kind=='quest' then expanded=e end end
-assert(expanded and #expanded.lines==6,'player/objective grouping merged or dropped rows')
-assert(expanded.lines[1]=='You:' and expanded.lineKinds[1]=='player')
+assert(expanded and #expanded.lines==4 and expanded.lines[1]=='+ You:','own progress must start collapsed')
+assert(expanded.lines[2]=='Dahlina Shadowfoot:' and expanded.lines[3]:find('1/4',1,true),'remote progress was collapsed or changed')
+A.db.trackerOwnProgressExpanded={[expanded.key]=true}
+entries=A:BuildTrackerEntries()
+for _,e in ipairs(entries) do if e.kind=='quest' then expanded=e end end
+assert(#expanded.lines==6,'expanded own progress lost objective rows')
+assert(expanded.lines[1]=='- You:' and expanded.lineKinds[1]=='ownPlayer')
 assert(expanded.lines[4]=='Dahlina Shadowfoot:' and expanded.lineKinds[4]=='player')
 assert(expanded.lines[2]:find('4/4',1,true) and expanded.lines[3]:find('0/4',1,true))
 assert(expanded.lines[5]:find('1/4',1,true) and expanded.lines[6]:find('2/4',1,true),'player counts crossed groups')

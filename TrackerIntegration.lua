@@ -15,9 +15,12 @@ local function completeColor()
     return "|cff00ff00"
 end
 A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
-local function progress(lines,kinds,name,q,remote,connected)
-    lines[#lines+1]=name..(connected==false and " (offline, cached)" or "")..":"
-    kinds[#lines]="player"
+local function progress(lines,kinds,name,q,remote,connected,ownKey)
+    local expanded=ownKey and (A.db.trackerOwnProgressExpanded or {})[ownKey]
+    local prefix=ownKey and (expanded and "- " or "+ ") or ""
+    lines[#lines+1]=prefix..name..(connected==false and " (offline, cached)" or "")..":"
+    kinds[#lines]=ownKey and "ownPlayer" or "player"
+    if ownKey and not expanded then return end
     if A:IsQuestReady(q) then
         lines[#lines+1]=completeColor().."Ready for turn-in|r";kinds[#lines]="objective"
         return
@@ -68,7 +71,7 @@ function A:BuildTrackerEntries()
                 for _,q in ipairs(g.quests) do
                     local key=s.member and (s.member.guid..":"..q.id) or ("all:"..q.id)
                     local lines,lineKinds={},{}
-                    if view.own[q.id] then progress(lines,lineKinds,"You",view.own[q.id],false) end
+                    if view.own[q.id] then progress(lines,lineKinds,"You",view.own[q.id],false,nil,key) end
                     local participants=q.participants or {s.member}
                     for _,m in ipairs(participants) do
                         if m and m.quests[q.id] then progress(lines,lineKinds,m.name,m.quests[q.id],true,m.connected) end
@@ -158,6 +161,9 @@ function A:TrackerEntryClick(row,button)
     if row.kind=="member" then
         self.db.trackerMembersClosed=self.db.trackerMembersClosed or {}
         self.db.trackerMembersClosed[row.key]=not self.db.trackerMembersClosed[row.key]
+    elseif row.kind=="ownProgress" then
+        self.db.trackerOwnProgressExpanded=self.db.trackerOwnProgressExpanded or {}
+        self.db.trackerOwnProgressExpanded[row.key]=not self.db.trackerOwnProgressExpanded[row.key]
     elseif row.kind=="group" then self.db.trackerGroupsClosed[row.key]=not self.db.trackerGroupsClosed[row.key]
     elseif row.kind=="quest" then
         if not combat() and button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
@@ -412,9 +418,11 @@ function A:RenderTrackerSidebar(entries,memberCount)
                     for _,r in ipairs(e.requirements or {}) do row(r.text,"line",nativeColor("Normal"),34) end
                     for i,line in ipairs(e.lines or {}) do
                         local kind=e.lineKinds and e.lineKinds[i]
-                        if kind=="player" then y=y+4 end
-                        row(line,"line",nativeColor(kind=="player" and "Header" or "Normal"),
-                            kind=="objective" and 46 or 34,nil,e.key,i)
+                        local player=kind=="player" or kind=="ownPlayer"
+                        if player then y=y+4 end
+                        local action=kind=="ownPlayer" and {kind="ownProgress",key=e.key} or nil
+                        row(line,"line",nativeColor(player and "Header" or "Normal"),
+                            kind=="objective" and 46 or 34,action,e.key,i)
                     end
                 end
             end

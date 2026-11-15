@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.4-beta3.zip
+- **Release file:** PartyQuestsForever_1.1.4-beta4.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,18 +63,17 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.4-beta3
+Party Quests Forever 1.1.4-beta4
 
 Beta readability update for WoW Forever 1.60.1 (interface 16001).
 
-- Displays each player's name as a separate highlighted heading under a quest.
-- Places each objective on its own indented line, replacing wrapped semicolon lists.
-- Separates player groups with spacing so wrapped objectives have a clear owner.
-- Keeps Ready for turn-in, offline/cached status and unknown progress within
-  the correct player's group.
-- Retains beta2's compact main collapse, restore and combat resizing fixes.
+- Your own progress starts collapsed under a clickable + You heading.
+- Expand or collapse your progress separately for each quest, including in combat.
+- Remembers your chosen state per quest across updates and reloads.
+- Party members' objective lists stay expanded beneath their player headings.
+- Retains separate objective rows, compact main collapse and combat resizing fixes.
 
-Long objectives can still wrap within their own row. Existing settings are kept.
+Existing settings are preserved; quests without a saved choice start closed.
 
 ## Submission references checked 2026-11-13
 
