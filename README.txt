@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.3
-Release 1.1.3: shared tracker background, centered expanded heading and combat expansion.
+Party Quests Forever 1.1.4-beta1
+BETA: bug-fix testing build for header alignment and combat visibility.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,

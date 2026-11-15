@@ -9,8 +9,8 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.3_CurseForge_Release.zip
-- **Release type:** Release
+- **Release file:** PartyQuestsForever_1.1.4-beta1.zip
+- **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
 - **Optional integration:** WIM. Do not mark it as a required dependency.
@@ -63,24 +63,16 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.3
+Party Quests Forever 1.1.4-beta1
 
-- Centers All Objectives across the joined header while expanded or collapsed.
-- Keeps the joined header centered through combat collapse and party toggles.
-- Restores the native header width when Party Quests is hidden during combat
-  and restores the joined header when reopened.
-- Uses one continuous background for party and Blizzard quests, following
-  Edit Mode opacity, appearance, scale and height.
-- Uses Blizzard's main collapse button for both columns and removes redundant
-  module collapse controls; party-only views retain a fallback control.
-- Fixes native-only collapse, empty backgrounds and collapsed header protrusion.
-- Allows player, zone and quest expansion/collapse during combat from known data.
-- Makes the Party Quests button work during combat and restores content when
-  reopening the pane or expanding the whole tracker.
-- Keeps bright green Ready labels, guarded native refresh and quest-log sharing.
+Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Discovery, membership validation and native tracker repair wait until combat ends.
+- Keeps All Objectives centered across the joined header when expanded or collapsed.
+- Preserves centering through combat collapse and party-pane toggles.
+- Restores the native header when hiding Party Quests, in or out of combat.
+- Retains the existing combat expansion, scrolling, shared backdrop and Ready fixes.
+
+Existing settings are preserved. This is a beta for in-game verification.
 
 ## Submission references checked 2026-11-13
 
