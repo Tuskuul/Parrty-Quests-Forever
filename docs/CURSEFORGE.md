@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5-beta3.zip
+- **Release file:** PartyQuestsForever_1.1.5-beta4.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,21 +63,22 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5-beta3
+Party Quests Forever 1.1.5-beta4
 
-Beta behavior correction for WoW Forever 1.60.1 (interface 16001).
+Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
 
-- Combat behavior now collapses the tracker to its compact header instead of
-  hiding the whole tracker. All Objectives, Party Quests and the main + remain.
-- Renames the Display option to Collapse tracker during combat; enabled by
-  default and preserves an existing saved off choice.
-- Restores the previous expanded or collapsed state after combat without
-  changing quest/player expansion choices.
-- Separate-window mode keeps its title bar during combat as well.
-- Retains focused-quest highlighting, reopening restoration and shared Ready tags.
+- Combat auto-collapse now hides native module contents through secure handlers,
+  leaving the compact header visible with both quest columns folded away.
+- Clicking Party Quests on a fully collapsed tracker expands both columns.
+  In combat, the secure click handler can reopen the complete tracker.
+- While expanded, Party Quests continues to toggle only the party pane.
+- The main +/- button can also expand or collapse the combat view.
+- Native redraws respect the automatic collapsed state; prior visibility and
+  collapse choices are restored after combat.
+- Retains focused quest highlighting, shared green Ready tags and reopening fixes.
 
-Changes to this setting during combat take effect after combat ends.
-In-game confirmation of the corrected collapse behavior is pending.
+Collapse tracker during combat remains enabled by default and can be disabled
+in Display settings. In-game verification of these changes is pending.
 
 ## Submission references checked 2026-11-13
 
