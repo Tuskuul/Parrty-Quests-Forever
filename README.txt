@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.4
-Release 1.1.4: clearer progress rows, collapsed + You details and combat resizing fixes.
+Party Quests Forever 1.1.5
+Stable release: combat collapse and restoration, focused quests and timer layout fixes.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -16,11 +16,17 @@ need a full client restart before the addon appears in the AddOns list.
 Disable the older PoofPartyQuests addon if it is still installed.
 
 QUICK START
+Display > Collapse tracker during combat defaults ON, keeps the compact header
+visible and restores your prior expanded/collapsed view afterward. Turn it off
+to leave the tracker expanded during combat. Changes during combat
+apply after combat ends. Focused quest highlighting is retained.
 The tracker sidebar background follows Blizzard Edit Mode's Objective Tracker
 opacity setting and its live fonts, text size, outlines, shadows, colors and
 scale. Appearance changes apply outside combat without needing a reload.
 Joined columns use one background. Blizzard's main collapse button controls
-both columns; Party Quests toggles the party panel. Player/zone/quest expanders
+both columns; Party Quests toggles the party panel while expanded. Expanding
+the compact docked tracker during combat shows a warning and queues reopening
+until combat ends. Player/zone/quest expanders
 remain available. An empty native tracker uses one compact party-only control.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
@@ -34,8 +40,9 @@ and Shift-click refreshes. Drag the minimap button to reposition it.
 
 QUEST INFORMATION
 Progress queries continue during combat. Existing sidebar rows update their
-counts and Ready text. Player, zone and quest expansion, party visibility and
-reopening work during combat using known data, creating rows when needed.
+counts and Ready text. Player, zone and quest sections can expand during combat
+using known data while the party pane is open, creating rows when needed.
+Expanding the fully collapsed docked tracker waits until combat ends.
 Automatic party updates also reflow changed rows during combat. Discovery and
 membership checks and native repair still wait. Client
 restrictions can still limit the information available during combat.

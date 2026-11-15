@@ -1,0 +1,14 @@
+Party Quests Forever 1.1.5-beta6
+
+Beta visual fix for WoW Forever 1.60.1 (interface 16001).
+
+- Keeps the expanded tracker background below the separate Quest Timers panel,
+  removing the extra backdrop/empty strip behind the timer area.
+- Applies to Blizzard-only and combined party tracker views, including combat
+  geometry checks when combat auto-collapse is disabled.
+- Preserves the compact collapsed header and the native timer's own position,
+  countdown, border and padding.
+- Retains beta5's confirmed combat expansion queue and docked restoration.
+
+The combat click/restore sequence was confirmed in-game. The new timer alignment
+still needs in-game visual confirmation. Existing settings are preserved.

@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.4_CurseForge_Release.zip
+- **Release file:** PartyQuestsForever_1.1.5_CurseForge_Release.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,23 +63,28 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.4
-
-- Cleaner quest progress: each player has a separate heading, with one objective
-  per indented line instead of long wrapped lists.
-- Your own progress starts collapsed under + You. Expand it per quest; your
-  choice is remembered across updates and reloads. Party progress stays open.
-- Main collapse hides both quest columns and leaves a compact header. Expanding
-  restores the full tracker and previously opened sections, in or out of combat.
-- Fixed background resizing when collapsing sections or hiding the party pane
-  during combat.
-- Party rows now reflow automatically during combat as objective details change.
-- Fixed repeated quest-log events postponing local quest-data reads, and added
-  a bounded combat fallback for those reads.
+Party Quests Forever 1.1.5
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Discovery, membership validation and guarded native repair remain deferred
-until combat ends.
+
+- Highlights the quest focused in Blizzard's Objective Tracker with a soft gold
+  background and accent in the party tracker, including during combat.
+- Adds Collapse tracker during combat in Display settings, enabled by default.
+  Keeps the compact header visible and restores the prior view after combat.
+  An existing saved off choice remains off.
+- Attempts to expand the compact docked tracker during combat show a warning
+  and queue expansion until combat ends, preserving the docked display mode.
+- Fixes blank Blizzard quest contents when reopening or restoring the tracker.
+- Adds a green [Ready] tag to combined quest headings when your quest and every
+  listed party participant are ready. Unknown or mixed progress stays unmarked.
+- Fixes the expanded tracker background overlapping the separate Quest Timers
+  panel in Blizzard-only and combined views, without moving the timer itself.
+- Preserves per-quest + You choices, player objective rows, shared styling,
+  quest-log sharing and guarded native refresh.
+
+Combat restoration and timer layout were verified in-game by the user before
+stable promotion. Discovery, membership checks and guarded native repair remain
+deferred until combat ends.
 
 ## Submission references checked 2026-11-13
 
