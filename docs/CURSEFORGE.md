@@ -9,8 +9,8 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.4_CurseForge_Release.zip
-- **Release type:** Release
+- **Release file:** PartyQuestsForever_1.1.5-beta4.zip
+- **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
 - **Optional integration:** WIM. Do not mark it as a required dependency.
@@ -63,23 +63,22 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.4
+Party Quests Forever 1.1.5-beta4
 
-- Cleaner quest progress: each player has a separate heading, with one objective
-  per indented line instead of long wrapped lists.
-- Your own progress starts collapsed under + You. Expand it per quest; your
-  choice is remembered across updates and reloads. Party progress stays open.
-- Main collapse hides both quest columns and leaves a compact header. Expanding
-  restores the full tracker and previously opened sections, in or out of combat.
-- Fixed background resizing when collapsing sections or hiding the party pane
-  during combat.
-- Party rows now reflow automatically during combat as objective details change.
-- Fixed repeated quest-log events postponing local quest-data reads, and added
-  a bounded combat fallback for those reads.
+Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Discovery, membership validation and guarded native repair remain deferred
-until combat ends.
+- Combat auto-collapse now hides native module contents through secure handlers,
+  leaving the compact header visible with both quest columns folded away.
+- Clicking Party Quests on a fully collapsed tracker expands both columns.
+  In combat, the secure click handler can reopen the complete tracker.
+- While expanded, Party Quests continues to toggle only the party pane.
+- The main +/- button can also expand or collapse the combat view.
+- Native redraws respect the automatic collapsed state; prior visibility and
+  collapse choices are restored after combat.
+- Retains focused quest highlighting, shared green Ready tags and reopening fixes.
+
+Collapse tracker during combat remains enabled by default and can be disabled
+in Display settings. In-game verification of these changes is pending.
 
 ## Submission references checked 2026-11-13
 

@@ -1,14 +1,12 @@
-# Party Quests Forever 1.1.4 release record
+# Party Quests Forever 1.1.5-beta4 beta build record
 
-- Own progress is independently collapsible and defaults closed; party progress
-  remains expanded. Combat toggles and per-quest state are regression checked.
-- Regression coverage verifies two players with distinct counts and separate rows.
-- Main collapse restores the compact native header, hides party contents and
-  shared backdrop, and expands back to the joined centered header.
-- Combat shared-background resizing measures current native bounds read-only.
-- Automatic combat party reflow, own-log event deadlines and heartbeat covered.
-- Existing native redraw guards, opt-outs and combat deferral preserved.
-- All 22 root Lua files parse; all 13 regression suites pass.
-- Existing SavedVariables and install-folder identity retained.
-- User confirmed compact collapse/restore in-game and approved the readability
-  changes for a small stable update. No CurseForge publication performed.
+- Secure state handler hides native modules while keeping the main header visible.
+- Secure click wrappers reopen both columns from the compact Party Quests/main
+  controls during combat; normal Party Quests toggling remains when expanded.
+- Normal full native collapse/Update is not invoked from combat auto-collapse.
+- Regression executes the actual secure snippet bodies for state transitions,
+  module redraw suppression and click handling, using mocked frame handles.
+- Prior native collapsed state and opt-out remain covered.
+- Out-of-combat Party Quests clicks expand a genuinely collapsed native tracker.
+- All 22 root Lua files parse; all 15 regression suites pass.
+- In-game verification pending. No CurseForge publication performed.

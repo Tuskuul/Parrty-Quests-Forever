@@ -379,6 +379,7 @@ frame:SetScript("OnEvent",function(_,event,...)
         if A.db.displayMode==nil then A.db.displayMode="blizzard" end
         if A.db.groupByZone==nil then A.db.groupByZone=true end
         if A.db.nativeTrackerRepair==nil then A.db.nativeTrackerRepair=true end
+        if A.db.combatAutoHide==nil then A.db.combatAutoHide=true end
         if A.InitUI then A:InitUI() end
         if A.InitSettings then A:InitSettings() end
     elseif event=="PLAYER_LOGIN" then

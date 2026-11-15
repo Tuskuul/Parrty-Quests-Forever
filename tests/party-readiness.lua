@@ -88,4 +88,26 @@ assert(expanded.lines[5]:find('1/4',1,true) and expanded.lines[6]:find('2/4',1,t
 for _,i in ipairs({2,3,5,6}) do
  assert(expanded.lineKinds[i]=='objective' and not expanded.lines[i]:find(';',1,true),'objective rows are not separate')
 end
+-- Shared parent rows carry no readiness state themselves; aggregate actual holders.
+local ownReady={id=508,title='Hidden Enemies',ready=true,readyKnown=true,objectives={}}
+local remoteReady={id=508,title='Hidden Enemies',ready=true,readyKnown=true,objectives={}}
+member.quests={[508]=remoteReady}
+local combined={id=508,title='Hidden Enemies',participants={member}}
+A.db.combineShared=true;A.own={[508]=ownReady}
+function A:BuildPartyViewData()
+ return {members={member},own=self.own,combined={combined},sections={[member.guid]={count=1,shared={},other={}}}}
+end
+local function parent()
+ for _,e in ipairs(A:BuildTrackerEntries()) do if e.kind=='quest' then return e end end
+end
+assert(parent().title:find('|cff00ff00[Ready]|r',1,true),'all-ready shared parent missing green Ready')
+remoteReady.ready=false
+assert(not parent().title:find('[Ready]',1,true),'mixed shared progress marked Ready')
+remoteReady.ready=nil;remoteReady.readyKnown=nil
+assert(not parent().title:find('[Ready]',1,true),'unknown shared progress marked Ready')
+remoteReady.ready=true;ownReady.ready=false
+assert(not parent().title:find('[Ready]',1,true),'local incomplete state ignored')
+ownReady.ready=true
+member.quests={}
+assert(not parent().title:find('[Ready]',1,true),'missing participant quest marked Ready')
 print('PASS: other-player-only Ready tags, complete counts, all-step coverage, unknown/incomplete rejection, authoritative flags and no local progress access')
