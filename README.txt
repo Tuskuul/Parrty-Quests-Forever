@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta1
+Party Quests Forever 1.1.6-beta2
 BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 

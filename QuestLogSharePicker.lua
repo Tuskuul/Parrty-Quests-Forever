@@ -79,7 +79,24 @@ function A:SubmitQuestLogShare(questIDs)
     end
 end
 
+function A:FinishQuestLogSharePicker()
+    local f=self.questSharePicker
+    if not f then return end
+    f.transferActive=nil
+    if self.questLogTransfer then
+        self.questLogTransfer.returnToPicker=nil
+        self.questLogTransfer:Hide()
+    end
+    local saved=f.draft
+    f.draft=nil;f.selected={}
+    if not f.committed and saved then self:InsertQuestLogChatLink("",saved) end
+    f.committed=nil
+end
+
 function A:OpenQuestLogShare(draft)
+    if self.questSharePicker and self.questSharePicker.transferActive and self.questLogTransfer then
+        self.questLogTransfer:Raise();self.questLogTransfer.edit:SetFocus();return
+    end
     -- Keep the original editor, text, cursor, channel and recipient across both
     -- popup steps, even after the original Share button loses its hover state.
     draft=draft or self:CaptureQuestLogChatDraft()
@@ -89,6 +106,7 @@ function A:OpenQuestLogShare(draft)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSharePicker" end
         f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:EnableMouse(true)
         f:SetMovable(true);f:RegisterForDrag("LeftButton")
+        f:SetClampedToScreen(true)
         f:SetScript("OnDragStart",function() f:StartMoving() end)
         f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
         if self.readable(f.TitleText) then f.TitleText:SetText("Share quests") end
@@ -116,12 +134,9 @@ function A:OpenQuestLogShare(draft)
         f.cancel=button(f,"Cancel",100,function() f:Hide() end)
         f.cancel:SetPoint("BOTTOMRIGHT",-16,18)
         f:SetScript("OnHide",function()
-            if A.questLogTransfer then A.questLogTransfer:Hide() end
-            local saved=f.draft
-            f.draft=nil;f.selected={}
-            -- Closing or Escape restores the draft without publishing a link.
-            if not f.committed and saved then A:InsertQuestLogChatLink("",saved) end
-            f.committed=nil
+            -- Copy/import temporarily replaces this window. Keep its scope,
+            -- selections and chat draft until the user returns or imports.
+            if not f.transferActive then A:FinishQuestLogSharePicker() end
         end)
     end
     local f=self.questSharePicker

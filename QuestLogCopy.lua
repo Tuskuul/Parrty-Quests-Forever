@@ -80,6 +80,9 @@ function A:ShowQuestLogTransfer(mode,questIDs)
         self.questLogTransfer=f
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsShareTransfer" end
         f:SetSize(540,280);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:EnableMouse(true)
+        f:SetMovable(true);f:RegisterForDrag("LeftButton");f:SetClampedToScreen(true)
+        f:SetScript("OnDragStart",function() f:StartMoving() end)
+        f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
         f.title=self.readable(f.TitleText) and f.TitleText or f:CreateFontString(nil,"OVERLAY","GameFontNormal")
         if not self.readable(f.TitleText) then f.title:SetPoint("TOPLEFT",16,-8) end
         f.help=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
@@ -101,14 +104,22 @@ function A:ShowQuestLogTransfer(mode,questIDs)
         f.submit:SetScript("OnClick",function()
             local token,err=A:ImportCopiedQuestLogLink(f.edit:GetText())
             if not token then f.status:SetText(err);return end
-            f:Hide()
-            if A.questSharePicker then A.questSharePicker:Hide() end
+            f.returnToPicker=nil;f:Hide()
+            A:FinishQuestLogSharePicker()
             A:OpenQuestLogLink(token)
         end)
         f.close=CreateFrame("Button",nil,f,"UIPanelButtonTemplate")
         f.close:SetSize(100,24);f.close:SetPoint("BOTTOMRIGHT",-16,16)
         f.close:SetScript("OnClick",function() f:Hide() end)
-        f:SetScript("OnHide",function() f.edit:ClearFocus();f.mode=nil;f.copyText=nil;f.edit:SetText("") end)
+        f:SetScript("OnHide",function()
+            f.edit:ClearFocus();f.mode=nil;f.copyText=nil;f.edit:SetText("")
+            local picker=A.questSharePicker
+            if picker and picker.transferActive then
+                picker.transferActive=nil
+                if f.returnToPicker then picker:Show();picker:Raise() end
+            end
+            f.returnToPicker=nil
+        end)
     end
     local f=self.questLogTransfer
     f.mode=mode;f.copyText=text;f.title:SetText(mode=="copy" and "Copy Share link" or "Import shared quests")
@@ -117,6 +128,10 @@ function A:ShowQuestLogTransfer(mode,questIDs)
     f.status:SetText(mode=="copy" and "Copying does not change or send your current chat draft." or "")
     f.submit:SetShown(mode=="import");f.close:SetText(mode=="copy" and "Done" or "Cancel")
     f.edit:SetText(text or "");f.scroll:SetVerticalScroll(0)
+    local picker=self.questSharePicker
+    if picker then
+        picker.transferActive=true;f.returnToPicker=true;picker:Hide()
+    end
     f:Show();f:Raise();f.edit:SetFocus()
     if mode=="copy" then f.edit:HighlightText() end
 end

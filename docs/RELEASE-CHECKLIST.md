@@ -1,13 +1,11 @@
-# Party Quests Forever 1.1.6-beta1 beta build record
+# Party Quests Forever 1.1.6-beta2 beta build record
 
-- Continues from stable 1.1.5; main remains stable.
-- Sharing adds three actions with full-log and selected-quest scope.
-- Copy uses a bounded owner-bearing in-game marker; Import never evaluates code
-  or merges foreign quests into the player log or party caches.
-- Tests cover forwarded-owner routing through request/response transfer,
-  selected-only payloads, Ready and event completion flags, invalid imports,
-  cache conflicts, 15-minute expiry and chat-draft/recipient preservation.
+- Copy/Import temporarily hide the chooser without finalizing its draft/state.
+- All close paths return to the previous scope and quest selection; successful
+  imports finalize the draft and open the viewer with both chooser dialogs closed.
+- Repeated Share requests do not reopen the chooser over an active transfer.
+- Both windows support dragging and screen clamping; anchors are set only once.
+- Tests cover first/repeated opens, Copy Done, Import Cancel, invalid/successful
+  imports, Escape and selection/draft preservation, plus existing regressions.
 - All 23 root Lua files parse; all 15 regression suites pass.
-- Packaging ignores test infrastructure and uses this beta's release notes.
-- Live-client layout, clipboard shortcuts, forwarding and import remain untested.
-- No stable promotion or manual CurseForge file upload is part of this beta.
+- Main remains stable 1.1.5; in-game visual verification is pending.

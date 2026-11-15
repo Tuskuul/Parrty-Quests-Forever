@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta1.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta2.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,24 +63,20 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta1
+Party Quests Forever 1.1.6-beta2
 
-- Added Share to chat, Copy Share link and Import to the sharing screen.
-- Full log and Select quests now choose what to share before choosing an action.
-- Share to chat prepares the existing short quest-log link in your chat draft.
-- Copy Share link shows selectable text for Ctrl+C and pasting into WoW character
-  chats. Forwarded links retain the original snapshot owner.
-- Import accepts a copied in-game string and opens the existing shared-log viewer.
-- Preserves selected quests, completion flags, chat drafts and recipient routing.
+- Copy Share link and Import now temporarily replace the share chooser instead
+  of opening over it in the center of the screen.
+- Done, Cancel, the close button and Escape return to the chooser with your
+  full-log/selected-quest choice, checked quests and chat draft preserved.
+- Successful imports close the sharing dialogs before opening the shared log.
+- Both sharing windows can be dragged and are kept within the screen bounds.
+  Their positions remain in place when reopened during the same session.
+- Reopening Share while Copy or Import is active brings that dialog forward.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Copied links require this beta or newer on the receiving client. They use the
-existing in-game transfer system: the owner must stay online with the addon,
-links expire after 15 minutes, and reloading clears the owner's snapshots.
-Direct character-whisper restrictions still apply. Existing Battle.net sharing
-remains available through Share to chat; copied links use character routing.
-
-In-game layout, Ctrl+C/Ctrl+V, forwarding and import need beta verification.
+Retains beta1's three sharing actions and in-game copy/import transport.
+Live-client verification of the revised window flow is pending.
 
 ## Submission references checked 2026-11-13
 
