@@ -102,4 +102,22 @@ function A:SetViewShown(shown) self.db.trackerHidden=not shown end
 function A:TrackerIntegrationTick() end
 A:TogglePartyTracker();assert(A.db.trackerHidden,'collapsed panel toggle reopened an already-enabled panel')
 A:TogglePartyTracker();assert(not A.db.trackerHidden,'second toggle failed to enable panel')
+-- Quest Timers has its own backdrop above All Objectives. The shared canvas
+-- must not stretch upward across that reserved area, at either pane visibility.
+A.db.displayMode='blizzard';A.db.trackerHidden=false;A.db.trackerSide='left'
+f.left=100;f.top=1000;f.width=420;f.height=850
+native.left=980;native.right=1600;native.top=2200;native.bottom=500;native.scale=0.4
+tracker.Header=widget({top=2000,scale=0.4});tracker.collapsed=false
+QuestTimerFrame={IsVisible=function() return true end}
+A:SyncTrackerBackgroundJoin(tracker,true)
+assert(background.point[5]==0 and background.height==850,'timer padding stretched joined background upward')
+A.db.trackerHidden=true;A:SyncTrackerBackgroundJoin(tracker,true)
+assert(background.point[5]==0,'native-only background still covered timer area')
+A.db.trackerHidden=false
+locked=true;A:ResizeCombatTrackerBackground()
+assert(background.point[5]==0,'combat measurement restored timer overlap')
+locked=false;QuestTimerFrame.IsVisible=function() return false end
+A:SyncTrackerBackgroundJoin(tracker,true)
+assert(background.point[5]==100 and background.height==950,'normal native bounds not restored when timer disappeared')
+QuestTimerFrame=nil
 print('PASS: header-only collapsed art, native-only and joined collapse, no duplicate module button, background behind native text, one union backdrop, alpha-safe suppression, redraw hooks, one main collapse including combat, visibility toggles, scale/both sides, standalone and native restoration')

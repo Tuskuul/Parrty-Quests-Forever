@@ -437,6 +437,21 @@ function A:RefreshCombatTrackerPane()
     self:ResizeCombatTrackerBackground()
     self:InvalidateTrackerIntegration()
 end
+function A:TrackerBackgroundContentTop(top,ownTop,scale)
+    local timer=QuestTimerFrame
+    local shown=timer and invoke(timer.IsVisible,timer)
+    if shown==nil and timer then shown=invoke(timer.IsShown,timer) end
+    if shown~=true then return top end
+    local header=self.integration.backgroundHeader
+    if not header then return top end
+    local headerTop=invoke(header.GetTop,header)
+    local headerScale=invoke(header.GetEffectiveScale,header)
+    local function number(v) return self.public(v,"number") and v==v and math.abs(v)<math.huge end
+    if not (number(headerTop) and number(headerScale) and headerScale>0 and number(scale) and scale>0) then return top end
+    -- The native NineSlice includes the separate timer's top-padding area.
+    -- Our joined canvas begins at All Objectives, leaving the timer's own art alone.
+    return math.max(top,(ownTop*scale-headerTop*headerScale)/scale)
+end
 function A:MeasureCombatTrackerBackground()
     local f,s=self.sidebar,self.integration
     local native=s.nativeBackdrop and s.nativeBackdrop.frame
@@ -450,7 +465,7 @@ function A:MeasureCombatTrackerBackground()
     if not (number(scale) and scale>0 and number(nativeScale) and nativeScale>0
         and number(ownLeft) and number(ownTop) and number(left) and number(right) and number(top) and number(bottom)) then return end
     f.combatBackgroundBounds={native={left=(left*nativeScale-ownLeft*scale)/scale,
-        right=(right*nativeScale-ownLeft*scale)/scale,top=(ownTop*scale-top*nativeScale)/scale,
+        right=(right*nativeScale-ownLeft*scale)/scale,top=self:TrackerBackgroundContentTop((ownTop*scale-top*nativeScale)/scale,ownTop,scale),
         bottom=(ownTop*scale-bottom*nativeScale)/scale}}
 end
 function A:ResizeCombatTrackerBackground()
@@ -911,7 +926,8 @@ function A:SyncTrackerBackgroundJoin(tracker,nativeVisible)
         end
         local nl=(l*nativeScale-ownLeft*scale)/scale
         local nr=(r*nativeScale-ownLeft*scale)/scale
-        local nt=(ownTop*scale-t*nativeScale)/scale
+        self.integration.backgroundHeader=self.readable(tracker.Header) and tracker.Header or nil
+        local nt=self:TrackerBackgroundContentTop((ownTop*scale-t*nativeScale)/scale,ownTop,scale)
         local nb=(ownTop*scale-b*nativeScale)/scale
         nativeBounds={left=nl,right=nr,top=nt,bottom=nb}
         if partyVisible then

@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5-beta5.zip
+- **Release file:** PartyQuestsForever_1.1.5-beta6.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,22 +63,20 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5-beta5
+Party Quests Forever 1.1.5-beta6
 
-Beta bug-fix build for WoW Forever 1.60.1 (interface 16001).
+Beta visual fix for WoW Forever 1.60.1 (interface 16001).
 
-- Attempts to expand the compact tracker during combat now queue expansion
-  until combat ends instead of reopening protected native frames immediately.
-- Shows a standard in-combat warning when expansion is deferred.
-- Applies the queued expansion to the combined docked tracker after combat.
-- Blocked-action notifications no longer change the saved display mode to the
-  separate window; the current docked view is preserved for restoration.
-- Keeps combat auto-collapse, focused highlights, shared Ready tags and saved
-  per-quest progress expansion choices.
+- Keeps the expanded tracker background below the separate Quest Timers panel,
+  removing the extra backdrop/empty strip behind the timer area.
+- Applies to Blizzard-only and combined party tracker views, including combat
+  geometry checks when combat auto-collapse is disabled.
+- Preserves the compact collapsed header and the native timer's own position,
+  countdown, border and padding.
+- Retains beta5's confirmed combat expansion queue and docked restoration.
 
-If a previous build already switched your saved view to the separate window,
-use Dock beside tracker once (or /spq tracker) outside combat to select docking.
-No existing intentional separate-window preference is overridden.
+The combat click/restore sequence was confirmed in-game. The new timer alignment
+still needs in-game visual confirmation. Existing settings are preserved.
 
 ## Submission references checked 2026-11-13
 
