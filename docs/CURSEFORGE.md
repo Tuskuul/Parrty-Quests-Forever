@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta5.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta6.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,11 +63,14 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta5
+Party Quests Forever 1.1.6-beta6
 
-- Extended the All Objectives header bars to the left when the party pane is
-  closed or the tracker is collapsed, filling the gap above the background.
-- Preserved title and button positions, the right edge and the joined layout.
+- Allows the main +/- button or Party Quests button to reopen the automatically
+  collapsed tracker during combat.
+- Keeps a manually reopened tracker available until you collapse it again or
+  combat ends, then restores the previous view.
+- Reopens prepared tracker contents without forcing a full native layout rebuild
+  during combat.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
 

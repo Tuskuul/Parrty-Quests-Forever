@@ -35,11 +35,7 @@ local combatClick=[[
     if control:GetAttribute("state-combat") == 1 and control:GetAttribute("enabled") then
         local collapsed=control:GetAttribute("combat-collapsed")
         if self:GetAttribute("party-launcher") and not collapsed then return end
-        if collapsed then
-            control:CallMethod("QueueTrackerExpand")
-            return false
-        end
-        collapsed=true
+        collapsed=not collapsed
         control:SetAttribute("combat-collapsed",collapsed)
         control:SetAttribute("manual-open",not collapsed)
         for i=1,control:GetAttribute("count") or 0 do
@@ -49,7 +45,7 @@ local combatClick=[[
                 elseif control:GetAttribute("available"..i) then frame:Show() end
             end
         end
-        control:CallMethod("ApplyCombatVisual",collapsed)
+        control:CallMethod("ApplyCombatVisual",collapsed,self:GetAttribute("party-launcher") and not collapsed)
         return false
     end
 ]]
@@ -65,10 +61,14 @@ function A:PrepareCombatCollapse()
         s.combatController=c;s.combatModules={};s.combatButtons={};s.combatGuards={}
         c:SetAttribute("count",0)
         c.QueueTrackerExpand=function() A:QueueTrackerExpand() end
-        c.ApplyCombatVisual=function(_,collapsed)
+        c.ApplyCombatVisual=function(_,collapsed,showParty)
             s.combatVisualCollapsed=collapsed
             if combat() then
                 s.nativeCollapsed=collapsed
+                if showParty then A.db.trackerHidden=false end
+                -- This native header method only swaps +/- texture atlases.
+                -- Native module visibility has already changed in the secure
+                -- snippet; do not call tracker:SetCollapsed/Update here.
                 local header=s.autoCollapseNative and s.autoCollapseNative.Header
                 if header and type(header.SetCollapsed)=="function" then header:SetCollapsed(collapsed) end
                 if collapsed then
@@ -131,14 +131,16 @@ function A:SyncCombatAutoHide()
         s.autoHideActive=true
         local collapsed=s.combatController and s.combatController:GetAttribute("combat-collapsed")
         if s.autoCollapseNativeShown then
-            -- Never hide just our pane if native secure collapse was unavailable.
-            if not collapsed then return false end
+            -- No controller means there is no secure native visibility state.
+            if collapsed==nil then return false end
             local header=s.autoCollapseNative and s.autoCollapseNative.Header
-            if header and type(header.SetCollapsed)=="function" then header:SetCollapsed(true) end
-            self:SyncCombatTrackerHeader(false)
-            if self.sidebar then
-                self.sidebar:Hide()
-                if self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+            if header and type(header.SetCollapsed)=="function" then header:SetCollapsed(not not collapsed) end
+            if collapsed then
+                self:SyncCombatTrackerHeader(false)
+                if self.sidebar then
+                    self.sidebar:Hide()
+                    if self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+                end
             end
         elseif self.sidebar and self.sidebar.scroll and not self.db.trackerHidden and self:ShouldShowPartyView() then
             local f=self.sidebar;f.viewCollapsed=true;f.scroll:Hide();f.hint:Hide()
