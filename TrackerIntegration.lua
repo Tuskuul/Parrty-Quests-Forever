@@ -193,6 +193,7 @@ function A:RefreshCombatTrackerPane()
     local visible=not s.nativeCollapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     f.viewCollapsed=not s.nativeVisible and not not self.db.trackerCollapsed
     f:SetShown(visible)
+    self:SyncCombatTrackerHeader(visible and s.nativeVisible)
     if visible then self:RenderCombatTrackerSidebar() end
     self:ResizeCombatTrackerBackground()
     self:InvalidateTrackerIntegration()
@@ -418,7 +419,27 @@ function A:RestoreJoinedTrackerHeader()
     end
     self.integration.joinedHeader=nil
 end
+function A:SyncCombatTrackerHeader(joined)
+    local s=self.integration
+    if not joined then
+        if s.joinedHeader then
+            -- Keep both native and joined visual anchors for a combat reopen.
+            s.combatJoinedHeader=s.joinedHeader
+            self:RestoreJoinedTrackerHeader()
+        end
+    elseif not s.joinedHeader and s.combatJoinedHeader then
+        local state=s.combatJoinedHeader
+        for _,item in ipairs(state.items) do
+            item.region:ClearAllPoints()
+            for _,point in ipairs(item.joinedPoints) do item.region:SetPoint(unpack(point)) end
+        end
+        state.titleCentered=nil
+        s.joinedHeader=state;s.combatJoinedHeader=nil
+        self:PositionJoinedTrackerTitle(false)
+    end
+end
 function A:JoinTrackerHeader(tracker,enabled)
+    self.integration.combatJoinedHeader=nil
     local header=self.readable(tracker.Header) and tracker.Header or nil
     local side=self.db.trackerSide=="right" and "right" or "left"
     local saved=self.integration.joinedHeader
@@ -446,6 +467,10 @@ function A:JoinTrackerHeader(tracker,enabled)
     end
     self.integration.joinedHeader=state
     self:PositionJoinedTrackerTitle(invoke(tracker.IsCollapsed,tracker)==true)
+    for _,item in ipairs(state.items) do
+        item.joinedPoints={}
+        for i=1,item.region:GetNumPoints() do item.joinedPoints[#item.joinedPoints+1]={item.region:GetPoint(i)} end
+    end
 end
 function A:PositionJoinedTrackerTitle(collapsed)
     local state=self.integration.joinedHeader

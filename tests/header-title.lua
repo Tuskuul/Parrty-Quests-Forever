@@ -22,6 +22,13 @@ for _,side in ipairs({'left','right'}) do
  assert(title.points[1][1]=='LEFT' and title.points[1][4]==32,'collapsed title lost its inset')
  A:PositionJoinedTrackerTitle(false)
  assert(title.points[1][1]=='CENTER','re-expanding did not restore centered title')
+ A:SyncCombatTrackerHeader(false)
+ assert(title.points[1][2]=='original' and background.points[1][2]=='original','combat hide left the header stretched')
+ A:SyncCombatTrackerHeader(true)
+ assert(title.points[1][1]=='CENTER' and #background.points==2,'combat reopen did not restore joined header')
+ A:SyncCombatTrackerHeader(false)
+ A:SyncCombatTrackerHeader(true)
+ assert(title.points[1][2]==background,'repeated combat toggle lost centered title')
  A:JoinTrackerHeader(tracker,false)
  assert(title.points[1][2]=='original' and title.points[1][4]==7,'native title anchors not restored')
 end
