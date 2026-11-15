@@ -352,6 +352,22 @@ function A:SetTrackerSidebarHeaderLayout(nativeVisible)
     f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-36-offset)
     self.integration.dirty=true
 end
+function A:UpdateTrackerQuestFocus()
+    local f=self.sidebar
+    if not f or type(f.rows)~="table" then return end
+    local api=C_SuperTrack or {}
+    local id=invoke(api.GetSuperTrackedQuestID)
+    if not self.public(id,"number") or id<=0 or invoke(api.IsSuperTrackingQuest)==false then id=nil end
+    self.integration.focusedQuestID=id
+    for _,row in ipairs(f.rows) do
+        local e=row.entry
+        local focused=not not (id and e and e.kind=="quest" and e.id==id)
+        if row.focusFill and row.focusAccent and row.focusShown~=focused then
+            row.focusFill:SetShown(focused);row.focusAccent:SetShown(focused)
+            row.focusShown=focused
+        end
+    end
+end
 function A:RenderTrackerSidebar(entries,memberCount)
     local f=self.sidebar;local width=f:GetWidth()-8
     f.child:SetWidth(width)
@@ -362,6 +378,16 @@ function A:RenderTrackerSidebar(entries,memberCount)
         if not b then
             b=CreateFrame("Button",nil,f.child);b.label=text(b,role,color)
             b.headerBackground=false
+            -- Allocate once with the pooled row; focus changes only toggle art.
+            b.focusFill=b:CreateTexture(nil,"BACKGROUND",nil,1)
+            b.focusFill:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
+            b.focusFill:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",1,-1)
+            b.focusFill:SetColorTexture(1,0.76,0.08,0.18);b.focusFill:Hide()
+            b.focusAccent=b:CreateTexture(nil,"BACKGROUND",nil,2)
+            b.focusAccent:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
+            b.focusAccent:SetPoint("BOTTOMLEFT",b,"BOTTOMLEFT",-6,-1)
+            b.focusAccent:SetWidth(3);b.focusAccent:SetColorTexture(1,0.8,0.1,0.9);b.focusAccent:Hide()
+            b.focusShown=false
             b.label:SetPoint("TOPLEFT",0,0);b:RegisterForClicks("LeftButtonUp","RightButtonUp")
             b:SetScript("OnClick",function(_,key) if b.entry then A:TrackerEntryClick(b.entry,key) end end)
             b:SetScript("OnDoubleClick",function(_,key)
@@ -432,6 +458,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
     f.child:SetHeight(math.max(1,y))
     f.contentHeight=y
     self:SizeTrackerSidebar()
+    self:UpdateTrackerQuestFocus()
 end
 function A:SizeTrackerSidebar()
     local f=self.sidebar
@@ -745,6 +772,7 @@ function A:TrackerSidebarHeightLimit(tracker)
 end
 function A:TrackerIntegrationTick()
     if not self.db then return end
+    self:UpdateTrackerQuestFocus()
     if combat() then
         self:UpdateTrackerSidebarCombat()
         -- Native content can contract without changing our quest data.
@@ -824,5 +852,8 @@ function A:TrackerIntegrationTick()
 end
 local events=CreateFrame("Frame")
 A.integrationEvents=events
-for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","PLAYER_REGEN_ENABLED"}) do events:RegisterEvent(event) end
-events:SetScript("OnEvent",function() A:InvalidateTrackerIntegration() end)
+for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","PLAYER_REGEN_ENABLED","SUPER_TRACKING_CHANGED"}) do events:RegisterEvent(event) end
+events:SetScript("OnEvent",function(_,event)
+    if event=="SUPER_TRACKING_CHANGED" then A:UpdateTrackerQuestFocus()
+    else A:InvalidateTrackerIntegration() end
+end)

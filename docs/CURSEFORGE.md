@@ -9,8 +9,8 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.4_CurseForge_Release.zip
-- **Release type:** Release
+- **Release file:** PartyQuestsForever_1.1.5-beta1.zip
+- **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
 - **Optional integration:** WIM. Do not mark it as a required dependency.
@@ -63,23 +63,18 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.4
+Party Quests Forever 1.1.5-beta1
 
-- Cleaner quest progress: each player has a separate heading, with one objective
-  per indented line instead of long wrapped lists.
-- Your own progress starts collapsed under + You. Expand it per quest; your
-  choice is remembered across updates and reloads. Party progress stays open.
-- Main collapse hides both quest columns and leaves a compact header. Expanding
-  restores the full tracker and previously opened sections, in or out of combat.
-- Fixed background resizing when collapsing sections or hiding the party pane
-  during combat.
-- Party rows now reflow automatically during combat as objective details change.
-- Fixed repeated quest-log events postponing local quest-data reads, and added
-  a bounded combat fallback for those reads.
+Beta feature build for WoW Forever 1.60.1 (interface 16001).
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Discovery, membership validation and guarded native repair remain deferred
-until combat ends.
+- Highlights the party tracker title matching the quest currently super-tracked
+  in Blizzard's Objective Tracker, using a soft gold background and left accent.
+- Highlight follows focus changes and clears when a quest is no longer focused,
+  including during combat. All visible copies of the same quest are highlighted.
+- Keeps quest expansion, scrolling, Ready labels and your progress preferences.
+- Does not change which quest Blizzard tracks or automatically expand sections.
+
+Existing settings are preserved. In-game visual confirmation is pending.
 
 ## Submission references checked 2026-11-13
 

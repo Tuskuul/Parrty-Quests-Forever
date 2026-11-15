@@ -1,3 +1,16 @@
+Party Quests Forever 1.1.5-beta1
+
+Beta feature build for WoW Forever 1.60.1 (interface 16001).
+
+- Highlights the party tracker title matching the quest currently super-tracked
+  in Blizzard's Objective Tracker, using a soft gold background and left accent.
+- Highlight follows focus changes and clears when a quest is no longer focused,
+  including during combat. All visible copies of the same quest are highlighted.
+- Keeps quest expansion, scrolling, Ready labels and your progress preferences.
+- Does not change which quest Blizzard tracks or automatically expand sections.
+
+Existing settings are preserved. In-game visual confirmation is pending.
+
 Party Quests Forever 1.1.4
 
 - Cleaner quest progress: each player has a separate heading, with one objective

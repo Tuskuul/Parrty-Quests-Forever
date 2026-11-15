@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.4**, with your own progress collapsed by default under a clickable **+ You** heading. Party members retain separate headings and objective rows. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
+**1.1.5-beta1**, a testing build that highlights the party quest matching Blizzard's currently focused quest. Your own progress starts collapsed under **+ You**. Party members retain separate headings and objective rows. Character/WIM sending and receiving and a Battle.net snapshot transfer have passed user testing. Native discovery remains limited to what the client exposes.
 
 ## Install
 
