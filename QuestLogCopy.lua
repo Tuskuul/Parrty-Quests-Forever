@@ -87,15 +87,34 @@ function A:ShowQuestLogTransfer(mode,questIDs)
         if not self.readable(f.TitleText) then f.title:SetPoint("TOPLEFT",16,-8) end
         f.help=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
         f.help:SetPoint("TOPLEFT",16,-36);f.help:SetWidth(500);f.help:SetJustifyH("LEFT")
-        f.scroll=CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
-        f.scroll:SetPoint("TOPLEFT",20,-104);f.scroll:SetPoint("BOTTOMRIGHT",-38,82)
+        f.fieldLabel=f:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
+        f.fieldLabel:SetPoint("TOPLEFT",16,-84)
+        f.inputBackground=CreateFrame("Frame",nil,f,"BackdropTemplate")
+        f.inputBackground:SetPoint("TOPLEFT",16,-104);f.inputBackground:SetPoint("BOTTOMRIGHT",-16,78)
+        f.inputBackground:SetBackdrop({bgFile="Interface\\ChatFrame\\ChatFrameBackground",
+            edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,
+            insets={left=4,right=4,top=4,bottom=4}})
+        f.inputBackground:SetBackdropColor(0.025,0.025,0.025,0.96)
+        f.inputBackground:SetBackdropBorderColor(0.7,0.7,0.7,1)
+        f.scroll=CreateFrame("ScrollFrame",nil,f.inputBackground,"UIPanelScrollFrameTemplate")
+        f.scroll:SetPoint("TOPLEFT",12,-10);f.scroll:SetPoint("BOTTOMRIGHT",-30,10)
         f.edit=CreateFrame("EditBox",nil,f.scroll)
         f.edit:SetMultiLine(true);f.edit:SetAutoFocus(false);f.edit:SetFontObject(ChatFontNormal or GameFontHighlightSmall)
-        f.edit:SetWidth(478);f.edit:SetHeight(80);f.edit:SetMaxLetters(512)
+        f.edit:SetWidth(466);f.edit:SetHeight(80);f.edit:SetMaxLetters(512)
+        f.edit:SetTextInsets(4,4,4,4);f.edit:SetTextColor(1,1,1,1)
         f.scroll:SetScrollChild(f.edit)
+        f.placeholder=f.inputBackground:CreateFontString(nil,"OVERLAY","GameFontDisableSmall")
+        f.placeholder:SetPoint("TOPLEFT",16,-14);f.placeholder:SetText("Paste your share link here...")
+        local function focusInput()
+            f.edit:SetFocus()
+            if f.mode=="copy" then f.edit:HighlightText() end
+        end
+        f.inputBackground:EnableMouse(true);f.inputBackground:SetScript("OnMouseDown",focusInput)
+        f.scroll:SetScript("OnMouseDown",focusInput)
         f.edit:SetScript("OnEscapePressed",function() f:Hide() end)
         f.edit:SetScript("OnTextChanged",function(box)
-            if f.mode=="copy" and box:GetText()~=f.copyText then box:SetText(f.copyText) end
+            if f.mode=="copy" and box:GetText()~=f.copyText then box:SetText(f.copyText);return end
+            f.placeholder:SetShown(f.mode=="import" and box:GetText()=="")
         end)
         f.status=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
         f.status:SetPoint("BOTTOMLEFT",16,50);f.status:SetWidth(500);f.status:SetJustifyH("LEFT")
@@ -123,6 +142,7 @@ function A:ShowQuestLogTransfer(mode,questIDs)
     end
     local f=self.questLogTransfer
     f.mode=mode;f.copyText=text;f.title:SetText(mode=="copy" and "Copy Share link" or "Import shared quests")
+    f.fieldLabel:SetText(mode=="copy" and "Share link - Ctrl+C to copy" or "Share link - Ctrl+V to paste")
     f.help:SetText(mode=="copy" and "Press Ctrl+C to copy the selected link, then paste it into a WoW character chat. Recipients need this beta or newer. The owner must stay online; links last 15 minutes."
         or "Paste a complete in-game string from Copy Share link with Ctrl+V, then click Import. The owner's addon supplies the snapshot; the owner must be online and the link still available.")
     f.status:SetText(mode=="copy" and "Copying does not change or send your current chat draft." or "")

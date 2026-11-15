@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta2.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta3.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,20 +63,16 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta2
+Party Quests Forever 1.1.6-beta3
 
-- Copy Share link and Import now temporarily replace the share chooser instead
-  of opening over it in the center of the screen.
-- Done, Cancel, the close button and Escape return to the chooser with your
-  full-log/selected-quest choice, checked quests and chat draft preserved.
-- Successful imports close the sharing dialogs before opening the shared log.
-- Both sharing windows can be dragged and are kept within the screen bounds.
-  Their positions remain in place when reopened during the same session.
-- Reopening Share while Copy or Import is active brings that dialog forward.
+- Added a visible bordered text box to Copy Share link and Import, with a dark
+  background, readable white text and padding.
+- Labels show where to copy or paste. Empty imports display a paste hint.
+- Clicking the field focuses it; copied links remain selected for Ctrl+C.
+- Retains beta2's window switching, dragging and selection/draft preservation.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Retains beta1's three sharing actions and in-game copy/import transport.
-Live-client verification of the revised window flow is pending.
+Live-client verification of the revised text fields is pending.
 
 ## Submission references checked 2026-11-13
 

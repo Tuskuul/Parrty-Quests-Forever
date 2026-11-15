@@ -1,3 +1,14 @@
+Party Quests Forever 1.1.6-beta3
+
+- Added a visible bordered text box to Copy Share link and Import, with a dark
+  background, readable white text and padding.
+- Labels show where to copy or paste. Empty imports display a paste hint.
+- Clicking the field focuses it; copied links remain selected for Ctrl+C.
+- Retains beta2's window switching, dragging and selection/draft preservation.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Live-client verification of the revised text fields is pending.
+
 Party Quests Forever 1.1.6-beta2
 
 - Copy Share link and Import now temporarily replace the share chooser instead
