@@ -1,8 +1,8 @@
 # Party Quests Forever 1.1.3 release record
 
 - Release authorized by the user after the combat testing builds.
-- Expanded All Objectives title centered across the joined header; collapsed
-  title retains its inset and native-only mode restores original anchors.
+- All Objectives title centered across the joined header when expanded or
+  collapsed, including combat. Hiding the party pane restores native anchors.
 - Shared backdrop, one main collapse, green Ready labels, Edit Mode appearance
   and height cap retained.
 - Combat player/zone/quest expansion, party toggle and reopen restoration included.

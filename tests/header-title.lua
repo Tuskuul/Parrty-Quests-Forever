@@ -13,15 +13,30 @@ end
 local background,title=region(),region()
 local header={Background=background,Text=title}
 local tracker={Header=header,IsCollapsed=function() return false end}
-A.sidebar={}
+A.sidebar={SetShown=function() end}
+GetTime=function() return 100 end
+InCombatLockdown=function() return true end
+A.db.displayMode='blizzard'
+function A:ShouldShowPartyView() return true end
+function A:ResizeCombatTrackerBackground() end
+function A:RenderCombatTrackerSidebar() end
+A.integration.nativeVisible=true
 for _,side in ipairs({'left','right'}) do
  A.db.trackerSide=side
  A:JoinTrackerHeader(tracker,true)
  assert(title.points[1][1]=='CENTER' and title.points[1][2]==background,'expanded title must center on joined artwork')
  A:PositionJoinedTrackerTitle(true)
- assert(title.points[1][1]=='LEFT' and title.points[1][4]==32,'collapsed title lost its inset')
+ assert(title.points[1][1]=='CENTER' and title.points[1][2]==background,'collapsed title is not centered on the visible bar')
  A:PositionJoinedTrackerTitle(false)
  assert(title.points[1][1]=='CENTER','re-expanding did not restore centered title')
+ A.integration.nativeCollapsed=true
+ A:RefreshCombatTrackerPane()
+ assert(A.integration.joinedHeader and title.points[1][1]=='CENTER','combat main collapse unjoined the header')
+ A.db.trackerHidden=true;A:RefreshCombatTrackerPane()
+ assert(not A.integration.joinedHeader,'hidden party pane kept its joined header')
+ A.db.trackerHidden=false;A:RefreshCombatTrackerPane()
+ assert(A.integration.joinedHeader and title.points[1][1]=='CENTER','combat reopen while collapsed lost centered header')
+ A.integration.nativeCollapsed=false
  A:SyncCombatTrackerHeader(false)
  assert(title.points[1][2]=='original' and background.points[1][2]=='original','combat hide left the header stretched')
  A:SyncCombatTrackerHeader(true)
@@ -32,4 +47,4 @@ for _,side in ipairs({'left','right'}) do
  A:JoinTrackerHeader(tracker,false)
  assert(title.points[1][2]=='original' and title.points[1][4]==7,'native title anchors not restored')
 end
-print('PASS: expanded title center, collapsed inset, both sidebar sides and native anchor restoration')
+print('PASS: expanded/collapsed title center, combat collapse and party toggles, both sidebar sides and native anchor restoration')

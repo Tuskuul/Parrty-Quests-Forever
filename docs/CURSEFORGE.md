@@ -65,7 +65,8 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 Party Quests Forever 1.1.3
 
-- Centers All Objectives across the joined header while expanded.
+- Centers All Objectives across the joined header while expanded or collapsed.
+- Keeps the joined header centered through combat collapse and party toggles.
 - Restores the native header width when Party Quests is hidden during combat
   and restores the joined header when reopened.
 - Uses one continuous background for party and Blizzard quests, following

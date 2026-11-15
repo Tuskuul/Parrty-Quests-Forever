@@ -193,7 +193,8 @@ function A:RefreshCombatTrackerPane()
     local visible=not s.nativeCollapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     f.viewCollapsed=not s.nativeVisible and not not self.db.trackerCollapsed
     f:SetShown(visible)
-    self:SyncCombatTrackerHeader(visible and s.nativeVisible)
+    local joined=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    self:SyncCombatTrackerHeader(joined and s.nativeVisible)
     if visible then self:RenderCombatTrackerSidebar() end
     self:ResizeCombatTrackerBackground()
     self:InvalidateTrackerIntegration()
@@ -475,7 +476,7 @@ end
 function A:PositionJoinedTrackerTitle(collapsed)
     local state=self.integration.joinedHeader
     if not state or not state.title then return end
-    local centered=not collapsed and state.background~=nil
+    local centered=state.background~=nil
     if state.titleCentered==centered then return end
     state.title:ClearAllPoints()
     if type(state.title.SetJustifyH)=="function" then state.title:SetJustifyH(centered and "CENTER" or "LEFT") end
