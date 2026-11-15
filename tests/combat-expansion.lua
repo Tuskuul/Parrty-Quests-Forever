@@ -30,7 +30,7 @@ assert(loadfile('TrackerIntegration.lua'))('SimplyPartyQuests',A)
 assert(loadfile('Settings.lua'))('SimplyPartyQuests',A)
 A.db={trackerMembersClosed={},trackerGroupsClosed={},questExpanded={}}
 A.own={};A.members={m={}}
-A.db.displayMode="blizzard";A.db.combatAutoHide=false
+A.db.displayMode="blizzard"
 function A:ShouldShowPartyView() return true end
 A.integration.nativeBackdrop={};A.integration.nativeVisible=true
 A.sidebar=widget()

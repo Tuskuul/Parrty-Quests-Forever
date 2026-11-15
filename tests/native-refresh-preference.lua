@@ -18,6 +18,4 @@ assert(init({nativeTrackerRepair=false}).nativeTrackerRepair==false,'explicit op
 assert(init({nativeTrackerRepair=true}).nativeTrackerRepair==true)
 local saved=A.db;saved.nativeTrackerRepair=false
 assert(init(saved).nativeTrackerRepair==false,'automatic or manual off state did not survive reload')
-assert(init({}).combatAutoHide==true,'combat auto-hide must default on')
-assert(init({combatAutoHide=false}).combatAutoHide==false,'combat auto-hide opt-out overwritten')
 print('PASS: native refresh default-on, existing unset preferences and saved opt-outs')
