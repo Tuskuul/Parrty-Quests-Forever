@@ -1,0 +1,10 @@
+Party Quests Forever 1.1.6-beta9
+
+- Simplified settings into display, layout, quests and tools sections.
+- Layout options now show only for the selected tracker or window mode.
+- Removed duplicate visibility, collapse and scan controls, plus developer tools
+  from the settings menu.
+- Moved diagnostics and Blizzard tracker recovery into expandable troubleshooting.
+- Shortened option descriptions and added the current sidebar width.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

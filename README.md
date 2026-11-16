@@ -9,12 +9,14 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.6-beta8**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+**1.1.6-beta9**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
 
 Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
 
 
-Combat auto-collapse is under **Display → Collapse tracker during combat**. It leaves the compact header visible; the main +/- or Party Quests button can reopen the prepared contents during combat. A manually opened view stays open until collapsed again or combat ends. It restores the previous expanded or collapsed view afterward; disable it to leave the tracker expanded during combat. Changes to this setting during combat apply afterward.
+Combat auto-collapse is under **Display → Collapse during combat**. It leaves the compact header visible; the Party Quests button can reopen the prepared contents during combat. The native +/- remains unreliable in combat on the tested Forever client. A manually opened view stays open until collapsed again or combat ends. It restores the previous expanded or collapsed view afterward; disable it to leave the tracker expanded during combat. Changes to this setting during combat apply afterward.
+
+Beta9 streamlines Settings into Display, mode-specific Layout, Quests and Tools. Duplicate show/collapse/scan controls and developer-only actions are removed from the menu. Diagnostics and native recovery are under **Show troubleshooting**; saved preferences remain unchanged. The API inspector remains available with `/spq inspect`, and existing developer slash commands remain available.
 
 ## Install
 

@@ -59,7 +59,7 @@ function A:StartShareApiProbe()
 end
 function A:ShareApiReport()
     local p=self.shareApiProbe
-    if not p then return "Share API inspector: not run. Use Inspect share APIs in Settings > Troubleshooting." end
+    if not p then return "Share API inspector: not run. Use /spq inspect to inspect share APIs." end
     local lines={"Share API inspector (read-only; never whispers or shares):",
         "Selected quest plus up to 4 own and 4 foreign IDs. False outside the log is not treated as proof of unshareability.",
         "Capture: "..(GetTime()<p.untilTime and "active; reopen the report after testing" or "finished")}

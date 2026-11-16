@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta8.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta9.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -53,7 +53,7 @@ WIM sending/receiving and Battle.net transfers have passed user testing. Not eve
 
 Existing **Simply Party Quests** users retain their settings. Keep the addon folder named **SimplyPartyQuests**; only its displayed name changes. Replace files and `/reload`. A first installation may need a full client restart. Disable the obsolete PoofPartyQuests addon if it is still installed.
 
-Settings includes a diagnostic report; the shared-log viewer also has **Transfer diagnostics**. Review names and quest details before sharing reports. Include addon/client versions and the affected quest. Guarded Blizzard tracker refresh defaults on for new/unset preferences. It checks confirmed count mismatches outside combat and pauses after blank or unverifiable redraws. Explicit off settings remain saved.
+Settings > Show troubleshooting includes a diagnostic report; the shared-log viewer also has **Transfer diagnostics**. Review names and quest details before sharing reports. Include addon/client versions and the affected quest. Guarded Blizzard tracker refresh defaults on for new/unset preferences. It checks confirmed count mismatches outside combat and pauses after blank or unverifiable redraws. Explicit off settings remain saved.
 
 Built for **WoW Forever 1.60.1**. Retail, other Classic clients and raid tracking are not supported.
 
@@ -63,15 +63,14 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta8
+Party Quests Forever 1.1.6-beta9
 
-- Faster party progress updates, with small quest updates between full-log syncs.
-- More responsive checks for party members without the addon, including retries
-  when Blizzard tooltip data becomes available.
-- Recognizes objective completion flags supplied by native party tooltips.
-- Adjusted combat visibility handling to reduce interference with Blizzard's
-  quest tracker refreshes.
-- Keeps the selected-quest highlight inside the party tracker pane.
+- Simplified settings into display, layout, quests and tools sections.
+- Layout options now show only for the selected tracker or window mode.
+- Removed duplicate visibility, collapse and scan controls, plus developer tools
+  from the settings menu.
+- Moved diagnostics and Blizzard tracker recovery into expandable troubleshooting.
+- Shortened option descriptions and added the current sidebar width.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
 

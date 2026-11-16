@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta8
+Party Quests Forever 1.1.6-beta9
 BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -26,13 +26,14 @@ scale. Appearance changes apply outside combat without needing a reload.
 Joined columns use one background. Blizzard's main collapse button controls
 both columns; Party Quests toggles the party panel while expanded. Expanding
 the compact docked tracker during combat uses a prepared secure click handler.
-Click the main +/- or Party Quests button to reopen it. Native layout rebuilds
+Click Party Quests to reopen it in combat; native +/- remains unreliable. Native layout rebuilds
 still wait until combat ends. Player/zone/quest expanders
 remain available. An empty native tracker uses one compact party-only control.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
 Choose a left/right tracker sidebar or the separate window. Settings contain
-display, grouping, resizing, visibility, refresh and diagnostic controls.
+display, mode-specific layout, grouping and refresh controls. Diagnostics and
+native recovery are under Show troubleshooting.
 Click player, zone and quest headings to expand/collapse them. Mouse wheel
 scrolls long lists. The separate window moves by its title bar and resizes from
 its bottom-right corner. The party pane automatically hides when solo; use the
@@ -43,7 +44,7 @@ QUEST INFORMATION
 Progress queries continue during combat. Existing sidebar rows update their
 counts and Ready text. Player, zone and quest sections can expand during combat
 using known data while the party pane is open, creating rows when needed.
-Reopening the automatically collapsed docked tracker works from its buttons.
+Use Party Quests to reopen the automatically collapsed docked tracker.
 If a secure click handler is unavailable, expansion queues until combat ends.
 Automatic party updates also reflow changed rows during combat. Discovery and
 membership checks and native repair still wait. Client
@@ -91,7 +92,7 @@ Blizzard-based chat replacements and advertised chat-focus overrides use their
 existing editor paths. Independent unsupported chat windows may need adapters.
 
 TROUBLESHOOTING
-Use Settings > Open diagnostic report. For stuck snapshot transfers, use
+Use Settings > Show troubleshooting > Open diagnostic report. For stuck snapshot transfers, use
 Transfer diagnostics in the shared-log viewer on both sender and recipient.
 Basic transfer counters work without enabling broader diagnostic capture.
 Reports may contain names, quest IDs and routing IDs; review before sharing.
@@ -116,3 +117,9 @@ continue receiving full snapshots. Native polling reacts sooner to party quest
 events and tooltip cache resolution. Blizzard data availability still varies.
 Combat setup no longer adds protected children to native module layout frames.
 The selected-quest highlight stays inset from the adjacent tracker pane.
+
+BETA9 SETTINGS
+Removed duplicate visibility, collapse and scan controls and developer-only menu
+actions. Diagnostics and native recovery expand on demand. Saved preferences are
+preserved. /spq inspect runs the share API inspector; /spq demo and /spq clear
+remain available for troubleshooting.
