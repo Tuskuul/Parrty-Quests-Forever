@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta12.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta13.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,12 +63,13 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta12
+Party Quests Forever 1.1.6-beta13
 
-- Improved combat reopening when the tracker was collapsed before the fight.
-- Collapse controls keep quest contents prepared and restore your previous view after combat.
+- Added Open shareable to find quests you can offer that a party member is not currently on.
+- Select quests and post or copy an offer link. Party members can open the list and click a quest to request a share.
+- Quest offers use current party logs without checking completion history. The owner can confirm sharing if combat or the client delays it.
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+For WoW Forever 1.60.1 (interface 16001). Both players need beta13 or newer for quest offers. Existing settings are preserved.
 
 ## Submission references checked 2026-11-13
 

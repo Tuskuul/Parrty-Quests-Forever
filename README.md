@@ -9,12 +9,12 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.6-beta12**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+**1.1.6-beta13**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
 
 Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
 
 
-Combat auto-collapse is under **Display → Collapse during combat**. It leaves the compact header visible; the Party Quests button can reopen the prepared contents during combat. The native +/- remains unreliable in combat on the tested Forever client. A manually opened view stays open until collapsed again or combat ends. It restores the previous expanded or collapsed view afterward; disable it to leave the tracker expanded during combat. Changes to this setting during combat apply afterward.
+Combat auto-collapse is under **Display → Collapse during combat**. It leaves the compact header visible; the Party Quests button can reopen the prepared contents during combat. Beta12 was visually verified reopening a tracker closed before combat on the tested Forever client. A manually opened view stays open until collapsed again or combat ends. It restores the previous expanded or collapsed view afterward; disable it to leave the tracker expanded during combat. Changes to this setting during combat apply afterward.
 
 Beta9 streamlines Settings into Display, mode-specific Layout, Quests and Tools. Duplicate show/collapse/scan controls and developer-only actions are removed from the menu. Diagnostics and native recovery are under **Show troubleshooting**; saved preferences remain unchanged. The API inspector remains available with `/spq inspect`, and existing developer slash commands remain available.
 
@@ -22,7 +22,17 @@ Beta10 follows a full code audit: transient quest-data failures retain the last 
 
 Beta11 queues Settings requests made in combat and opens the panel once combat ends. Unrelated blocked UI actions no longer disable native tracker recovery. `/spq report` distinguishes disabled combat setup, unavailable APIs and failed initialization, with the failed phase and error when available.
 
-Beta12 prepares the underlying native layout outside combat even when the tracker is visually collapsed. While combat auto-collapse is enabled, the main button uses that prepared visibility path outside combat as well. Both combat buttons can then reopen prepared modules without calling the native full layout; combat exit restores the prior visual collapse. Disabling the option returns collapse control to Blizzard. The closed-before-combat case still requires live-client verification.
+Beta12 prepares the underlying native layout outside combat even when the tracker is visually collapsed. While combat auto-collapse is enabled, the main button uses that prepared visibility path outside combat as well. Both combat buttons can then reopen prepared modules without calling the native full layout; combat exit restores the prior visual collapse. Disabling the option returns collapse control to Blizzard. The closed-before-combat case was subsequently verified in the user's beta12 recording; group progress and quest offers are separate tests.
+
+## Quest offers
+
+Open **Share quests → Open shareable**. This uses the same checkbox list as Select quests, filtered to quests in your own log that the client marks shareable and at least one party member is not currently on. Hover a title to see which known members are missing it. Only recent complete addon logs prove absence; unavailable or stale logs do not. No completion-history or prerequisite lookup is used for this list.
+
+Select the quests to offer, then **Share to chat** or **Copy Share link**. Both players need beta13 or newer and must remain in the same party. The recipient opens the offer list and clicks **[Request share]** on a quest. The owner rechecks the published selection, current party membership, ownership and native shareability, then attempts the normal party quest share. Normal acceptance requirements still apply, and native sharing may offer the quest to other eligible party members as well.
+
+Combat defers sharing to an owner confirmation. If the automatic native call fails or records a blocked action, a **Share quest** confirmation appears on the owner; subsequent requests use confirmation for that session. The original quest-log selection is restored. If that confirmation is also rejected by the client, use the normal quest-log Share Quest button. Native attempts are reported as attempts, not proof of delivery or acceptance. This final native operation still requires live Forever verification.
+
+Offer links expire after 15 minutes, share the six-published-link limit with snapshots, and contain selected titles without objective/completion details. Old full-log, selected-log, Copy and Import behavior remains available. Offers use character chat; they do not add Battle.net request routing or Questie interoperability.
 
 ## Install
 

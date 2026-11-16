@@ -17,23 +17,24 @@ local function escaped(s) return (s:gsub("|","||")) end
 function A:ParseCopiedQuestLogLink(text)
     if not self.public(text,"string") or #text>255 then return nil end
     text=text:match("^%s*(.-)%s*$")
-    local token,name=text:match("^%[Party Quests Log:([%x%-]+):([%x]+)%]$")
+    local kind,token,name=text:match("^%[Party Quests (%a+):([%x%-]+):([%x]+)%]$")
+    if kind~="Log" and kind~="Offer" then return nil end
     if not tokenOK(token) or not name then return nil end
     local owner=unhex(name)
     if not ownerOK(owner) then return nil end
-    return {token=token,owner=owner}
+    return {token=token,owner=owner,offer=kind=="Offer"}
 end
 
-function A:CreateCopiedQuestLogLink(questIDs)
+function A:CreateCopiedQuestLogLink(questIDs,offer)
     if not self:InitQuestLogLinks() or not self.questLinkComms then
         return nil,"Quest-log communication is unavailable in this client."
     end
-    local token,snapshot=self:CreateQuestLogSnapshot(questIDs)
+    local token,snapshot=self:CreateQuestLogSnapshot(questIDs,offer)
     if not token then return nil,snapshot end
     if not ownerOK(snapshot.owner) then return nil,"Your character name is unavailable." end
     -- Carry the original owner, rather than treating whoever pastes/forwards
     -- the marker as the publisher. Remains within normal WoW chat length.
-    local marker="[Party Quests Log:"..token..":"..hex(snapshot.owner).."]"
+    local marker="[Party Quests "..(offer and "Offer:" or "Log:")..token..":"..hex(snapshot.owner).."]"
     if #marker>255 then return nil,"The link is too long for WoW chat." end
     snapshot.published=true
     return marker
@@ -42,20 +43,20 @@ end
 function A:RegisterCopiedQuestLogLink(ref)
     self:PruneQuestLinks()
     local s=self:QuestLinkState();local previous=s.observed[ref.token]
-    if previous and previous.owner:lower()~=ref.owner:lower() then return false end
+    if previous and (previous.owner:lower()~=ref.owner:lower() or (previous.offer==true)~=(ref.offer==true)) then return false end
     local mine=s.published[ref.token]
-    if mine and mine.owner:lower()~=ref.owner:lower() then return false end
+    if mine and (mine.owner:lower()~=ref.owner:lower() or (mine.offer==true)~=(ref.offer==true)) then return false end
     -- Repeated observation must not replace an existing Battle.net route.
     if previous and previous.accountID then return true end
-    s.observed[ref.token]={owner=ref.owner,localTime=GetTime()}
+    s.observed[ref.token]={owner=ref.owner,offer=ref.offer==true,localTime=GetTime()}
     return true
 end
 
 function A:ObserveCopiedQuestLogLinks(message)
-    return (message:gsub("%[Party Quests Log:([%x%-]+):([%x]+)%]",function(token,name)
-        local ref=self:ParseCopiedQuestLogLink("[Party Quests Log:"..token..":"..name.."]")
+    return (message:gsub("%[Party Quests (%a+):([%x%-]+):([%x]+)%]",function(kind,token,name)
+        local ref=self:ParseCopiedQuestLogLink("[Party Quests "..kind..":"..token..":"..name.."]")
         if not ref or not self:RegisterCopiedQuestLogLink(ref) then return nil end
-        return "|cffffff00|Haddon:SPQLOG:"..token.."|h["..escaped(ref.owner).."'s Quest Log]|h|r"
+        return "|cffffff00|Haddon:SPQLOG:"..token.."|h["..escaped(ref.owner)..(ref.offer and "'s Quest Offers]|h|r" or "'s Quest Log]|h|r")
     end))
 end
 
@@ -69,10 +70,10 @@ function A:ImportCopiedQuestLogLink(text)
     return ref.token
 end
 
-function A:ShowQuestLogTransfer(mode,questIDs)
+function A:ShowQuestLogTransfer(mode,questIDs,offer)
     local text
     if mode=="copy" then
-        local err;text,err=self:CreateCopiedQuestLogLink(questIDs)
+        local err;text,err=self:CreateCopiedQuestLogLink(questIDs,offer)
         if not text then self.questSharePicker.status:SetText(err);self.questSharePicker.status:Show();return end
     end
     if not self.questLogTransfer then

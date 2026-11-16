@@ -1,3 +1,11 @@
+Party Quests Forever 1.1.6-beta13
+
+- Added Open shareable to find quests you can offer that a party member is not currently on.
+- Select quests and post or copy an offer link. Party members can open the list and click a quest to request a share.
+- Quest offers use current party logs without checking completion history. The owner can confirm sharing if combat or the client delays it.
+
+For WoW Forever 1.60.1 (interface 16001). Both players need beta13 or newer for quest offers. Existing settings are preserved.
+
 Party Quests Forever 1.1.6-beta12
 
 - Improved combat reopening when the tracker was collapsed before the fight.

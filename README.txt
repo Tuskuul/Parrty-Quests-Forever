@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.6-beta12
-BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
+Party Quests Forever 1.1.6-beta13
+BETA: Quest offers, chat links, copied links and in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -139,3 +139,12 @@ Opening Settings in combat queues one request until combat ends. Unrelated UI
 blocks no longer disable native repair. Reports include combat auto-collapse
 preference, setup status, API availability, controller/driver state, module count
 and initialization errors. Native +/- still needs live verification.
+
+QUEST OFFERS (BETA13)
+Share quests > Open shareable lists your shareable quests missing from a recent
+party member log. Select offers, then Share to chat or Copy Share link.
+Hover a quest for missing member names. Completion history is not required.
+The recipient opens the link and clicks a quest to request its normal share.
+Both players need beta13 or newer and must remain in the same party.
+Combat or client restrictions may require the owner to click Share quest.
+Links last 15 minutes. Native share delivery/acceptance still needs live testing.
