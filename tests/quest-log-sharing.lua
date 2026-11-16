@@ -32,6 +32,7 @@ GetServerTime=function() return 10000 end
 GetUnitName=function() return 'Tester-Realm' end
 local A={}
 assert(loadfile('Core.lua'))('SimplyPartyQuests',A)
+assert(loadfile('QuestDialogStyle.lua'))('SimplyPartyQuests',A)
 assert(loadfile('QuestLogLinks.lua'))('SimplyPartyQuests',A)
 assert(loadfile('QuestLogSharePicker.lua'))('SimplyPartyQuests',A)
 assert(loadfile('QuestLogCopy.lua'))('SimplyPartyQuests',A)

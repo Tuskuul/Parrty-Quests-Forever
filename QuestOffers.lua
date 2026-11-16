@@ -9,7 +9,7 @@ local function validID(id) return A.public(id,"number") and id>=1 and id<=100000
 local function tokenOK(token) return A.public(token,"string") and #token<=48 and token:match("^[%x]+%-%x+%-%x+$")~=nil end
 local function label(f,text,y)
     local t=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-    t:SetPoint("TOPLEFT",16,y);t:SetWidth(408);t:SetJustifyH("LEFT");t:SetText(text);return t
+    A:StyleQuestDialogText(t,"body");t:SetPoint("TOPLEFT",16,y);t:SetWidth(408);t:SetJustifyH("LEFT");t:SetText(text);return t
 end
 function A:QuestOfferMember(name)
     if not self.public(name,"string") or not name:find("%S") then return nil end
@@ -169,6 +169,7 @@ function A:ShowQuestOfferConfirmation()
     if not self.questOfferConfirmation then
         local f=CreateFrame("Frame","SimplyPartyQuestsOfferConfirm",UIParent,"BasicFrameTemplateWithInset")
         self.questOfferConfirmation=f
+        self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsOfferConfirm" end
         f:SetSize(440,180);f:SetPoint("CENTER",0,140);f:SetFrameStrata("DIALOG")
         if self.readable(f.TitleText) then f.TitleText:SetText("Requested quest share") end

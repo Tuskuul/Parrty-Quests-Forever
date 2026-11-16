@@ -32,7 +32,7 @@ GetServerTime=function() return 10000 end
 GetUnitName=function() return 'Tester-Realm' end
 
 local A={}
-for _,file in ipairs({'Core.lua','ShareRequests.lua','QuestEligibility.lua','QuestLogLinks.lua','QuestOffers.lua'}) do assert(loadfile(file))('SimplyPartyQuests',A) end
+for _,file in ipairs({'Core.lua','ShareRequests.lua','QuestEligibility.lua','QuestDialogStyle.lua','QuestLogLinks.lua','QuestOffers.lua'}) do assert(loadfile(file))('SimplyPartyQuests',A) end
 local level,race,class,used=28,2,1,0
 local unavailable=false
 local completed={}
@@ -89,10 +89,12 @@ A:QuestLinkState().received[token]=snapshot
 A:ShowSharedQuestLog(token,snapshot)
 local row=A.sharedQuestLogWindow.rows[1]
 assert(row.label.text:find('Not eligible',1,true),'known failure was not marked in the recipient list')
+assert(row.reason.shown and row.reason.text:find('Requires level 29',1,true),'eligibility reason was not visible beneath its quest')
 row.scripts.OnClick()
 assert(sent==0 and A:QuestOfferStatus(token):find('Not eligible: Requires level 29',1,true),'ineligible request was sent or lacked a clear reason')
 assert(A.lastStage=='offer-ineligible','eligibility denial was not diagnosable')
 -- Recheck when clicked: a cached grey row must not block a newly eligible character.
 level=29;row.scripts.OnClick()
 assert(sent==1 and row.label.text:find('Request share',1,true),'level-up was not rechecked before requesting')
+assert(not row.reason.shown and row.reason.text=='','pooled quest row retained an obsolete eligibility reason')
 print('PASS: recipient-only eligibility and reasons, actual level-29/30 cases, missing prerequisites, completion/repeatables, race/class, log capacity, unknown-rule warnings, legacy shareability, no blocked sends and live click recheck')

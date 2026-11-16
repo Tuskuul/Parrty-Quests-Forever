@@ -1,55 +1,53 @@
-# Party Quests Forever 1.1.6-beta14 beta build record
+# Party Quests Forever 1.1.6-beta15 beta build record
 
-Baseline: beta13, 3a156511c78786bf5e84d2f3b8025c4bf4b072fb.
+Baseline: beta14, 76e403788c53928efc0cb36c4bd64e0311e56fa1.
 
-Live beta13 evidence:
-- Recipient downloaded Ivry Berkana's offer snapshot, requested quests 95494 and
-  899, then recorded acceptance events after each request and both IDs in own log.
-- Owner report records two offer-push-attempt stages and result messages for those
-  same IDs. No matching owner manual fallback or blocked actions were recorded.
-  This supports the tested automatic native share flow, without proving all cases.
-- Reverse-side requests included 1361 and 701; the user states that requester is
-  too low-level. Bundled eligibility metadata gives minimum levels 30 and 29.
+User approved a parchment mockup and explicitly requested the same visual
+language for all share windows: chooser, received logs/offers, Copy/Import and
+owner confirmation. Implement with native client artwork and font objects,
+without inheriting native quest-acceptance scripts or changing Blizzard frames.
 
 Changes:
-- Extract existing local level/race/class checks for reuse before completion
-  availability can obscure a known level failure.
-- Check requester eligibility while rendering offers and freshly on click.
-  Failures are grey/Not eligible, have a reason tooltip, and clicks report
-  Not eligible: <reason> locally without sending a Q request.
-- Check client-reported quest capacity using GetMaxNumQuestsCanAccept and the
-  second GetNumQuestLogEntries result, not a guessed limit or header count.
-- Reuse prerequisite, completion, exclusive/chain, parent and other known rules.
-  Published native shareability overrides missing static shareable flags for
-  offers only; ordinary legacy whisper requests retain their static flag gate.
-- Unknown metadata/history and repeatable/profession/reputation uncertainty are
-  explicit warnings, not proof of ineligibility. Native acceptance remains final.
-- Completion-reader lookups are shared per displayed offer list. Publisher
-  filtering, creation and offer payload still do not use completion history.
-- Same-party/version/token/selection/rate/expiry guards and owner selection
-  restoration remain unchanged. Beta13 owner protocol remains compatible.
+- Add QuestDialogStyle.lua before all sharing UI files in the TOC. Common paper
+  fill, dark ink palette, gold titles and screen clamping apply once per dialog.
+- Use QuestBG-Parchment when the atlas exists. Otherwise crop the native classic
+  QuestGreeting text area. A warm opaque base avoids transparent background gaps.
+- Hide the template's decorative Inset/InsetBg fills, preserving native trim.
+- Highlight the current Full log / Select quests / Open shareable mode.
+- Use dark green completion markers and dark brown quest/body text. Keep native
+  red button controls and a contrasting, bordered Copy/Import field.
+- Offer rows have native quest icons/dividers; known eligibility failures show a
+  muted title with red reason text below. Row height includes wrapped reason text.
+- Reused rows clear icons, dividers, reason text and hover handlers when moving
+  between offers and normal log objectives; eligibility recheck behavior remains.
+- Preserve drag/copy/paste/chat draft/cancel/import/request behavior. Full-log
+  chooser gets 12 additional pixels of vertical room for its introductory text.
 
-Source check: Gethe/wow-ui-source at bebcb6bf309cf41b41bd74f8ca651e6a105b2676,
-QuestLogDocumentation.lua documents GetMaxNumQuestsCanAccept as standard accepted
-quest limit and GetNumQuestLogEntries as shown-entry and quest-count returns.
-Eligibility database provenance and limitations remain in QuestEligibility.lua.
+Native source references, pinned to Gethe/wow-ui-source
+bebcb6bf309cf41b41bd74f8ca651e6a105b2676:
+- Blizzard_UIPanels_Game/Mainline/QuestFrameTemplates.xml: QuestBG-Parchment.
+- Blizzard_UIPanels_Game/Vanilla/QuestFrameTemplates.xml: greeting artwork,
+  available quest list fonts and UI-QuestTitleHighlight.
+- Blizzard_UIPanelTemplates/Mainline/UIPanelTemplates.xml: BasicFrameTemplate
+  background sublevels and BasicFrameTemplateWithInset's InsetBg/inner borders.
 
-Validation: 24 source files parse; 20 Lua regression suites; 7 auto-tag tests.
-New tests use actual 701/1361 metadata and cover low level even with unavailable
-completion history, prerequisites, race/class, completed versus repeatable quests,
-capacity versus header count, unknown rules, legacy flag gating, recipient UI
-reason, zero requests on failure, and fresh level-up eligibility on a cached row.
-The simulated two-client test now loads the real eligibility implementation and
-still verifies the normal sharing flow. Publisher history-query count stays zero.
+Validation: 25 source files parse; 20 existing Lua regression suites pass;
+7 auto-tag tests pass. Sharing test harnesses now load the production theme.
+The existing recipient eligibility test also checks visible inline reason text
+and its removal after a level change, preventing stale pooled-row failure text.
+No new test suite for purely cosmetic color/texture constants.
 
-Live checks:
-1. Lower-level requester opens the same offers and sees Not eligible on 701/1361;
-   hover/click identifies required level, and owner sees no new share request.
-2. Eligible requester still requests and accepts a quest normally.
-3. Unknown/custom rules show Check requirements and remain requestable.
-4. Old full/selected log snapshots still expand normally; shared pooled viewer
-   rows must not retain offer tooltips/color when reused for a normal snapshot.
+Live visual checks after installing beta15:
+1. Open Full log, Select quests and Open shareable. Check paper, selected mode,
+   list scrolling, checkbox hit areas, wrapped titles and footer clearance.
+2. Open a received full/selected log, then an offer. Check expanded objectives,
+   green completion text, native icons, grey unavailable title and red reason.
+3. Reuse the received viewer for a normal log: no stale offer icons/reasons.
+4. Copy and Import: verify visible field, placeholder, Ctrl+C/Ctrl+V, focus,
+   cancel/return, committed import and preserved chat draft/selection.
+5. Trigger owner confirmation, including combat deferral. Check contrast and
+   normal Share/Dismiss controls. Check native asset rendering and UI scaling.
 
-Offer TTL remains up to 15 minutes from creation, reusable by multiple current
-party members. Owner must stay online; reload or six-link eviction can expire a
-link early. Keep stable main at 1.1.5; no automatic stable promotion.
+Appearance was not rendered in an actual WoW client here; the approved generated
+mockup is a style target, not proof of exact live pixel layout. No protocol,
+eligibility, TTL, raid support or native tracker changes. Keep main at 1.1.5.

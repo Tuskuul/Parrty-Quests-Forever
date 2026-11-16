@@ -54,7 +54,7 @@ end
 local function quest(id,title) return {id=id,title=title,objectives={}} end
 local function client(name,peer)
  local a={name=name,peer=peer,selected=777}
- for _,file in ipairs({'Core.lua','ShareRequests.lua','QuestLogLinks.lua','QuestLogCopy.lua','QuestOffers.lua','QuestLogSharePicker.lua'}) do assert(loadfile(file))('SimplyPartyQuests',a) end
+ for _,file in ipairs({'Core.lua','ShareRequests.lua','QuestDialogStyle.lua','QuestLogLinks.lua','QuestLogCopy.lua','QuestOffers.lua','QuestLogSharePicker.lua'}) do assert(loadfile(file))('SimplyPartyQuests',a) end
  a.members={[peer]={guid=peer,name=peer,fullName=peer,unit='party1',connected=true,quests={},syncedAt=now}}
  function a:ReadOwn() end
  function a:InitQuestLogLinks() return true end

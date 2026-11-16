@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.6-beta14**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+**1.1.6-beta15**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
 
 Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
 
@@ -37,6 +37,12 @@ Offer links expire after 15 minutes, share the six-published-link limit with sna
 Beta14 adds requester eligibility feedback. Quests with known failed acceptance checks are grey and marked **Not eligible**; hover for the reason, or click to display it above the list. Clicking rechecks the current character before sending any request, so gaining a level or changing quest state does not leave a cached row permanently blocked. Checks include available level/race/class rules, prerequisite and completion/chain rules, active ownership and the client-reported quest-log capacity. Unknown custom quests, unavailable history, repeatable availability and unverified profession/reputation rules remain **Check requirements**, rather than being treated as proven failures. Normal game acceptance still decides those cases.
 
 These checks run on the requester. They do not change the publisher's Open shareable list or require party-member completion history. Only the requester needs beta14 for the new notices; beta13 owners remain protocol-compatible. An offer is reusable by multiple current party members for up to 15 minutes from creation while the owner remains online. Reloading the owner or exceeding the six-published-link limit can invalidate it earlier; ownership, shareability and party membership are rechecked per request.
+
+## Share-window appearance
+
+Beta15 applies the approved parchment quest-dialog treatment to the sharing chooser, received logs/offers, Copy/Import and owner share confirmation. Dark brown quest text, green completion text, native quest icons and red eligibility reasons are readable against parchment. The selected Full log, Select quests or Open shareable mode is highlighted. Copy and Import retain a distinct bordered input field. Unavailable offer rows show the reason beneath the title as well as on hover/click. All share dialogs remain draggable and are clamped to the screen.
+
+The theme uses client quest artwork and retains the existing native button/close-frame trim. It does not reskin Blizzard's actual NPC quest dialog, objective tracker, Settings or the general diagnostic report. Link lifetime, eligibility rules and sharing protocols are unchanged.
 
 ## Install
 

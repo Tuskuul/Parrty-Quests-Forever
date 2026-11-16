@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta14
+Party Quests Forever 1.1.6-beta15
 BETA: Quest offers, chat links, copied links and in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -155,3 +155,9 @@ reason or click to display it; no request is sent when a check fails.
 Unavailable or incomplete rules show Check requirements and leave the native
 acceptance decision available. Publisher filtering still uses current logs only.
 The requester needs beta14 for these notices; beta13 owners remain compatible.
+
+PARCHMENT SHARE WINDOWS (BETA15)
+All sharing dialogs now use a matching parchment quest-window style: Share
+quests, received logs/offers, Copy/Import and owner share confirmation.
+Unavailable quests show their reason in red beneath the title. Selected modes
+are highlighted, and Copy/Import retains a clear bordered input field.

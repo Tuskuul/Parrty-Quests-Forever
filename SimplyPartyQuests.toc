@@ -5,7 +5,7 @@
 ## X-Category: Quests & Leveling
 ## X-License: GPL-3.0-only
 ## Author: Wolfie
-## Version: 1.1.6-beta14
+## Version: 1.1.6-beta15
 ## SavedVariables: SimplyPartyQuestsDB
 Core.lua
 QuestCatalog.lua
@@ -24,6 +24,7 @@ ShareRequests.lua
 ShareApiDiagnostics.lua
 Minimap.lua
 QuestLinkDiagnostics.lua
+QuestDialogStyle.lua
 QuestLogLinks.lua
 ChatCompatibility.lua
 BattleNetQuestLinks.lua

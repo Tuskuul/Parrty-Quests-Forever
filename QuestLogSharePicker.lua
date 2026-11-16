@@ -2,7 +2,7 @@ local _, A = ...
 
 local function label(parent,text,font)
     local t=parent:CreateFontString(nil,"OVERLAY",font or "GameFontHighlightSmall")
-    t:SetText(text);t:SetJustifyH("LEFT");return t
+    A:StyleQuestDialogText(t,"body");t:SetText(text);t:SetJustifyH("LEFT");return t
 end
 local function button(parent,text,width,callback)
     local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
@@ -23,6 +23,7 @@ end
 function A:ShowQuestShareSelection(offers)
     local f=self.questSharePicker
     f.scope=offers and "offer" or "selected"
+    self:StyleQuestShareTabs(f)
     self:ReadOwn()
     f.quests={};f.selected={}
     local offerReason
@@ -62,7 +63,7 @@ function A:ShowQuestShareSelection(offers)
             end
         end)
         b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
-        b.caption:SetText(plain(q.title)..(q.ready and " |cff00ff00[Ready]|r" or ""))
+        b.caption:SetText(plain(q.title)..(q.ready and " |cff195c21[Ready]|r" or ""))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y);b:Show()
         y=y+math.max(40,b.caption:GetStringHeight()+16)
     end
@@ -74,7 +75,7 @@ end
 
 function A:ShowQuestShareFullLog()
     local f=self.questSharePicker
-    f.scope="full";f.selected={};f:SetSize(520,228)
+    f.scope="full";self:StyleQuestShareTabs(f);f.selected={};f:SetSize(520,240)
     f.scroll:Hide();f.submit:Show();f.status:Show()
     f.prompt:SetText("Share your log, select quests, open shareable quests, or import a link.")
     f.status:SetText("Full log selected. Share to chat prepares a message for you to send.")
@@ -114,6 +115,7 @@ function A:OpenQuestLogShare(draft)
     if not self.questSharePicker then
         local f=CreateFrame("Frame","SimplyPartyQuestsSharePicker",UIParent,"BasicFrameTemplateWithInset")
         self.questSharePicker=f
+        self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSharePicker" end
         f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:EnableMouse(true)
         f:SetMovable(true);f:RegisterForDrag("LeftButton")

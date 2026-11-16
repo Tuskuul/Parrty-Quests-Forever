@@ -337,6 +337,7 @@ function A:ShowSharedQuestLog(token,snapshot,message)
     if not self.sharedQuestLogWindow then
         local f=CreateFrame("Frame","SimplyPartyQuestsSharedLog",UIParent,"BasicFrameTemplateWithInset")
         self.sharedQuestLogWindow=f
+        self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSharedLog" end
         f:SetSize(550,560);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG")
         f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
@@ -344,6 +345,7 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         f.title=self.readable(f.TitleText) and f.TitleText or f:CreateFontString(nil,"OVERLAY","GameFontNormal")
         if not self.readable(f.TitleText) then f.title:SetPoint("TOPLEFT",16,-8) end
         f.subtitle=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        self:StyleQuestDialogText(f.subtitle,"body")
         f.subtitle:SetPoint("TOPLEFT",16,-33);f.subtitle:SetWidth(510);f.subtitle:SetJustifyH("LEFT")
         f.scroll=CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
         f.scroll:SetPoint("TOPLEFT",16,-72);f.scroll:SetPoint("BOTTOMRIGHT",-32,52)
@@ -353,6 +355,10 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         f.transferReport:SetSize(170,22);f.transferReport:SetPoint("BOTTOMLEFT",16,14)
         f.transferReport:SetText("Transfer diagnostics")
         f.transferReport:SetScript("OnClick",function() A:ShowDiagnosticReport() end)
+        f.ownerNotice=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        self:StyleQuestDialogText(f.ownerNotice,"muted")
+        f.ownerNotice:SetPoint("BOTTOMRIGHT",-16,19);f.ownerNotice:SetWidth(280);f.ownerNotice:SetJustifyH("RIGHT")
+        f.ownerNotice:SetText("The owner must remain online.")
         f.rows={}
     end
     local f=self.sharedQuestLogWindow
@@ -367,7 +373,16 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         if not b then
             b=CreateFrame("Button",nil,f.child);b.label=b:CreateFontString(nil,"ARTWORK")
             b.label:SetJustifyH("LEFT");b.label:SetJustifyV("TOP");b.label:SetPoint("TOPLEFT",6,-4);b.label:SetWidth(476)
-            b.art=b:CreateTexture(nil,"BACKGROUND");b.art:SetAllPoints(b);b.art:SetAtlas("UI-QuestTracker-Secondary-Objective-Header")
+            b.art=b:CreateTexture(nil,"BACKGROUND");b.art:SetAllPoints(b);b.art:SetColorTexture(0.35,0.20,0.06,0.08)
+            b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetTexture("Interface\\GossipFrame\\AvailableQuestIcon");b.icon:SetSize(18,18)
+            b.icon:SetPoint("TOPLEFT",4,-5)
+            b.reason=b:CreateFontString(nil,"ARTWORK","GameFontHighlightSmall")
+            b.reason:SetJustifyH("LEFT");b.reason:SetJustifyV("TOP");b.reason:SetWidth(450)
+            b.reason:SetPoint("TOPLEFT",b.label,"BOTTOMLEFT",0,-4)
+            A:StyleQuestDialogText(b.reason,"error")
+            b.divider=b:CreateTexture(nil,"BACKGROUND");b.divider:SetColorTexture(0.38,0.24,0.08,0.35)
+            b.divider:SetPoint("BOTTOMLEFT",4,0);b.divider:SetPoint("BOTTOMRIGHT",-4,0);b.divider:SetHeight(1)
+            b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight","ADD")
             b:SetScript("OnClick",function()
                 if b.questID then f.expanded[b.questID]=f.expanded[b.questID]==false;A:ShowSharedQuestLog(token,snapshot) end
             end)
@@ -380,7 +395,11 @@ function A:ShowSharedQuestLog(token,snapshot,message)
                 else f.expanded[b.questID]=f.expanded[b.questID]==false;A:ShowSharedQuestLog(token,snapshot) end
             end
         end)
-        b.label:SetFontObject(heading and (ObjectiveTrackerLineFont or GameFontNormal) or (ObjectiveTrackerLineFont or GameFontHighlightSmall))
+        local offerRow=snapshot and snapshot.offer and heading
+        b.icon:SetShown(offerRow==true);b.icon:SetDesaturated(ineligible==true)
+        b.label:ClearAllPoints();b.label:SetPoint("TOPLEFT",offerRow and 30 or 6,-4)
+        b.label:SetWidth(offerRow and 450 or 476)
+        b.divider:SetShown(offerRow==true)
         b:SetScript("OnEnter",reason and function(button)
             if GameTooltip then
                 GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Quest requirements")
@@ -388,11 +407,13 @@ function A:ShowSharedQuestLog(token,snapshot,message)
             end
         end or nil)
         b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
-        if ineligible then b.label:SetTextColor(0.55,0.55,0.55)
-        elseif complete then b.label:SetTextColor(0.1,1,0.1)
-        elseif heading then b.label:SetTextColor(1,0.82,0) else b.label:SetTextColor(0.8,0.8,0.8) end
-        b.label:SetText(label);b.art:SetShown(heading);b:EnableMouse(id~=nil)
-        local h=math.max(heading and 26 or 18,b.label:GetStringHeight()+8)
+        A:StyleQuestDialogText(b.label,ineligible and "muted" or (complete and "ready" or (heading and "heading" or "body")),heading)
+        b.label:SetText(label);b.art:SetShown(heading and not offerRow);b:EnableMouse(id~=nil)
+        local reasonHeight=0
+        if offerRow and ineligible and reason then
+            b.reason:SetText(safe(reason));b.reason:Show();reasonHeight=b.reason:GetStringHeight()+4
+        else b.reason:SetText("");b.reason:Hide() end
+        local h=math.max(heading and 26 or 18,b.label:GetStringHeight()+reasonHeight+8)
         b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y);b:SetSize(490,h);b:Show();y=y+h+3
     end
     if snapshot and snapshot.quests then

@@ -6,7 +6,7 @@ InCombatLockdown=function() return true end
 CreateFrame=function() return {RegisterEvent=function() end,SetScript=function() end} end
 UnitName=function() return 'Me' end
 local A={}
-for _,f in ipairs({'Core.lua','Definitions.lua','LiveProgress.lua','QuestLogLinks.lua','BattleNetQuestLinks.lua'}) do assert(loadfile(f))('SimplyPartyQuests',A) end
+for _,f in ipairs({'Core.lua','Definitions.lua','LiveProgress.lua','QuestDialogStyle.lua','QuestLogLinks.lua','BattleNetQuestLinks.lua'}) do assert(loadfile(f))('SimplyPartyQuests',A) end
 local changed=0;A.Changed=function() changed=changed+1 end
 A.db={};A.members={}
 local info={questID=101,title='Quest',isHeader=false}

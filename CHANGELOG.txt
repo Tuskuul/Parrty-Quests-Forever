@@ -1,3 +1,11 @@
+Party Quests Forever 1.1.6-beta15
+
+- Share, quest-offer, received-log, Copy/Import and share-confirmation windows now use a parchment quest-window style.
+- Added quest icons, highlighted sharing modes and readable dark text with green completion markers.
+- Unavailable offered quests show their eligibility reason in red beneath the quest. Copy/Import keeps a clearly bordered text field.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
 Party Quests Forever 1.1.6-beta14
 
 - Offered quests now show Not eligible when the requester fails known acceptance requirements.
