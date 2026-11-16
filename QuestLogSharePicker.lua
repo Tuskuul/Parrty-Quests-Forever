@@ -97,6 +97,7 @@ function A:OpenQuestLogShare(draft)
     if self.questSharePicker and self.questSharePicker.transferActive and self.questLogTransfer then
         self.questLogTransfer:Raise();self.questLogTransfer.edit:SetFocus();return
     end
+    if self.questSharePicker and self.questSharePicker:IsShown() then self.questSharePicker:Raise();return end
     -- Keep the original editor, text, cursor, channel and recipient across both
     -- popup steps, even after the original Share button loses its hover state.
     draft=draft or self:CaptureQuestLogChatDraft()

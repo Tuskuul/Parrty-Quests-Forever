@@ -28,7 +28,9 @@ function A:QueueMembershipValidation(tasks)
     for _,m in pairs(self.members) do
         if not m.syncedAt or GetTime()-m.syncedAt>120 then
             local ids={}
-            for id in pairs(m.quests) do ids[#ids+1]=id end
+            for id,q in pairs(m.quests) do
+                if not q.syncedAt or GetTime()-q.syncedAt>120 then ids[#ids+1]=id end
+            end
             table.sort(ids)
             local pass={member=m,started=GetTime(),remaining=#ids,results={},positive=false,valid=self:CanValidateMembership(m)}
             for _,id in ipairs(ids) do tasks[#tasks+1]={kind="membership",value=id,pass=pass} end
@@ -56,7 +58,7 @@ function A:ValidationStep(task)
     local removed=false
     for questID,present in pairs(pass.results) do
         local q=m.quests[questID]
-        if q then
+        if q and (not q.syncedAt or now-q.syncedAt>120) then
             if present then q.pendingAbsentAt=nil;q.polledAt=now
             elseif not q.polledAt or q.polledAt<=pass.started then
                 if q.pendingAbsentAt and now-q.pendingAbsentAt>60 then q.pendingAbsentAt=nil end
@@ -89,6 +91,10 @@ function A:UpdateQuestTitle(id)
     self:Changed()
 end
 function A:StartSweep()
+    if paused() then
+        self.sweepDue=GetTime()+0.5;self.sweepStatus="Discovery queued until combat ends"
+        return
+    end
     if self.sweep then return end
     self.sweepDue=nil
     if not (C_QuestLog and type(C_QuestLog.IsUnitOnQuest)=="function") then

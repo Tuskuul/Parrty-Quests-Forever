@@ -3,6 +3,7 @@ local PREFIX="SPQLOG1"
 local function validID(id) return A.public(id,"number") and id>0 and id%1==0 and id<100000000000 end
 local function escaped(text) return (text:gsub("|","||")) end
 function A:SendQuestLogPacket(message,target)
+    if not self.public(message,"string") or #message>255 or not self.public(target,"string") then return false end
     local id=target:match("^BN:(%d+)$")
     local send,args
     if id then
@@ -19,9 +20,11 @@ function A:SendQuestLogPacket(message,target)
     local ok,result=pcall(send,unpack(args))
     local returned=(result==nil and "nil") or (self.public(result,"number") and tostring(result)) or (self.public(result,"boolean") and tostring(result)) or "nonpublic result"
     self:QuestLinkTrace(ok and "send-return" or "send-exception",route.." result="..returned)
-    if not ok or (result~=nil and result~=true and result~=0) then
+    local success=ok and (result==nil or (self.public(result,"boolean") and result) or (self.public(result,"number") and result==0))
+    if not success then
         self.questLogTransportError="Addon data send failed or was restricted ("..returned..")";return false
     end
+    self.questLogTransportError=nil
     return true
 end
 function A:BattleNetQuestLogPeer(accountID)

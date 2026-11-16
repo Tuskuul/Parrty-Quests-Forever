@@ -39,7 +39,7 @@ assert(member.quests[103] and not member.quests[101],'legacy full snapshot no lo
 assert(not receiver:Deserialize('R\t103'),'deletion accepted in full snapshot')
 assert(not receiver:Deserialize('R\t103\nQ\t103\tConflict\t1',true),'conflicting delta accepted')
 -- Multipart updates are atomic and do not interrupt an in-flight full snapshot.
-now=106;sender.own={[101]=q(101,1)};sender.own[101].title=string.rep('Long quest ',50)
+now=106;sender.own={[101]=q(101,1)};sender.own[101].title=string.rep('Long quest ',18)
 sender:SendSnapshot();assert(#sender.queue>1)
 local before=#sender.queue;sender:SendProgressDelta();assert(#sender.queue==before)
 receiver:Receive(sender.queue[1],'friend');assert(member.quests[103],'incomplete packet applied')

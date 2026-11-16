@@ -3,10 +3,25 @@ A.members, A.own, A.queue, A.incoming = {}, {}, {}, {}
 A.prefix = "SPQ1"
 local serial, lastSend, lastRequest, lastDelta = 0, -100, -100, -100
 local types = Enum and Enum.TooltipDataLineType or {}
-local function secret(v) return issecretvalue and issecretvalue(v) end
-local function readable(v) return not secret(v) and type(v) == "table" and not (issecrettable and issecrettable(v)) end
-local function public(v, kind) return not secret(v) and type(v) == kind end
-A.public, A.readable = public, readable
+local function secret(v)
+    if not issecretvalue then return false end
+    local ok,value=pcall(issecretvalue,v)
+    return not ok or value==true
+end
+local function readable(v)
+    if secret(v) or type(v)~="table" then return false end
+    if issecrettable then
+        local ok,value=pcall(issecrettable,v)
+        if not ok or value then return false end
+    end
+    return true
+end
+local function public(v,kind) return not secret(v) and type(v)==kind end
+A.public,A.readable,A.secret=public,readable,secret
+local function finiteInteger(v,min,max)
+    return public(v,"number") and v==v and v>=min and v<=max and v%1==0
+end
+A.validInteger=finiteInteger
 local function clean(s)
     if not public(s, "string") then return "" end
     return s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
@@ -18,12 +33,43 @@ local function fields(s)
     for v in (s .. "\t"):gmatch("(.-)\t") do t[#t+1] = decode(v) end
     return t
 end
+function A:DisplayText(value)
+    if not public(value,"string") then return "" end
+    return value:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):gsub("|","||")
+end
+function A:NormalizeSavedSettings()
+    local db=self.db
+    for _,key in ipairs({"expanded","questExpanded","sectionCollapsed","zoneCollapsed","trackerGroupsClosed","trackerMembersClosed","trackerOwnProgressExpanded"}) do
+        if not readable(db[key]) then db[key]={} end
+    end
+    for _,key in ipairs({"combineShared","groupByZone","nativeTrackerRepair","combatAutoHide","locked","hideMinimapButton","trackerHidden","hidden","collapsed","trackerCollapsed","requestShares","diag"}) do
+        if db[key]~=nil and type(db[key])~="boolean" then db[key]=nil end
+    end
+    if db.displayMode~="blizzard" and db.displayMode~="window" then db.displayMode="blizzard" end
+    if db.trackerSide~="right" then db.trackerSide="left" end
+    local function number(value,default,min,max)
+        if not public(value,"number") or value~=value or value==math.huge or value==-math.huge then return default end
+        return math.max(min,math.min(max,value))
+    end
+    db.sidebarWidth=number(db.sidebarWidth,420,320,640)
+    db.minimapAngle=number(db.minimapAngle,140,-100000,100000)%360
+    if db.size~=nil then
+        local size=readable(db.size) and db.size or {}
+        db.size={width=number(size.width,460,380,1200),height=number(size.height,540,280,1200)}
+    end
+    if db.position~=nil then
+        local pos=readable(db.position) and db.position
+        if not pos or not public(pos.x,"number") or not public(pos.y,"number") or pos.x~=pos.x or pos.y~=pos.y
+            or math.abs(pos.x)>100000 or math.abs(pos.y)>100000 then db.position=nil end
+    end
+    db.diagLines=nil;db.diagChanges=nil;db.diagEvents=nil
+end
 function A:Changed()
     if self.InvalidateTrackerIntegration then self:InvalidateTrackerIntegration() end
     if self.batchNative then self.liveDirty=true elseif self.Render then self:Render() end
 end
 function A:QuestDisplayChanged(old,q)
-    if not old or old.title~=q.title or old.ready~=q.ready or old.readyKnown~=q.readyKnown then return true end
+    if not old or old.title~=q.title or old.ready~=q.ready or old.readyKnown~=q.readyKnown or old.zoneName~=q.zoneName then return true end
     for _,field in ipairs({"objectives","requirements"}) do
         local a,b=old[field] or {},q[field] or {}
         if #a~=#b then return true end
@@ -97,7 +143,8 @@ function A:Roster()
     self.partyQueryCache={}
     self.questQueryState={}
     -- A new roster invalidates incomplete transmissions and queued old-group data.
-    self.incoming, self.queue = {}, {}
+    self.incoming,self.queue={},{}
+    self.partySendRetries=0;self.partyRetryAt=nil
     self.publishedQuests=nil;self.progressPending=nil
     self:Changed()
 end
@@ -119,21 +166,31 @@ function A:MemberFromLine(line)
     if public(line.guid,"string") and self.members[line.guid] then return self.members[line.guid] end
     return self:MemberFromName(clean(line.leftText))
 end
-function A:ReadOwn()
+function A:ReadOwnUnsafe()
     local previous=self.own
     local quests,zoneName = {},nil
     if C_QuestLog and C_QuestLog.GetNumQuestLogEntries then
-        for i=1, C_QuestLog.GetNumQuestLogEntries() do
-            local info = C_QuestLog.GetInfo(i)
+        local total=C_QuestLog.GetNumQuestLogEntries()
+        if not finiteInteger(total,0,1000) then error("Quest log is temporarily unavailable") end
+        for i=1,total do
+            local info=C_QuestLog.GetInfo(i)
+            if not readable(info) or secret(info.isHeader) or secret(info.questID) then error("Quest entry is temporarily unavailable") end
+            if not info.isHeader and not finiteInteger(info.questID,1,10000000) then error("Quest identity is temporarily unavailable") end
             if readable(info) and public(info.isHeader,"boolean") and info.isHeader then
                 zoneName=public(info.title,"string") and info.title or nil
             end
             if readable(info) and not secret(info.isHeader) and not info.isHeader and public(info.questID, "number") then
                 local q = {id=info.questID, title=public(info.title,"string") and info.title or ("Quest "..info.questID), objectives={}}
                 q.zoneName=zoneName
-                local list = C_QuestLog.GetQuestObjectives(q.id)
+                local list=C_QuestLog.GetQuestObjectives(q.id)
+                if list~=nil and not readable(list) then error("Quest objectives are temporarily restricted") end
+                if list==nil and previous[q.id] then
+                    q.objectives=previous[q.id].objectives
+                    q.ready,q.readyKnown=previous[q.id].ready,previous[q.id].readyKnown
+                end
                 if readable(list) then
                     for _, o in ipairs(list) do
+                        if not readable(o) or secret(o.numFulfilled) or secret(o.numRequired) or not public(o.text,"string") then error("Quest objective is temporarily restricted") end
                         if readable(o) and public(o.text,"string") then
                             q.objectives[#q.objectives+1] = {text=o.text,
                                 done=public(o.numFulfilled,"number") and o.numFulfilled or nil,
@@ -158,7 +215,7 @@ function A:ReadOwn()
                 quests[q.id] = q
             end
         end
-    end
+    else error("Quest log API unavailable") end
     local ownChanged=false
     for id,q in pairs(quests) do
         if previous[id] and self:QuestDisplayChanged(previous[id],q) then ownChanged=true;break end
@@ -175,7 +232,19 @@ function A:ReadOwn()
     if self.PopulateRequirements then
         for _,m in pairs(self.members) do for _,q in pairs(m.quests) do self:PopulateRequirements(q) end end
     end
-    self:Changed()
+    if changed then self:Changed() end
+    return changed
+end
+function A:ReadOwn()
+    local before=self.own
+    local ok,changed=pcall(self.ReadOwnUnsafe,self)
+    if not ok then
+        self.own=before;self.ownReadError="Quest data unavailable; retaining last known log"
+        self.ownDue=self.ownDue or (GetTime()+1)
+        return false
+    end
+    self.ownReadError=nil
+    return changed
 end
 -- Native rows are grouped by quest title, then by player, then objectives.
 -- Never infer a missing quest from an empty or restricted tooltip response.
@@ -234,8 +303,9 @@ function A:Consume(data, knownID, source)
             if resurrect then m.removedQuests[q.id]=nil end
         end
         -- A recent full snapshot is richer than a tooltip's subset of objectives.
-        if resurrect and (not m.syncedAt or now-m.syncedAt > 120) then
-            local old = m.quests[q.id]
+        local old=m.quests[q.id]
+        local fresh=math.max(m.syncedAt or -1000,(old and old.syncedAt) or -1000)
+        if resurrect and now-fresh>120 then
             if self.TrackProgress then self:TrackProgress(m,q,old,source or "native") end
             if old then
                 if q.ready==nil then q.ready,q.readyAt=old.ready,old.readyAt end
@@ -273,6 +343,11 @@ function A:ScanUnit(unit)
 end
 function A:RefreshKnown()
     self.liveTasks=nil;self.liveDue=GetTime()
+    if self.LiveTick then
+        self.partyQueryCache={}
+        if self.QueueTriggeredRefresh then self:QueueTriggeredRefresh("manual refresh") end
+        return
+    end
     if not (C_TooltipInfo and C_TooltipInfo.GetQuestPartyProgress) then return end
     local ids = {}
     for id in pairs(self.own) do ids[id] = true end
@@ -302,23 +377,30 @@ function A:Serialize(questIDs)
     return table.concat(lines, "\n")
 end
 function A:Deserialize(payload,delta)
+    if not public(payload,"string") or #payload>60000 then return nil end
+    local records=0
     local quests, count, removed = {}, 0, {}
     for line in payload:gmatch("[^\n]+") do
-        local f = fields(line)
-        local id = tonumber(f[2])
-        if not id or id < 1 or id%1 ~= 0 then return nil end
+        records=records+1;if records>3200 then return nil end
+        local f=fields(line)
+        local id=tonumber(f[2])
+        if not finiteInteger(id,1,10000000) then return nil end
         if delta and f[1]=="R" and #f==2 then
             if quests[id] or removed[id] then return nil end
             removed[id]=true
         elseif f[1] == "Q" and #f == 4 then
             count = count+1
             if count > 100 or quests[id] or removed[id] then return nil end
+            if #f[3]>240 or f[3]:find("[%z\1-\8\11\12\14-\31\127]") then return nil end
             if f[4]~="0" and f[4]~="1" and f[4]~="N" then return nil end
             quests[id] = {id=id,title=f[3],ready=f[4]=="1",readyKnown=(f[4]=="1" or f[4]=="N") or nil,objectives={}}
         elseif f[1] == "O" and #f == 5 and quests[id] then
             local q = quests[id]
             if #q.objectives >= 30 then return nil end
-            q.objectives[#q.objectives+1] = {text=f[3],done=tonumber(f[4]),total=tonumber(f[5])}
+            if #f[3]>512 or f[3]:find("[%z\1-\8\11\12\14-\31\127]") then return nil end
+            local done,total=tonumber(f[4]),tonumber(f[5])
+            if (f[4]~="" and not finiteInteger(done,0,1000000)) or (f[5]~="" and not finiteInteger(total,0,1000000)) then return nil end
+            q.objectives[#q.objectives+1]={text=f[3],done=done,total=total}
         else return nil end
     end
     return quests,removed
@@ -354,28 +436,49 @@ function A:SendSnapshot()
     if #payload > 60000 then return end
     if self:QueueProgressPayload(payload,false) then lastSend=GetTime() end
 end
+function A:SendPartyPacket()
+    if #self.queue==0 or not self.comms or not next(self.members) then return end
+    local now=GetTime()
+    if self.partyRetryAt and now<self.partyRetryAt then return end
+    local fn=C_ChatInfo and C_ChatInfo.SendAddonMessage
+    if type(fn)~="function" then return end
+    local ok,result=pcall(fn,self.prefix,self.queue[1],"PARTY")
+    local success=ok and (result==nil or result==true or (public(result,"number") and result==0))
+    if success then
+        table.remove(self.queue,1);self.partySendRetries=0;self.partyRetryAt=nil;self.partySendError=nil
+    else
+        self.partySendRetries=(self.partySendRetries or 0)+1;self.partyRetryAt=now+0.5
+        self.partySendError="Party update send failed; retrying"
+        if self.partySendRetries>=6 then
+            self.queue={};self.publishedQuests=nil;self.sendPending=true;self.partySendRetries=0
+            self.partyRetryAt=now+2;self.partySendError="Party update interrupted; full sync queued"
+        end
+    end
+end
 function A:Request()
     if not self.comms or not next(self.members) or GetTime()-lastRequest < 5 then return end
     lastRequest = GetTime()
-    C_ChatInfo.SendAddonMessage(self.prefix,"REQ","PARTY")
+    local ok=pcall(C_ChatInfo.SendAddonMessage,self.prefix,"REQ","PARTY")
+    if not ok then self.partySendError="Party refresh request failed" end
 end
 function A:Receive(message, sender)
     if not public(message,"string") or #message>255 then return end
     local m = self:MemberFromSender(sender)
     if not m then return end
-    if message == "REQ" then
-        self.sendPending=true;m.progressSequence=nil
-        self.incoming[m.guid]=nil;self.incoming[m.guid..":delta"]=nil
-        return
-    end
+    if message=="REQ" then self.sendPending=true;return end
     local delta=message:sub(1,1)=="D"
     if delta then message=message:sub(2) end
     local seq, index, total, part = message:match("^(%d+):(%d+):(%d+):(.*)$")
     seq,index,total = tonumber(seq),tonumber(index),tonumber(total)
-    if not seq or total<1 or total>334 or index<1 or index>total or #part>180 then return end
+    if not finiteInteger(seq,1,1000000000000) or not finiteInteger(total,1,334)
+        or not finiteInteger(index,1,total) or #part>180 then return end
     local key=m.guid..(delta and ":delta" or "")
-    if delta and m.progressSequence and seq<=m.progressSequence then return end
-    local p = self.incoming[key]
+    -- Serial 1 is a legacy-compatible sender restart. Other completed older
+    -- packets must not roll newer progress back, including full snapshots.
+    if m.progressSequence and seq<=m.progressSequence and (delta or seq~=1) then return end
+    if delta and (not m.progressSequence or seq~=m.progressSequence+1) then self:Request();return end
+    local p=self.incoming[key]
+    if not delta and seq==1 and p and p.seq~=1 then p=nil;self.incoming[key]=nil end
     if not p or p.seq~=seq then
         if p and seq<p.seq then return end
         p={seq=seq,total=total,parts={},at=GetTime()};self.incoming[key]=p
@@ -387,7 +490,7 @@ function A:Receive(message, sender)
     if quests then
         m.removedQuests=delta and (m.removedQuests or {}) or {}
         for _,q in pairs(quests) do
-            m.removedQuests[q.id]=nil
+            m.removedQuests[q.id]=nil;q.syncedAt=GetTime()
             for _,o in ipairs(q.objectives) do o.observedAt=GetTime() end
             if self.PopulateRequirements then self:PopulateRequirements(q) end
         end
@@ -417,8 +520,8 @@ A.events=frame
 frame:SetScript("OnEvent",function(_,event,...)
     if event=="ADDON_LOADED" then
         if (...)~="SimplyPartyQuests" then return end
-        SimplyPartyQuestsDB=SimplyPartyQuestsDB or {}
-        A.db=SimplyPartyQuestsDB
+        SimplyPartyQuestsDB=readable(SimplyPartyQuestsDB) and SimplyPartyQuestsDB or {}
+        A.db=SimplyPartyQuestsDB;A:NormalizeSavedSettings()
         A.db.expanded=A.db.expanded or {}
         A.db.questExpanded=A.db.questExpanded or {}
         A.db.sectionCollapsed=A.db.sectionCollapsed or {}
@@ -490,7 +593,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     end
     if A.sendPending and #A.queue==0 and now-lastSend>=5 then A.sendPending=nil;A:SendSnapshot() end
     if A.progressPending and #A.queue==0 then A:SendProgressDelta() end
-    if #A.queue>0 and A.comms and next(A.members) then C_ChatInfo.SendAddonMessage(A.prefix,table.remove(A.queue,1),"PARTY") end
+    A:SendPartyPacket()
     for guid,p in pairs(A.incoming) do if now-p.at>90 then A.incoming[guid]=nil end end
     if refreshElapsed>=15 then
         refreshElapsed=0

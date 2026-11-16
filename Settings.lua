@@ -40,7 +40,7 @@ end
 function A:SetDetailedDiagnostics(value,restart)
     local before=self.db.diag;self.db.diag=not not value
     if value and (not before or restart) then
-        self.db.diagLines={};self.db.diagChanges={};self.db.diagEvents={}
+        self.diagLines={};self.diagChanges={};self.diagEvents={}
         if self.triggerStats then self.triggerStats.events={};self.triggerStats.units={};self.triggerStats.batches=0 end
         local s=self.liveStats;s.changes=0;s.first=0;s.repeated=0;s.readyChanges=0;s.bySource={}
         s.scope={shared={data=0,empty=0},foreign={data=0,empty=0}}
@@ -61,7 +61,10 @@ function A:SyncSettings()
         if c.get then c:SetChecked(not not c.get()) end
     end
     local count=0;for _ in pairs(self.members) do count=count+1 end
-    self.settingsStatus:SetText("View: "..(self.db.displayMode=="blizzard" and "Tracker sidebar" or "Pop-out window").."   |   Party members: "..count)
+    local pending=A.integration and A.integration.pendingDisplayMode
+    local suffix=pending and ("   |   "..(pending=="blizzard" and "Tracker" or "Window").." queued after combat")
+        or ((InCombatLockdown and InCombatLockdown()) and "   |   Layout changes apply after combat" or "")
+    self.settingsStatus:SetText("View: "..(self.db.displayMode=="blizzard" and "Tracker sidebar" or "Pop-out window").."   |   Party members: "..count..suffix)
     if self.settingsWidthLabel then self.settingsWidthLabel:SetText("Sidebar width: "..(self.db.sidebarWidth or 420).." pixels") end
     if self.settingsControls.advanced then self.settingsControls.advanced:SetText((self.settingsAdvancedOpen and "Hide" or "Show").." troubleshooting") end
     if self.settingsLayout and self.settingsPanel:IsShown() then self.settingsLayout() end

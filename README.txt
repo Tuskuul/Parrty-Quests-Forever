@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta9
+Party Quests Forever 1.1.6-beta10
 BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -123,3 +123,11 @@ Removed duplicate visibility, collapse and scan controls and developer-only menu
 actions. Diagnostics and native recovery expand on demand. Saved preferences are
 preserved. /spq inspect runs the share API inspector; /spq demo and /spq clear
 remain available for troubleshooting.
+
+BETA10 AUDIT
+Temporary quest API failures retain last known progress. Party and snapshot
+transfers retry transient send failures. New chat drafts are preserved while
+sharing. Refresh works in combat; catalog discovery waits. Display-mode changes
+queue until combat ends and choosing the active mode cancels a queued change.
+/spq report includes combat frame protection and click-stage history. Native +/-
+and intermittent native-pane blanking still need live testing.

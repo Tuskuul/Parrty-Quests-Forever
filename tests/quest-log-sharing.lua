@@ -8,6 +8,7 @@ local function widget()
   if k=='SetText' then return function(self,s)
    self.text=s;if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self) end
   end end
+  if k=='IsShown' then return function(self) return self.shown end end
   if k=='GetText' then return function(self) return self.text or '' end end
   if k=='HighlightText' then return function(self) self.highlighted=true end end
   if k=='SetShown' then return function(self,v) self.shown=v end end
@@ -35,9 +36,9 @@ assert(loadfile('QuestLogLinks.lua'))('SimplyPartyQuests',A)
 assert(loadfile('QuestLogSharePicker.lua'))('SimplyPartyQuests',A)
 assert(loadfile('QuestLogCopy.lua'))('SimplyPartyQuests',A)
 A.own={
- [101]={id=101,title='Alpha',objectives={{text='Escort',done=0,total=0}}},
- [202]={id=202,title='Beta',ready=true,objectives={{text='Collect',done=2,total=2}}},
- [303]={id=303,title='Gamma',objectives={{text='Secret quest',done=1,total=3}}},
+ [101]={id=101,title='Alpha',objectives={{text='Escort',done=0,total=0,finished=true}}},
+ [202]={id=202,title='Beta',ready=true,objectives={{text='Collect',done=2,total=2,finished=true}}},
+ [303]={id=303,title='Gamma',objectives={{text='Secret quest',done=1,total=3,finished=false}}},
 }
 local own=A.own
 function A:ReadOwn() end

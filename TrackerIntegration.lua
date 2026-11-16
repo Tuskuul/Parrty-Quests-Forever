@@ -18,12 +18,15 @@ A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
 -- A visual combat collapse leaves the native main header in place. Protected
 -- native modules are hidden by secure snippets, rather than a combat Update().
 local combatApply=[[
+    self:CallMethod("TraceCombatTracker",newstate==1 and "combat enter" or "combat exit")
     local collapsed = newstate == 1 and self:GetAttribute("enabled")
     self:SetAttribute("combat-collapsed", collapsed and true or false)
     self:SetAttribute("manual-open",nil)
     for i=1,self:GetAttribute("count") or 0 do
         local frame=self:GetFrameRef("module"..i)
-        if frame then
+        if frame and frame:IsProtected() then
+            self:SetAttribute("combat-stage","state-module-"..i)
+            self:CallMethod("TraceCombatTracker","state module "..i)
             if collapsed then frame:Hide()
             elseif self:GetAttribute("shown"..i) then frame:Show()
             else frame:Hide() end
@@ -34,10 +37,12 @@ local combatApply=[[
         if newstate==1 and self:GetAttribute("enabled") then main:Show()
         else main:Hide() end
     end
-    self:CallMethod("ApplyCombatVisual", collapsed and true or false)
+    self:SetAttribute("combat-stage","state-visual")
+    self:CallMethod("ApplyCombatVisual",collapsed and true or false)
 ]]
 local combatClick=[[
     if control:GetAttribute("state-combat") == 1 and control:GetAttribute("enabled") then
+        control:CallMethod("TraceCombatTracker",self:GetAttribute("party-launcher") and "party click entered" or "native click entered")
         local collapsed=control:GetAttribute("combat-collapsed")
         if self:GetAttribute("party-launcher") and not collapsed then return end
         collapsed=not collapsed
@@ -45,15 +50,62 @@ local combatClick=[[
         control:SetAttribute("manual-open",not collapsed)
         for i=1,control:GetAttribute("count") or 0 do
             local frame=control:GetFrameRef("module"..i)
-            if frame then
+            if frame and frame:IsProtected() then
+                control:SetAttribute("combat-stage","click-module-"..i)
+                control:CallMethod("TraceCombatTracker","click module "..i)
                 if collapsed then frame:Hide()
                 elseif control:GetAttribute("available"..i) then frame:Show() end
             end
         end
+        control:SetAttribute("combat-stage","click-visual")
         control:CallMethod("ApplyCombatVisual",collapsed,self:GetAttribute("party-launcher") and not collapsed)
         return false
     end
 ]]
+function A:ApplyOrdinaryCombatModules(collapsed,restore)
+    for module,state in pairs(self.integration.combatModuleStates or {}) do
+        local protected=invoke(module.IsProtected,module)
+        if restore or protected==false then
+            local shown
+            if restore then shown=state.shown and module.hasContents~=false
+            else shown=not collapsed and state.available and module.hasContents~=false end
+            if shown then invoke(module.Show,module) else invoke(module.Hide,module) end
+        end
+    end
+end
+function A:TraceCombatTracker(stage)
+    local s=self.integration
+    s.combatHistory=s.combatHistory or {}
+    s.combatHistory[#s.combatHistory+1]=string.format("%.1f %s",GetTime(),stage)
+    while #s.combatHistory>40 do table.remove(s.combatHistory,1) end
+end
+function A:CombatTrackerReport()
+    local s=self.integration;local c=s.combatController
+    local function safe(v)
+        if self.public(v,"string") or self.public(v,"boolean") or self.public(v,"number") then return tostring(v) end
+        return "unknown"
+    end
+    local out={"Combat tracker: stage="..safe(c and invoke(c.GetAttribute,c,"combat-stage"))}
+    local function frame(label,object)
+        if not object then return end
+        local ok,protected,explicit=pcall(function() return object:IsProtected() end)
+        out[#out+1]=label..": shown="..safe(invoke(object.IsShown,object)).."; protected="..safe(ok and protected)
+            .."; explicit="..safe(ok and explicit).."; height="..safe(invoke(object.GetHeight,object))
+        local permission=C_RestrictedActions and C_RestrictedActions.CheckAllowProtectedFunctions
+        if type(permission)=="function" then
+            local allowed=invoke(permission,object,true)
+            out[#out]=out[#out].."; addon writes="..safe(allowed)
+        end
+    end
+    frame("Native container",ObjectiveTrackerFrame)
+    frame("Native +/-",ObjectiveTrackerFrame and ObjectiveTrackerFrame.Header and ObjectiveTrackerFrame.Header.MinimizeButton)
+    frame("Combat +/- overlay",s.combatMainButton);frame("Party button",self.partyTrackerButton)
+    for module,i in pairs(s.combatModules or {}) do
+        frame("Module "..i,module);frame("Module "..i.." contents",module.ContentsFrame)
+    end
+    for _,row in ipairs(s.combatHistory or {}) do out[#out+1]=row end
+    return table.concat(out,"\n")
+end
 function A:PrepareCombatCollapse()
     if combat() or not self.db then return end
     local s=self.integration
@@ -63,11 +115,14 @@ function A:PrepareCombatCollapse()
     local c=s.combatController
     if not c then
         c=CreateFrame("Frame",nil,UIParent,"SecureHandlerStateTemplate")
-        s.combatController=c;s.combatModules={};s.combatButtons={};s.combatGuards={}
+        s.combatController=c;s.combatModules={};s.combatButtons={};s.combatGuards={};s.combatModuleStates={}
         c:SetAttribute("count",0)
         c.QueueTrackerExpand=function() A:QueueTrackerExpand() end
+        c.TraceCombatTracker=function(_,stage) A:TraceCombatTracker(stage) end
         c.ApplyCombatVisual=function(_,collapsed,showParty)
             s.combatVisualCollapsed=collapsed
+            A:ApplyOrdinaryCombatModules(collapsed,not combat())
+            A:TraceCombatTracker(showParty and "party click" or "native/state visibility")
             if combat() then
                 s.nativeCollapsed=collapsed
                 if showParty then A.db.trackerHidden=false end
@@ -94,21 +149,33 @@ function A:PrepareCombatCollapse()
         local i=s.combatModules[module]
         if not i then
             count=count+1;i=count;s.combatModules[module]=i
-            -- Frame references permit restricted visibility operations without adding
-            -- secure children to native modules. Such children propagate protection
-            -- to Blizzard's layout frames and can block their normal combat redraws.
+            -- Stored refs may name ordinary frames, but their restricted
+            -- Show/Hide handles are unusable in combat unless IsProtected is true.
             c:SetFrameRef("module"..i,module)
-            SecureHandlerWrapScript(module,"OnShow",c,[[if control:GetAttribute("combat-collapsed") then self:Hide() end]])
-            SecureHandlerWrapScript(module,"OnHide",c,[[
-                if control:GetAttribute("state-combat")==1 and control:GetAttribute("manual-open")
-                    and self:GetAttribute("spq-combat-available") then self:Show() end
-            ]])
+            local explicit=false
+            if type(module.IsProtected)=="function" then
+                local ok,_,value=pcall(module.IsProtected,module)
+                explicit=ok and value==true
+            end
+            if explicit then
+                SecureHandlerWrapScript(module,"OnShow",c,[[
+                    if control:GetAttribute("state-combat")==1 and control:GetAttribute("combat-collapsed") then self:Hide() end
+                ]])
+            elseif type(module.HookScript)=="function" then
+                module:HookScript("OnShow",function(frame)
+                    if combat() and c:GetAttribute("combat-collapsed") and invoke(frame.IsProtected,frame)==false then
+                        invoke(frame.Hide,frame)
+                    end
+                end)
+            end
+            -- Do not force a native OnHide back to Show. A normal quest refresh
+            -- legitimately hides empty modules and releases/rebuilds their rows.
         end
         local shown=module:IsShown()
         local available=shown or module.hasContents==true
         c:SetAttribute("shown"..i,shown)
         c:SetAttribute("available"..i,available)
-        module:SetAttribute("spq-combat-available",available)
+        s.combatModuleStates[module]={shown=shown,available=available}
     end
     if native then
         invoke(native.ForEachModule,native,add)
@@ -226,7 +293,7 @@ local function progress(lines,kinds,name,q,remote,connected,ownKey)
     end
     local count=0
     for _,o in ipairs(q.objectives or {}) do
-        local text=o.text or "Objective"
+        local text=A:DisplayText(o.text or "Objective")
         if A:IsGenericObjective(text) then text="Unnamed step" end
         if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." "..(o.done or "?").."/"..o.total end
         if remote and (o.done==nil or o.total==nil) then text=text.." (progress unknown)" end
@@ -294,7 +361,7 @@ function A:BuildTrackerEntries()
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=q.title..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
+                    local title=A:DisplayText(q.title)..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
                     entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
@@ -308,13 +375,38 @@ function A:InvalidateTrackerIntegration()
     local s=self.integration
     s.dirty=true;s.due=s.due or (GetTime()+0.25)
 end
+function A:CombatControlNotice(message)
+    local now=GetTime();local s=self.integration
+    if s.controlNotice~=message or not s.controlNoticeAt or now-s.controlNoticeAt>=5 then
+        s.controlNotice=message;s.controlNoticeAt=now
+        print("Party Quests Forever: "..message)
+    end
+end
+function A:ApplyPendingDisplayMode()
+    local s=self.integration
+    if combat() or not s.pendingDisplayMode then return end
+    local mode=s.pendingDisplayMode;s.pendingDisplayMode=nil
+    self:SetDisplayMode(mode)
+end
 function A:SetDisplayMode(mode)
     if mode~="blizzard" and mode~="window" then return end
+    if combat() then
+        if mode==self.db.displayMode then
+            if self.integration.pendingDisplayMode then self:CombatControlNotice("Pending display change cancelled.") end
+            self.integration.pendingDisplayMode=nil
+        else
+            self.integration.pendingDisplayMode=mode
+            self:CombatControlNotice("Display mode will change after combat.")
+        end
+        if self.SyncSettings then self:SyncSettings() end
+        return
+    end
     self.db.displayMode=mode;self.db.trackerHidden=false
     if mode=="window" then self.db.hidden=false end
     self.integration.nextTry=0;self:InvalidateTrackerIntegration()
     if self.window then self.window:SetShown(mode=="window") end
     self:TrackerIntegrationTick()
+    if self.SyncSettings then self:SyncSettings() end
 end
 function A:RefreshParty()
     self:ReadOwn();self:Request();self:ScanUnit("target");self:RefreshKnown();self:StartSweep()
@@ -407,8 +499,7 @@ end
 function A:TrackerEntryClick(row,button)
     if row.kind=="quest" then self.shareProbeSelected=row.id end
     if IsShiftKeyDown and IsShiftKeyDown() then
-        if not combat() then self:RefreshParty() end
-        return
+        self:RefreshParty();return
     end
     if row.kind=="member" then
         self.db.trackerMembersClosed=self.db.trackerMembersClosed or {}
@@ -418,8 +509,11 @@ function A:TrackerEntryClick(row,button)
         self.db.trackerOwnProgressExpanded[row.key]=not self.db.trackerOwnProgressExpanded[row.key]
     elseif row.kind=="group" then self.db.trackerGroupsClosed[row.key]=not self.db.trackerGroupsClosed[row.key]
     elseif row.kind=="quest" then
-        if not combat() and button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
-            QuestMapFrame_OpenToQuestDetails(row.id);return
+        if button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
+            if combat() then
+                self:CombatControlNotice("Open quest details after combat.")
+            else QuestMapFrame_OpenToQuestDetails(row.id) end
+            return
         end
         self.db.questExpanded[row.key]=not self.db.questExpanded[row.key]
     end
@@ -446,7 +540,11 @@ function A:RenderCombatTrackerSidebar()
     if ok then self.integration.lastError=nil
     else
         self.integration.lastError=self.public(err,"string") and err:sub(1,180) or "combat expansion failed"
-        print("Party Quests Forever: combat expansion failed; layout will retry after combat. /spq report for details.")
+        local now=GetTime()
+        if not self.integration.combatNoticeAt or now-self.integration.combatNoticeAt>=10 then
+            self.integration.combatNoticeAt=now
+            print("Party Quests Forever: combat display unavailable; /spq report includes the failed stage.")
+        end
     end
     return ok
 end
@@ -683,7 +781,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
         b:EnableMouse(entry~=nil);b:Show();y=y+height+2
     end
     if memberCount==0 then row("Join a party to see available quests.","line",nativeColor("Normal"),0)
-    elseif #entries==0 then row("No party quests discovered yet. Try Refresh or Scan in Settings.","line",nativeColor("Normal"),0)
+    elseif #entries==0 then row("No party quests discovered yet. Try Refresh in Settings.","line",nativeColor("Normal"),0)
     else
         local previousSource,previousMember
         for _,e in ipairs(entries) do
@@ -711,7 +809,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
             else
                 row((e.open and "- " or "+ ")..e.title,"line",nativeColor("Header"),20,e,e.key,0)
                 if e.open then
-                    for _,r in ipairs(e.requirements or {}) do row(r.text,"line",nativeColor("Normal"),34) end
+                    for _,r in ipairs(e.requirements or {}) do row(A:DisplayText(r.text),"line",nativeColor("Normal"),34) end
                     for i,line in ipairs(e.lines or {}) do
                         local kind=e.lineKinds and e.lineKinds[i]
                         local player=kind=="player" or kind=="ownPlayer"
@@ -1089,6 +1187,7 @@ function A:TrackerSidebarHeightLimit(tracker)
 end
 function A:TrackerIntegrationTick()
     if not self.db then return end
+    if self.integration.pendingDisplayMode and not combat() then self:ApplyPendingDisplayMode();return end
     if self:SyncCombatAutoHide() then return end
     self:ApplyPendingTrackerRestore()
     self:RestoreNativeExpandedLayout(ObjectiveTrackerFrame)

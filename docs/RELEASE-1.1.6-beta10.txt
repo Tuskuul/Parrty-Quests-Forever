@@ -1,0 +1,12 @@
+Party Quests Forever 1.1.6-beta10
+
+- Improved combat handling for tracker modules and display-mode changes.
+- Refresh remains available during combat; discovery resumes afterward.
+- Keeps last known progress when quest data is temporarily unavailable.
+- Retries interrupted party updates and shared-log transfers.
+- Protects fresh party updates from stale or incomplete responses.
+- Preserves newer chat drafts when using the Share window.
+- Recovers invalid saved layout values while retaining valid preferences.
+- Detailed diagnostic captures now stay in session memory.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

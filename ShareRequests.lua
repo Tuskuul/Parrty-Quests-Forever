@@ -2,7 +2,7 @@ local _, A = ...
 local function call(fn,...)
     if type(fn)~="function" then return nil end
     local ok,result=pcall(fn,...)
-    if ok and not (issecretvalue and issecretvalue(result)) then return result end
+    if ok and not (A.secret and A.secret(result)) then return result end
 end
 local function hasBit(mask,id)
     return math.floor(mask/2^(id-1))%2==1
@@ -113,11 +113,11 @@ function A:RequestQuestShare(id,guid)
     end
     if self.demo then feedback("Share requests are disabled in sample preview.");return end
     if self.db.requestShares==false then feedback("Double-click share requests are disabled in settings.");return end
-    if InCombatLockdown and InCombatLockdown() then feedback("Try again after combat.");return end
     local m=self.members[guid]
     if not m or not m.quests[id] or m.connected==false then feedback("The quest owner is no longer available in your party.");return end
     if not m.unit or call(UnitGUID,m.unit)~=guid then feedback("The party member could not be verified.");return end
-    local ok,reason=self:CheckShareEligibility(id)
+    local readable,ok,reason=pcall(self.CheckShareEligibility,self,id)
+    if not readable then feedback("Quest eligibility is unavailable right now; try again after combat.");return end
     if ok~=true then feedback(reason);return end
     local now=GetTime()
     self.shareRequests=self.shareRequests or {}
@@ -132,8 +132,8 @@ function A:RequestQuestShare(id,guid)
     if not self.public(title,"string") then feedback("Quest title is unavailable.");return end
     title=title:gsub("[\r\n|]",""):sub(1,120)
     local message=string.format("Could you share |cffffff00|Hquest:%d:-1|h[%s]|h|r with me, please?",id,title)
-    local success=pcall(send,message,"WHISPER",nil,target)
-    if not success then feedback("The client could not send the share request.");return end
+    local success,result=pcall(send,message,"WHISPER",nil,target)
+    if not success or result==false then feedback("The client could not send the share request.");return end
     self.shareRequests[id]=now;self.shareLastSent=now
     feedback("Requested a share of ["..title.."] from "..m.name..".")
 end

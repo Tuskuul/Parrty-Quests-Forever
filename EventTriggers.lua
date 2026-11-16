@@ -6,8 +6,8 @@ local triggers={"UNIT_QUEST_LOG_CHANGED","PARTY_KILL","CHAT_MSG_LOOT","BAG_UPDAT
 function A:TriggerLog(line)
     self:Diag(line)
     if not (self.db and self.db.diag) then return end
-    self.db.diagEvents=self.db.diagEvents or {}
-    local log=self.db.diagEvents
+    self.diagEvents=self.diagEvents or {}
+    local log=self.diagEvents
     log[#log+1]=string.format("%.1f %s",GetTime(),line)
     while #log>100 do table.remove(log,1) end
 end
@@ -117,7 +117,7 @@ function A:TriggerReport()
         "Events observed: "..table.concat(events,"; "),
         "Quest-change units: "..table.concat(units,"; "),
         "Triggered refresh batches: "..stats.batches,
-        "Recent events and refreshes:",table.concat(self.db.diagEvents or {},"\n")},"\n")
+        "Recent events and refreshes:",table.concat(self.diagEvents or {},"\n")},"\n")
 end
 local frame=CreateFrame("Frame")
 A.triggerFrame=frame

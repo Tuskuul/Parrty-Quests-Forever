@@ -15,7 +15,7 @@ local function text(value)
     return value:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|T.-|t", ""):match("^%s*(.-)%s*$")
 end
 local function printable(value)
-    if issecretvalue and issecretvalue(value) then return "<restricted>" end
+    if A.secret and A.secret(value) then return "<restricted>" end
     local kind=type(value)
     if kind=="string" then return value:sub(1,240):gsub("\n"," ") end
     if kind=="number" or kind=="boolean" then return tostring(value) end
@@ -23,16 +23,16 @@ local function printable(value)
 end
 function A:Diag(line)
     if not (self.db and self.db.diag) then return end
-    self.db.diagLines=self.db.diagLines or {}
-    local lines=self.db.diagLines
+    self.diagLines=self.diagLines or {}
+    local lines=self.diagLines
     lines[#lines+1]=string.format("%.1f %s",GetTime(),line)
     while #lines>350 do table.remove(lines,1) end
 end
 function A:ProgressChange(line)
     self:Diag(line)
     if not (self.db and self.db.diag) then return end
-    self.db.diagChanges=self.db.diagChanges or {}
-    local rows=self.db.diagChanges
+    self.diagChanges=self.diagChanges or {}
+    local rows=self.diagChanges
     rows[#rows+1]=string.format("%.1f %s",GetTime(),line)
     while #rows>60 do table.remove(rows,1) end
 end
@@ -81,7 +81,7 @@ function A:NormalizePartyProgress(data,id)
     local rows={{type=kinds.QuestTitle,id=id,leftText=title or ("Quest "..id)}}
     local member
     for _,line in ipairs(data.lines) do
-        if not readable(line) or (issecretvalue and issecretvalue(line.type)) then return nil end
+        if not readable(line) or (A.secret and A.secret(line.type)) then return nil end
         local left,right=text(line.leftText),text(line.rightText)
         local named=left:gsub(":%s*$", "")
         local found,identity=nil,false
@@ -180,7 +180,7 @@ function A:LiveQuery(source,fn,id,...)
         for _,line in ipairs(data.lines) do
             if readable(line) then
                 for _,field in ipairs({"id","guid","leftText","numFulfilled","numRequired"}) do
-                    if issecretvalue and issecretvalue(line[field]) then restricted=true end
+                    if A.secret and A.secret(line[field]) then restricted=true end
                 end
                 if unitGUID and public(line.type,"number") and line.type==Enum.TooltipDataLineType.QuestTitle then
                     self:RememberLiveSource("guid",unitGUID);unitGUID=nil
@@ -392,10 +392,12 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.1.6-beta9", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.1.6-beta10", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),
+        self.CombatTrackerReport and self:CombatTrackerReport() or "Combat tracker: unavailable",
+        "Local log: "..(self.ownReadError or "available").."; party transport: "..(self.partySendError or "available"),
         "Polling: "..(self.demo and "demo" or (memberCount==0 and "no tracked party" or (inCombat and "active (combat; discovery/layout deferred)" or "active")))
             .."; members="..memberCount.."; instance="..tostring(inInstance).."; raid="..tostring(IsInRaid()),
         "Sweep: "..self:SweepSummary(),
@@ -415,8 +417,8 @@ function A:DiagnosticReport()
         self.TriggerReport and self:TriggerReport() or "",
         "Payloads below can include party names and quest IDs. Review before sharing.",
         "Recent changes (retained separately from repeated payloads):",
-        table.concat(self.db.diagChanges or {},"\n"),
-        "Recent payloads:",table.concat(self.db.diagLines or {},"\n")},"\n")
+        table.concat(self.diagChanges or {},"\n"),
+        "Recent payloads:",table.concat(self.diagLines or {},"\n")},"\n")
 end
 function A:ShowDiagnosticReport()
     if not self.reportWindow then

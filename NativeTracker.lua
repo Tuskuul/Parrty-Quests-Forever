@@ -7,12 +7,12 @@ local function call(fn,...)
     if ok then return a,b,c end
 end
 local function object(value)
-    if issecretvalue and issecretvalue(value) then return nil end
+    if A.secret and A.secret(value) then return nil end
     if type(value)=="table" and readable(value) then return value end
     if type(value)=="userdata" then return value end
 end
 local function safe(value)
-    if issecretvalue and issecretvalue(value) then return "<restricted>" end
+    if A.secret and A.secret(value) then return "<restricted>" end
     if type(value)=="string" then return value:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("\n"," "):sub(1,220) end
     if type(value)=="number" or type(value)=="boolean" then return tostring(value) end
     return "-"

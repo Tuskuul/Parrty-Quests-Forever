@@ -30,6 +30,7 @@ function A:PruneQuestLinks()
 end
 function A:CreateQuestLogSnapshot(questIDs)
     self:ReadOwn();self:PruneQuestLinks()
+    if self.ownReadError then return nil,"Your quest log is temporarily unavailable. Try sharing again shortly." end
     if questIDs then
         local selected=0
         for id in pairs(questIDs) do
@@ -43,20 +44,11 @@ function A:CreateQuestLogSnapshot(questIDs)
     local token=string.format("%x-%x-%x",math.floor(epoch()),hash,s.serial)
     local payload=self:Serialize(questIDs)
     -- Preserve native completion flags for event/escort objectives without counts.
-    if C_QuestLog and C_QuestLog.GetQuestObjectives then
-        for id,q in pairs(self.own) do
-            if not questIDs or questIDs[id] then
-                local ok,objectives=pcall(C_QuestLog.GetQuestObjectives,id)
-                if ok and self.readable(objectives) then
-                    local index=0
-                    for _,o in ipairs(objectives) do
-                        if self.readable(o) and self.public(o.text,"string") then
-                            index=index+1
-                            if q.objectives[index] and q.objectives[index].text==o.text and self.public(o.finished,"boolean") then
-                                payload=payload.."\nF\t"..id.."\t"..index.."\t"..(o.finished and "1" or "0")
-                            end
-                        end
-                    end
+    for id,q in pairs(self.own) do
+        if not questIDs or questIDs[id] then
+            for index,o in ipairs(q.objectives) do
+                if self.public(o.finished,"boolean") then
+                    payload=payload.."\nF\t"..id.."\t"..index.."\t"..(o.finished and "1" or "0")
                 end
             end
         end
@@ -97,6 +89,12 @@ function A:InsertQuestLogChatLink(marker,draft)
     local box=(draft and draft.box) or (self.FocusedQuestLogCustomChatBox and self:FocusedQuestLogCustomChatBox()) or (active and active()) or (last and last()) or (choose and choose())
     draft=draft or self:CaptureQuestLogChatDraft(box)
     if box and type(box.Insert)=="function" then
+        if draft and type(box.GetText)=="function" then
+            local current=box:GetText()
+            if self.public(current,"string") and current~="" and current~=draft.text then
+                return false,"Your chat draft changed. Reopen Share to use the current draft."
+            end
+        end
         if draft and draft.window and (box.parentWindow~=draft.window or draft.window.theUser~=draft.recipient or draft.window.type~=draft.windowType) then
             return false -- A recycled WIM window must not redirect a captured draft.
         end
@@ -125,8 +123,9 @@ function A:DraftQuestLogLink(draft,questIDs)
     if not token then print("Party Quests: "..err);return false end
     -- A plain marker survives normal chat transport. Receiving copies turn it
     -- into Blizzard's local-only addon hyperlink without sending custom markup.
-    if not self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft) then
-        print("Party Quests: the chat entry box is unavailable.")
+    local inserted,reason=self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft)
+    if not inserted then
+        print("Party Quests: "..(reason or "The chat entry box is unavailable."))
         return false
     end
     return true
@@ -266,9 +265,20 @@ end
 function A:QuestLinkTransferTick()
     local s=self:QuestLinkState();local now=GetTime()
     if #s.outgoing>0 and now>=(s.nextSend or 0) then
-        local packet=table.remove(s.outgoing,1);local snapshot=s.published[packet.token]
-        if snapshot and now-snapshot.localTime<=TTL then self:SendQuestLogPacket(packet.message,packet.target) end
-        s.nextSend=now+0.25
+        local packet=s.outgoing[1];local snapshot=s.published[packet.token]
+        if not snapshot or now-snapshot.localTime>TTL then table.remove(s.outgoing,1)
+        elseif self:SendQuestLogPacket(packet.message,packet.target) then table.remove(s.outgoing,1)
+        else
+            packet.retries=(packet.retries or 0)+1
+            if packet.retries>=6 then
+                local kept={}
+                for _,other in ipairs(s.outgoing) do
+                    if other.token~=packet.token or other.target~=packet.target then kept[#kept+1]=other end
+                end
+                s.outgoing=kept;self:QuestLinkTrace("reply-send-failed",packet.token.." route="..packet.target)
+            end
+        end
+        s.nextSend=now+(packet.retries and 0.5 or 0.25)
     end
     for token,p in pairs(s.pending) do
         if now-p.started>120 then

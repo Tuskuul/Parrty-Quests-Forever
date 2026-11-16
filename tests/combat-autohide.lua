@@ -5,9 +5,11 @@ GetTime=function() return 100 end
 InCombatLockdown=function() return locked end
 local function frame(shown)
  local f={shown=shown~=false,attrs={},refs={},scripts={},wrapped={}}
+ function f:IsProtected() return not not self.protected,not not self.explicit end
+ function f:HookScript(k,fn) self.scripts[k]=fn end
  function f:IsShown() return self.shown end
- function f:Show() assert(not locked or not self.protected or restricted,'protected frame shown from addon Lua');self.shown=true end
- function f:Hide() assert(not locked or not self.protected or restricted,'protected frame hidden from addon Lua');self.shown=false end
+ function f:Show() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,'protected frame shown from addon Lua');self.shown=true end
+ function f:Hide() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,'protected frame hidden from addon Lua');self.shown=false end
  function f:SetAttribute(k,v) self.attrs[k]=v end
  function f:GetAttribute(k) return self.attrs[k] end
  function f:SetFrameRef(k,v) self.refs[k]=v end
@@ -28,7 +30,7 @@ local function frame(shown)
 end
 CreateFrame=function(_,_,parent,template)
  local f=frame();f.parent=parent
- f.protected=template and template:find('SecureHandler',1,true)~=nil
+ f.protected=template and template:find('SecureHandler',1,true)~=nil;f.explicit=f.protected
  return f
 end
 local function snippet(body,self,newstate,control)
@@ -45,9 +47,10 @@ SecureHandlerWrapScript=function(f,event,c,body) assert(not locked);f.wrapped[ev
 local A={}
 assert(loadfile('Core.lua'))('SimplyPartyQuests',A)
 assert(loadfile('TrackerIntegration.lua'))('SimplyPartyQuests',A)
-local module=frame(true);module.hasContents=true;module.protected=true
+local module=frame(true);module.hasContents=true;module.protected=true;module.explicit=true
 local empty=frame(false);empty.hasContents=false;empty.protected=true
-local native=frame(true);native.modules={module,empty};native.closed=false
+local ordinary=frame(true);ordinary.hasContents=true
+local native=frame(true);native.modules={module,empty,ordinary};native.closed=false
 native.Header={MinimizeButton=frame(),SetCollapsed=function(self,v) self.closed=v end}
 native.IsCollapsed=function(self) return self.closed end
 native.SetCollapsed=function(self,v) assert(not locked,'native full collapse attempted in combat');self.closed=v end
@@ -55,7 +58,7 @@ native.Update=function() assert(not locked,'native layout update attempted in co
 ObjectiveTrackerFrame=native
 A.db={displayMode='blizzard',trackerHidden=false,trackerCollapsed=false}
 A.sidebar=frame(true);A.sidebar.trackerBackground=frame(true);A.window=frame(false)
-A.partyTrackerButton=frame()
+A.partyTrackerButton=frame();A.partyTrackerButton.protected=true;A.partyTrackerButton.explicit=true
 function A:RefreshCombatTrackerPane()
  if self:SyncCombatAutoHide() then return end
  self.sidebar:Show();self.sidebar.trackerBackground:Show()
@@ -77,13 +80,14 @@ local function click(f)
 end
 locked=true;state(1);A:SyncCombatAutoHide()
 assert(main.shown,'combat main control was not activated')
+assert(not ordinary.shown,'ordinary module was not collapsed through its normal API')
 -- Native handler replacement must not remove the independent combat control.
 native.Header.MinimizeButton:SetScript('OnClick',function() error('native handler ran in combat') end)
 assert(native.shown and not module.shown and native.Header.closed,'whole native tracker failed to collapse to header')
 assert(not A.sidebar.shown and not A.sidebar.trackerBackground.shown)
 assert(not native.closed and not A.db.trackerHidden,'visual collapse altered native/saved state')
 assert(click(A.partyTrackerButton)==false,'collapsed Party Quests click was not handled')
-assert(module.shown and A.sidebar.shown and not native.Header.closed,'secure combat reopening failed')
+assert(module.shown and ordinary.shown and A.sidebar.shown and not native.Header.closed,'combat reopening failed for protected/ordinary modules')
 assert(not empty.shown and not A.integration.expandAfterCombat,'combat reopening showed empty module or queued instead')
 assert(not A:SyncCombatAutoHide() and A.sidebar.shown,'combat polling re-collapsed manually opened tracker')
 assert(click(A.partyTrackerButton)==nil,'expanded party button should retain normal pane toggle')
@@ -93,9 +97,10 @@ module.shown=true
 snippet(module.wrapped.OnShow.body,module,nil,c)
 assert(not module.shown,'native redraw resurrected combat-collapsed module')
 assert(click(native.Header.MinimizeButton)==false and module.shown and not native.Header.closed,'main secure combat expansion failed')
--- A native hide while manually open uses the restricted restoration path.
-module.shown=false;snippet(module.wrapped.OnHide.body,module,nil,c)
-assert(module.shown,'secure manual-open state did not survive native hide')
+-- Native OnHide can mean contents were released; never resurrect an empty module.
+module.shown=false
+assert(not module.wrapped.OnHide,'native hide was overridden by forced restoration')
+assert(not module.shown,'native layout hide was undone')
 -- Only the Party Quests launcher changes the saved party-pane visibility.
 assert(click(native.Header.MinimizeButton)==false and not module.shown)
 A.db.trackerHidden=true

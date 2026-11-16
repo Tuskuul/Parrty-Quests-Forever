@@ -1,6 +1,6 @@
 local _, A = ...
 local function value(v)
-    if issecretvalue and issecretvalue(v) then return "restricted" end
+    if A.secret and A.secret(v) then return "restricted" end
     if type(v)=="boolean" or type(v)=="number" then return tostring(v) end
     if type(v)=="string" then return v:gsub("[\r\n]"," "):sub(1,180) end
     if v==nil then return "nil" end
