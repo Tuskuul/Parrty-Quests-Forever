@@ -582,6 +582,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     elapsed=0
     if A.layoutDirty then A.layoutDirty=nil;A:Render() end
     local now=GetTime()
+    if A.ApplyPendingSettings then A:ApplyPendingSettings() end
     A:CombatOwnTick()
     if A.PollTick then A:PollTick() end
     if A.TriggerTick then A:TriggerTick() end

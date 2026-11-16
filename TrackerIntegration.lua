@@ -85,7 +85,13 @@ function A:CombatTrackerReport()
         if self.public(v,"string") or self.public(v,"boolean") or self.public(v,"number") then return tostring(v) end
         return "unknown"
     end
-    local out={"Combat tracker: stage="..safe(c and invoke(c.GetAttribute,c,"combat-stage"))}
+    local configured=self.db and self.db.combatAutoHide~=false
+    local out={"Combat tracker: auto-collapse="..safe(configured).."; setup="..(s.combatSetupStatus or "not attempted")
+        .."; stage="..safe(c and invoke(c.GetAttribute,c,"combat-stage")),
+        "Combat setup APIs: RegisterStateDriver="..type(RegisterStateDriver).."; SecureHandlerWrapScript="..type(SecureHandlerWrapScript),
+        "Combat setup state: controller="..tostring(c~=nil).."; driver="..tostring(s.combatDriverReady==true)
+            .."; modules="..safe(c and invoke(c.GetAttribute,c,"count")).."; settings queued="..tostring(self.settingsOpenPending==true)}
+    if s.combatSetupError then out[#out+1]="Combat setup error: "..s.combatSetupError end
     local function frame(label,object)
         if not object then return end
         local ok,protected,explicit=pcall(function() return object:IsProtected() end)
@@ -107,11 +113,31 @@ function A:CombatTrackerReport()
     return table.concat(out,"\n")
 end
 function A:PrepareCombatCollapse()
-    if combat() or not self.db then return end
     local s=self.integration
+    local enabled=self.db and self.db.combatAutoHide~=false
+    if s.combatSetupEnabled~=enabled then s.combatSetupRetryAt=nil;s.combatSetupEnabled=enabled end
+    if s.combatSetupRetryAt and GetTime()<s.combatSetupRetryAt then return end
+    local ok,err=pcall(self.PrepareCombatCollapseUnsafe,self)
+    if not ok then
+        s.combatSetupStatus="setup failed at "..(s.combatSetupPhase or "unknown phase")
+        s.combatSetupError=self.public(err,"string") and err:sub(1,240) or "unavailable error text"
+        s.combatSetupRetryAt=GetTime()+10
+    end
+end
+function A:PrepareCombatCollapseUnsafe()
+    local s=self.integration
+    if not self.db then s.combatSetupStatus="waiting for saved settings";return end
+    if combat() then
+        if not s.combatSetupStatus then s.combatSetupStatus="waiting for combat to end" end
+        return
+    end
+    s.combatSetupError=nil
+    if self.db.combatAutoHide==false and not s.combatController then s.combatSetupStatus="disabled in settings";return end
+    if type(RegisterStateDriver)~="function" then s.combatSetupStatus="unavailable: RegisterStateDriver";return end
+    if type(SecureHandlerWrapScript)~="function" then s.combatSetupStatus="unavailable: SecureHandlerWrapScript";return end
     local native=ObjectiveTrackerFrame
-    if self.db.combatAutoHide==false and not s.combatController then return end
-    if type(RegisterStateDriver)~="function" or type(SecureHandlerWrapScript)~="function" then return end
+    if not native then s.combatSetupStatus="waiting for Blizzard tracker";return end
+    s.combatSetupPhase="controller"
     local c=s.combatController
     if not c then
         c=CreateFrame("Frame",nil,UIParent,"SecureHandlerStateTemplate")
@@ -148,7 +174,7 @@ function A:PrepareCombatCollapse()
         if not self.readable(module) then return end
         local i=s.combatModules[module]
         if not i then
-            count=count+1;i=count;s.combatModules[module]=i
+            count=count+1;i=count
             -- Stored refs may name ordinary frames, but their restricted
             -- Show/Hide handles are unusable in combat unless IsProtected is true.
             c:SetFrameRef("module"..i,module)
@@ -168,6 +194,7 @@ function A:PrepareCombatCollapse()
                     end
                 end)
             end
+            s.combatModules[module]=i
             -- Do not force a native OnHide back to Show. A normal quest refresh
             -- legitimately hides empty modules and releases/rebuilds their rows.
         end
@@ -177,8 +204,9 @@ function A:PrepareCombatCollapse()
         c:SetAttribute("available"..i,available)
         s.combatModuleStates[module]={shown=shown,available=available}
     end
+    s.combatSetupPhase="modules"
     if native then
-        invoke(native.ForEachModule,native,add)
+        if type(native.ForEachModule)=="function" then native:ForEachModule(add) end
         for _,module in pairs(native.modules or {}) do add(module) end
     end
     c:SetAttribute("count",count)
@@ -189,6 +217,7 @@ function A:PrepareCombatCollapse()
         SecureHandlerWrapScript(frame,"OnClick",c,combatClick)
         s.combatButtons[frame]=true
     end
+    s.combatSetupPhase="buttons"
     local minimize=native and native.Header and native.Header.MinimizeButton
     if minimize then
         -- Use an addon-owned secure click surface, just like Party Quests.
@@ -211,9 +240,12 @@ function A:PrepareCombatCollapse()
         button(main,false)
     end
     button(self.partyTrackerButton,true)
+    s.combatSetupPhase="state driver"
     if not s.combatDriverReady then
         RegisterStateDriver(c,"combat","[combat] 1; 0");s.combatDriverReady=true
     end
+    s.combatSetupStatus=self.db.combatAutoHide==false and "disabled in settings" or "ready"
+    s.combatSetupError=nil;s.combatSetupRetryAt=nil;s.combatSetupPhase="complete"
 end
 function A:SyncCombatAutoHide()
     local s=self.integration

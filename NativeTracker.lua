@@ -134,11 +134,13 @@ function A:NativeTrackerTick()
     self:RecordNativeTrackerRefresh("confirmed mismatch "..signature)
     -- One normal native dirty request per distinct mismatch. No direct edits
     -- to counters, block state, module contents, visibility or watched quests.
+    s.refreshInFlight=true
     local ok,err=pcall(tracker.MarkDirty,tracker)
-    if ok then
+    s.refreshInFlight=nil
+    if ok and not s.suspended then
         s.requested=s.requested+1;s.result="redraw requested; awaiting counter verification"
         s.verify={at=GetTime()+1.5,deadline=GetTime()+8,objectives=mismatches}
-    else
+    elseif not ok then
         s.errors=s.errors+1;s.result="redraw failed: "..safe(err)
         s.suspended=true
         self.db.nativeTrackerRepair=false -- no repeated errors in a broken UI
@@ -200,15 +202,20 @@ frame:SetScript("OnEvent",function(_,event,addon,action)
     s.blocks[#s.blocks+1]=string.format("%.1f %s addon=%s action=%s",GetTime(),event,safe(addon),safe(action))
     while #s.blocks>12 do table.remove(s.blocks,1) end
     if public(addon,"string") and addon=="SimplyPartyQuests" then
-        if A.db then
-            A.db.nativeTrackerRepair=false
-            if A.integration and A.integration.attached then
-                -- A blocked combat click must not permanently change the chosen view.
-                A.integration.lastError="addon block notification; docked restore queued"
-                A.integration.blockedRestore=true
-                A:InvalidateTrackerIntegration()
-            end
-        end;s.due=nil;s.verify=nil;s.suspended=true
+        -- Settings access says nothing about the health of a quest redraw.
+        if public(action,"string") and (action:find("Settings",1,true) or action:find("InterfaceOptions",1,true)) then return end
+        if A.integration and A.integration.attached then
+            A.integration.lastError="addon block notification; docked restore queued"
+            A.integration.blockedRestore=true
+            A:InvalidateTrackerIntegration()
+        end
+        -- Pause repair only when a redraw is executing or being verified.
+        -- Preserve saved opt-outs and do not disable repair for unrelated UI work.
+        if s.refreshInFlight or s.verify then
+            if A.db then A.db.nativeTrackerRepair=false end
+            s.due=nil;s.verify=nil;s.suspended=true
+            s.result="redraw paused after a blocked action during repair"
+        end
     end
 end)
 for _,event in ipairs({"ADDON_ACTION_BLOCKED","ADDON_ACTION_FORBIDDEN"}) do pcall(frame.RegisterEvent,frame,event) end

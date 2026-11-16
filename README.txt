@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta10
+Party Quests Forever 1.1.6-beta11
 BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -131,3 +131,9 @@ sharing. Refresh works in combat; catalog discovery waits. Display-mode changes
 queue until combat ends and choosing the active mode cancels a queued change.
 /spq report includes combat frame protection and click-stage history. Native +/-
 and intermittent native-pane blanking still need live testing.
+
+BETA11 FOLLOW-UP
+Opening Settings in combat queues one request until combat ends. Unrelated UI
+blocks no longer disable native repair. Reports include combat auto-collapse
+preference, setup status, API availability, controller/driver state, module count
+and initialization errors. Native +/- still needs live verification.

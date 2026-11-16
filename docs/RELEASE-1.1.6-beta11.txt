@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.6-beta11
+
+- Settings requested during combat open automatically once combat ends.
+- Unrelated settings and UI failures no longer disable Blizzard tracker recovery.
+- Diagnostic reports now identify disabled, unavailable or failed combat setup.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

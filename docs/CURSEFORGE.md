@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta10.zip
+- **Release file:** PartyQuestsForever_1.1.6-beta11.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,16 +63,11 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta10
+Party Quests Forever 1.1.6-beta11
 
-- Improved combat handling for tracker modules and display-mode changes.
-- Refresh remains available during combat; discovery resumes afterward.
-- Keeps last known progress when quest data is temporarily unavailable.
-- Retries interrupted party updates and shared-log transfers.
-- Protects fresh party updates from stale or incomplete responses.
-- Preserves newer chat drafts when using the Share window.
-- Recovers invalid saved layout values while retaining valid preferences.
-- Detailed diagnostic captures now stay in session memory.
+- Settings requested during combat open automatically once combat ends.
+- Unrelated settings and UI failures no longer disable Blizzard tracker recovery.
+- Diagnostic reports now identify disabled, unavailable or failed combat setup.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
 

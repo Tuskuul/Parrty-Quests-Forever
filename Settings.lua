@@ -199,7 +199,19 @@ function A:RegisterSettingsCategory()
     end
 end
 
+function A:ApplyPendingSettings()
+    if self.settingsOpenPending and not (InCombatLockdown and InCombatLockdown()) then self:OpenSettings() end
+end
 function A:OpenSettings()
+    if InCombatLockdown and InCombatLockdown() then
+        if not self.settingsOpenPending then
+            self.settingsOpenPending=true
+            if self.CombatControlNotice then self:CombatControlNotice("Settings will open after combat.")
+            else print("Party Quests Forever: settings will open after combat.") end
+        end
+        return false
+    end
+    self.settingsOpenPending=nil
     self:InitSettings();self:RegisterSettingsCategory();self:SyncSettings()
     if self.settingsCategory and Settings and type(Settings.OpenToCategory)=="function" then
         Settings.OpenToCategory(self.settingsCategory:GetID())
