@@ -34,6 +34,7 @@ GetUnitName=function() return 'Tester-Realm' end
 
 local active,hardware,pushFailure,blocked=false,false,false,false
 local wire,pushes={},{}
+local completionReads=0
 GetUnitName=function(unit) return unit=='player' and active.name or active.peer end
 UnitName=GetUnitName
 UnitGUID=function(unit) return unit=='player' and active.name or active.peer end
@@ -41,7 +42,7 @@ InCombatLockdown=function() return active.combat end
 local pushable={[101]=true,[202]=true,[404]=true}
 C_QuestLog={
  IsPushableQuest=function(id) return pushable[id] or false end,
- IsQuestFlaggedCompleted=function() error('completion history must not be queried') end,
+ IsQuestFlaggedCompleted=function() completionReads=completionReads+1;return false end,
  GetSelectedQuest=function() return active.selected end,
  SetSelectedQuest=function(id) active.selected=id end,
 }
@@ -53,7 +54,7 @@ end
 local function quest(id,title) return {id=id,title=title,objectives={}} end
 local function client(name,peer)
  local a={name=name,peer=peer,selected=777}
- for _,file in ipairs({'Core.lua','QuestLogLinks.lua','QuestLogCopy.lua','QuestOffers.lua','QuestLogSharePicker.lua'}) do assert(loadfile(file))('SimplyPartyQuests',a) end
+ for _,file in ipairs({'Core.lua','ShareRequests.lua','QuestLogLinks.lua','QuestLogCopy.lua','QuestOffers.lua','QuestLogSharePicker.lua'}) do assert(loadfile(file))('SimplyPartyQuests',a) end
  a.members={[peer]={guid=peer,name=peer,fullName=peer,unit='party1',connected=true,quests={},syncedAt=now}}
  function a:ReadOwn() end
  function a:InitQuestLogLinks() return true end
@@ -95,6 +96,7 @@ local quests,isOffer=owner:ValidateQuestLinkPayload(published.payload)
 assert(isOffer and quests[101] and not quests[202],'offer snapshot leaked unselected quests')
 assert(not quests[101].ready and #quests[101].objectives==0 and not published.payload:find('Private objective detail',1,true),'offer carried unneeded objective/completion data')
 assert(not owner:ValidateQuestLinkPayload('G\t1\n'..published.payload),'duplicate offer metadata accepted')
+assert(completionReads==0,'publisher filtering or offer creation queried completion history')
 active=guest
 assert(guest:ImportCopiedQuestLogLink(marker)==token,'Import did not accept the copied offer')
 assert(not guest:ImportCopiedQuestLogLink(marker:gsub('Offer:','Log:')),'same token was rebound to a different link purpose')
@@ -111,7 +113,7 @@ end
 local received=guest:QuestLinkState().received[token]
 assert(received and received.offer and received.quests[101],'offer transfer lost its purpose or quests')
 assert(guest.sharedQuestLogWindow.title.text:find('Quest Offers',1,true))
-assert(guest.sharedQuestLogWindow.rows[1].label.text:find('Request share',1,true))
+assert(guest.sharedQuestLogWindow.rows[1].label.text:find('Check requirements',1,true))
 guest.sharedQuestLogWindow.rows[1].scripts.OnClick()
 request=table.remove(wire,1);assert(request and request.message=='Q|'..token..'|101','offer click did not request the real quest')
 active=owner;owner:ReceiveQuestLogLink(request.message,guest.name,'WHISPER')

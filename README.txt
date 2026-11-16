@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta13
+Party Quests Forever 1.1.6-beta14
 BETA: Quest offers, chat links, copied links and in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -148,3 +148,10 @@ The recipient opens the link and clicks a quest to request its normal share.
 Both players need beta13 or newer and must remain in the same party.
 Combat or client restrictions may require the owner to click Share quest.
 Links last 15 minutes. Native share delivery/acceptance still needs live testing.
+
+REQUESTER ELIGIBILITY (BETA14)
+Offered quests show Not eligible for a known acceptance failure. Hover for the
+reason or click to display it; no request is sent when a check fails.
+Unavailable or incomplete rules show Check requirements and leave the native
+acceptance decision available. Publisher filtering still uses current logs only.
+The requester needs beta14 for these notices; beta13 owners remain compatible.

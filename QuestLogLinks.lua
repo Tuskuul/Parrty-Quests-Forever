@@ -362,7 +362,7 @@ function A:ShowSharedQuestLog(token,snapshot,message)
     f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",16,snapshot and snapshot.offer and -94 or -72)
     f.scroll:SetPoint("BOTTOMRIGHT",-32,52)
     local y,used=0,0
-    local function row(label,heading,id,complete)
+    local function row(label,heading,id,complete,ineligible,reason)
         used=used+1;local b=f.rows[used]
         if not b then
             b=CreateFrame("Button",nil,f.child);b.label=b:CreateFontString(nil,"ARTWORK")
@@ -381,7 +381,15 @@ function A:ShowSharedQuestLog(token,snapshot,message)
             end
         end)
         b.label:SetFontObject(heading and (ObjectiveTrackerLineFont or GameFontNormal) or (ObjectiveTrackerLineFont or GameFontHighlightSmall))
-        if complete then b.label:SetTextColor(0.1,1,0.1)
+        b:SetScript("OnEnter",reason and function(button)
+            if GameTooltip then
+                GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Quest requirements")
+                GameTooltip:AddLine(A:DisplayText(reason),1,1,1,true);GameTooltip:Show()
+            end
+        end or nil)
+        b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
+        if ineligible then b.label:SetTextColor(0.55,0.55,0.55)
+        elseif complete then b.label:SetTextColor(0.1,1,0.1)
         elseif heading then b.label:SetTextColor(1,0.82,0) else b.label:SetTextColor(0.8,0.8,0.8) end
         b.label:SetText(label);b.art:SetShown(heading);b:EnableMouse(id~=nil)
         local h=math.max(heading and 26 or 18,b.label:GetStringHeight()+8)
@@ -397,11 +405,17 @@ function A:ShowSharedQuestLog(token,snapshot,message)
             f.subtitle:SetText(#quests.." offered quests. Click a quest to request its normal share prompt.\n"..(self:QuestOfferStatus(token) or "Both players need this beta. Normal quest acceptance rules apply."))
         else f.subtitle:SetText(#quests.." quests | "..ready.." ready for turn-in\nSnapshot: "..stamp.." (not a live view)") end
         if #quests==0 then row("No quests in this snapshot.",false) end
+        local completionReader
+        if snapshot.offer and self.QuestCompletionReader then
+            local ok,reader=pcall(self.QuestCompletionReader,self)
+            if ok then completionReader=reader end
+        end
         for _,q in ipairs(quests) do
             local expanded=f.expanded[q.id]~=false
             if snapshot.offer then
-                local owned=self.own[q.id]~=nil
-                row(safe(q.title)..(owned and " [Already in your log]" or " [Request share]"),true,not owned and q.id or nil,false)
+                local eligible,reason=self:CheckQuestOfferEligibility(q.id,completionReader)
+                local suffix=self.own[q.id] and " [Already in your log]" or (eligible==false and " [Not eligible]" or (eligible==nil and " [Check requirements]" or " [Request share]"))
+                row(safe(q.title)..suffix,true,q.id,false,eligible==false,reason)
             else
                 row((expanded and "- " or "+ ")..safe(q.title)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
                 if expanded then

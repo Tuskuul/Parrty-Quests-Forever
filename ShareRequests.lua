@@ -23,19 +23,10 @@ function A:QuestCompletionReader()
         return nil
     end
 end
-function A:CheckShareEligibility(id)
+function A:CheckBasicShareEligibility(id)
     if self.own[id] then return false,"Already in your quest log." end
-    local completed=self:QuestCompletionReader()
-    local done=completed(id)
     local d=self.questEligibility and self.questEligibility[id]
-    if done==true then
-        if d and d.special and hasBit(d.special,1) then return nil,"Repeatable quest completed before; current availability needs verification." end
-        return false,"Already completed by this character."
-    end
-    if done==nil then return nil,"Completion history is unavailable." end
     if not d or d.uncertain then return nil,"Acceptance requirements need verification for this quest." end
-    if not d.flags or not hasBit(d.flags,4) then return false,"Not marked shareable in the quest database." end
-    if d.special and hasBit(d.special,1) then return nil,"Repeatable quest availability needs verification." end
     local level=call(UnitLevel,"player")
     if not self.public(level,"number") or not self.public(d.level,"number") then return nil,"Required level is unavailable." end
     if level<d.level then return false,"Requires level "..d.level.."." end
@@ -50,6 +41,28 @@ function A:CheckShareEligibility(id)
     end
     local ok,reason=identity(d.races,UnitRace,"Race");if ok~=true then return ok,reason end
     ok,reason=identity(d.classes,UnitClass,"Class");if ok~=true then return ok,reason end
+    return true,"Known level, race and class checks passed."
+end
+function A:CheckShareEligibility(id,offered,completionReader)
+    if self.own[id] then return false,"Already in your quest log." end
+    local completed=completionReader or self:QuestCompletionReader()
+    local done=completed(id)
+    local d=self.questEligibility and self.questEligibility[id]
+    if done==true then
+        if (d and d.special and hasBit(d.special,1)) or (offered and call(C_QuestLog and C_QuestLog.IsRepeatableQuest,id)==true) then
+            return nil,"Repeatable quest completed before; current availability needs verification."
+        end
+        if offered and not d and call(C_QuestLog and C_QuestLog.IsRepeatableQuest,id)~=false then
+            return nil,"Prior completion found, but repeatable status could not be verified."
+        end
+        return false,"Already completed by this character."
+    end
+    if done==nil then return nil,"Completion history is unavailable." end
+    if not d or d.uncertain then return nil,"Acceptance requirements need verification for this quest." end
+    if not offered and (not d.flags or not hasBit(d.flags,4)) then return false,"Not marked shareable in the quest database." end
+    if d.special and hasBit(d.special,1) then return nil,"Repeatable quest availability needs verification." end
+    local ok,reason=self:CheckBasicShareEligibility(id)
+    if ok~=true then return ok,reason end
     local function prerequisite(list,any)
         if not list or #list==0 then return true end
         local unknown=false

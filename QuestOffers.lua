@@ -82,6 +82,22 @@ function A:SetQuestOfferStatus(token,text)
         self:ShowSharedQuestLog(token,snapshot)
     end
 end
+function A:CheckQuestOfferEligibility(id,completionReader)
+    if self.own[id] then return false,"Already in your quest log." end
+    local ok,basic,basicReason=pcall(self.CheckBasicShareEligibility,self,id)
+    if ok and basic==false then return false,basicReason end
+    local api=C_QuestLog or {}
+    local maximum=call(api.GetMaxNumQuestsCanAccept)
+    if self.public(maximum,"number") and maximum>0 and type(api.GetNumQuestLogEntries)=="function" then
+        local counted,_,used=pcall(api.GetNumQuestLogEntries)
+        if counted and self.public(used,"number") and used>=maximum then return false,"Your quest log is full." end
+    end
+    local checked,eligible,reason=pcall(self.CheckShareEligibility,self,id,true,completionReader)
+    if checked and eligible==false then return false,reason end
+    if not ok or not checked then return nil,"The client could not verify the acceptance requirements." end
+    if basic==nil then return nil,basicReason end
+    return eligible,reason
+end
 function A:RequestOfferedQuest(token,id,snapshot)
     local s=self:QuestOfferState();self:PruneQuestLinks()
     local known=self:QuestLinkState().received[token]
@@ -90,7 +106,11 @@ function A:RequestOfferedQuest(token,id,snapshot)
     if not member then self:SetQuestOfferStatus(token,"The owner is no longer available in your party.");return end
     self:ReadOwn()
     if self.ownReadError then self:SetQuestOfferStatus(token,"Your quest log is temporarily unavailable.");return end
-    if self.own[id] then self:SetQuestOfferStatus(token,"This quest is already in your log.");return end
+    local eligible,eligibilityReason=self:CheckQuestOfferEligibility(id)
+    if eligible==false then
+        self:QuestLinkTrace("offer-ineligible",token.." quest="..id)
+        self:SetQuestOfferStatus(token,"Not eligible: "..eligibilityReason);return
+    end
     local now=GetTime();local key=token..":"..id
     if (s.lastSent and now-s.lastSent<5) or (s.pending[key] and now-s.pending[key].at<15) then
         self:SetQuestOfferStatus(token,"A share was requested recently; please wait.");return
@@ -100,7 +120,8 @@ function A:RequestOfferedQuest(token,id,snapshot)
     end
     s.lastSent=now;s.pending[key]={at=now,owner=target,id=id}
     self:QuestLinkTrace("offer-request",token.." quest="..id)
-    self:SetQuestOfferStatus(token,"Share requested. Watch for the normal quest offer; the owner may need to confirm.")
+    self:SetQuestOfferStatus(token,eligible==nil and ("Share requested; some requirements could not be verified. "..(eligibilityReason or "The game will check acceptance."))
+        or "Share requested. Watch for the normal quest offer; the owner may need to confirm.")
 end
 function A:ValidateOfferedQuest(token,id,sender)
     self:PruneQuestLinks()
