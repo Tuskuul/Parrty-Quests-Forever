@@ -8,7 +8,8 @@ local function frame(shown)
  function f:IsProtected() return not not self.protected,not not self.explicit end
  function f:HookScript(k,fn) self.scripts[k]=fn end
  function f:IsShown() return self.shown end
- function f:Show() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,'protected frame shown from addon Lua');self.shown=true end
+ function f:SetShown(v) if v then self:Show() else self:Hide() end end
+ function f:Show() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,debug.traceback('protected frame shown from addon Lua'));self.shown=true end
  function f:Hide() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,'protected frame hidden from addon Lua');self.shown=false end
  function f:SetAttribute(k,v) self.attrs[k]=v end
  function f:GetAttribute(k) return self.attrs[k] end
@@ -53,8 +54,14 @@ local ordinary=frame(true);ordinary.hasContents=true
 local native=frame(true);native.modules={module,empty,ordinary};native.closed=false
 native.Header={MinimizeButton=frame(),SetCollapsed=function(self,v) self.closed=v end}
 native.IsCollapsed=function(self) return self.closed end
-native.SetCollapsed=function(self,v) assert(not locked,'native full collapse attempted in combat');self.closed=v end
-native.Update=function() assert(not locked,'native layout update attempted in combat') end
+native.SetCollapsed=function(self,v)
+ assert(not locked,'native full collapse attempted in combat');self.closed=v
+ self:Update()
+end
+native.Update=function()
+ assert(not locked,'native layout update attempted in combat')
+ for _,m in ipairs(native.modules) do m:SetShown(not native.closed and m.hasContents) end
+end
 ObjectiveTrackerFrame=native
 A.db={displayMode='blizzard',trackerHidden=false,trackerCollapsed=false}
 A.sidebar=frame(true);A.sidebar.trackerBackground=frame(true);A.window=frame(false)
@@ -70,13 +77,15 @@ local c=A.integration.combatController
 assert(c and module.wrapped.OnShow and A.partyTrackerButton.wrapped.OnClick,'secure setup incomplete')
 local main=A.integration.combatMainButton
 assert(main and main.wrapped.OnClick and main.anchor==native.Header.MinimizeButton,'native +/- has no dedicated secure click surface')
-assert(not main.shown and not native.Header.MinimizeButton.wrapped.OnClick,'outside-combat native button should remain untouched')
+assert(main.shown and not native.Header.MinimizeButton.wrapped.OnClick,'prepared collapse control must cover the native button while enabled')
 local function state(v)
  c:SetAttribute('state-combat',v);snippet(c:GetAttribute('_onstate-combat'),c,v)
 end
 local function click(f)
  if f==native.Header.MinimizeButton then f=main end
- local w=f.wrapped.OnClick;return snippet(w.body,f,nil,w.controller)
+ local w=f.wrapped.OnClick;local result=snippet(w.body,f,nil,w.controller)
+ if result~=false and f.scripts.OnClick then f.scripts.OnClick(f) end
+ return result
 end
 locked=true;state(1);A:SyncCombatAutoHide()
 assert(main.shown,'combat main control was not activated')
@@ -112,22 +121,40 @@ click(native.Header.MinimizeButton)
 A:TogglePartyTracker()
 assert(A.integration.expandAfterCombat and not module.shown,'unsecured expansion did not use fallback queue')
 locked=false;state(0);A:SyncCombatAutoHide()
-assert(not main.shown,'combat overlay obscures native button outside combat')
+assert(main.shown,'prepared collapse control was lost outside combat')
 assert(native.shown and module.shown and not native.Header.closed and A.integration.restoreNativeLayout)
-A.db.trackerHidden=true;native.closed=true
+A.db.trackerHidden=true;A:SetPreparedTrackerCollapsed(true)
 A:ApplyPendingTrackerRestore()
 assert(not A.integration.expandAfterCombat and not native.closed and not A.db.trackerHidden,'queued post-combat docked expansion failed')
 -- Outside combat the party launcher must expand an actually collapsed native view.
-native.closed=true;A.db.trackerHidden=true
+A:SetPreparedTrackerCollapsed(true);A.db.trackerHidden=true
 function A:SetViewShown(v) self.db.trackerHidden=not v end
 local ticks=0;function A:TrackerIntegrationTick() ticks=ticks+1 end
 A:TogglePartyTracker()
 assert(not native.closed and not A.db.trackerHidden and ticks==1,'out-of-combat party launcher did not expand whole tracker')
 -- Preserve a preexisting native collapse after the automatic visual cycle.
 native.closed=true;module.shown=false;A:SyncCombatAutoHide()
-locked=true;state(1);locked=false;state(0);A:SyncCombatAutoHide()
-assert(native.closed and not module.shown,'automatic cycle expanded a previously collapsed native view')
-A.db.combatAutoHide=false;A:SyncCombatAutoHide();locked=true;state(1)
+assert(not native.closed and A:IsNativeTrackerCollapsed(native),'preexisting native collapse was not prepared without changing its visual preference')
+locked=true;state(1)
+assert(click(native.Header.MinimizeButton)==false,'preclosed main button did not run securely')
+assert(module.shown and ordinary.shown and not native.Header.closed,'preclosed native layout failed to reopen in combat')
+assert(not native.closed,'combat opening retained native collapsed state')
+module.native=native
+-- Simulate a native visibility refresh: its real expanded state must keep rows visible.
+snippet('if not self.native.closed and self.hasContents then self:Show() else self:Hide() end',module)
+assert(module.shown,'native collapsed state hid the reopened quest module')
+assert(click(native.Header.MinimizeButton)==false and not module.shown,'preclosed main button failed to collapse again')
+assert(click(A.partyTrackerButton)==false and module.shown,'preclosed party launcher failed to reopen')
+locked=false;state(0);A:SyncCombatAutoHide()
+assert(A:IsNativeTrackerCollapsed(native) and not native.closed and not module.shown,'automatic cycle lost the pre-combat visual collapse')
+-- Opening/closing before combat must never invoke a native collapsed layout.
+click(native.Header.MinimizeButton)
+assert(not A:IsNativeTrackerCollapsed(native) and module.shown and ordinary.shown,'out-of-combat prepared expansion failed')
+click(native.Header.MinimizeButton)
+assert(A:IsNativeTrackerCollapsed(native) and not module.shown and not native.closed,'out-of-combat collapse used the native layout')
+A.db.combatAutoHide=false;A:SyncCombatAutoHide()
+assert(native.closed and not A.integration.preparedNative,'disabling auto-collapse failed to restore native collapse ownership')
+locked=true;state(1)
 assert(not c:GetAttribute('combat-collapsed'),'explicit option off was ignored')
 assert(not main.shown,'option off still intercepts native button clicks')
 print('PASS: restricted combat reopen/collapse, no protected addon-Lua writes or native rebuild, no empty modules, redraw/manual-open persistence, queued fallback and saved state/opt-out')

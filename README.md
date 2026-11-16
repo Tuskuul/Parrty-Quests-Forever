@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.6-beta11**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+**1.1.6-beta12**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
 
 Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
 
@@ -21,6 +21,8 @@ Beta9 streamlines Settings into Display, mode-specific Layout, Quests and Tools.
 Beta10 follows a full code audit: transient quest-data failures retain the last known log; party/snapshot packets retry bounded transport failures; delta updates stay authoritative over native observations; and Share preserves chat drafts edited while its chooser is open. Combat refresh uses budgeted data queries, display-mode changes wait for combat exit, and native modules are no longer forcibly reopened on every hide. `/spq report` now records frame protection and secure click stages. Native +/- and spontaneous blanking still require live verification; the build does not claim those reports resolved.
 
 Beta11 queues Settings requests made in combat and opens the panel once combat ends. Unrelated blocked UI actions no longer disable native tracker recovery. `/spq report` distinguishes disabled combat setup, unavailable APIs and failed initialization, with the failed phase and error when available.
+
+Beta12 prepares the underlying native layout outside combat even when the tracker is visually collapsed. While combat auto-collapse is enabled, the main button uses that prepared visibility path outside combat as well. Both combat buttons can then reopen prepared modules without calling the native full layout; combat exit restores the prior visual collapse. Disabling the option returns collapse control to Blizzard. The closed-before-combat case still requires live-client verification.
 
 ## Install
 

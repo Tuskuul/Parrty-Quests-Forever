@@ -76,3 +76,10 @@ queue()
 assert(A.nativeTracker.suspended and not A.nativeTracker.verify and not A.db.nativeTrackerRepair,'synchronously blocked repair started verification anyway')
 print('PASS: mismatch-only requests, result verification, duplicate suppression, blank/error pauses, busy/combat deferral and no progress guessing')
 
+
+-- A visual collapse must defer repair even though its prepared native layout is expanded.
+reset('fix')
+A.IsNativeTrackerCollapsed=function(self,container) assert(container==parent);return true end
+queue()
+assert(requests==0 and A.nativeTracker.due,'visually collapsed prepared tracker was redrawn')
+A.IsNativeTrackerCollapsed=nil

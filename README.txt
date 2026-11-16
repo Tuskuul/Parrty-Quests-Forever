@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta11
+Party Quests Forever 1.1.6-beta12
 BETA: Share to chat, Copy Share link and Import for in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -26,6 +26,8 @@ scale. Appearance changes apply outside combat without needing a reload.
 Joined columns use one background. Blizzard's main collapse button controls
 both columns; Party Quests toggles the party panel while expanded. Expanding
 the compact docked tracker during combat uses a prepared secure click handler.
+With combat collapse enabled, closing before a fight keeps the underlying quest
+layout prepared for reopening. Turning the option off restores native collapse.
 Click Party Quests to reopen it in combat; native +/- remains unreliable. Native layout rebuilds
 still wait until combat ends. Player/zone/quest expanders
 remain available. An empty native tracker uses one compact party-only control.

@@ -50,7 +50,8 @@ function A:NativeTrackerRefreshReady(module)
     local parent=object(module and module.parentContainer)
     if not parent then return false,"native module is not attached" end
     if call(module.CanUpdate,module)==false then return false,"native module is busy" end
-    if call(module.IsCollapsed,module)==true or call(parent.IsCollapsed,parent)==true then
+    local collapsed=self.IsNativeTrackerCollapsed and self:IsNativeTrackerCollapsed(parent) or call(parent.IsCollapsed,parent)==true
+    if call(module.IsCollapsed,module)==true or collapsed then
         return false,"native tracker is collapsed"
     end
     if call(parent.IsShown,parent)==false then return false,"native tracker is hidden" end

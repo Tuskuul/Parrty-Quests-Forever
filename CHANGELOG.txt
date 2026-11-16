@@ -1,3 +1,10 @@
+Party Quests Forever 1.1.6-beta12
+
+- Improved combat reopening when the tracker was collapsed before the fight.
+- Collapse controls keep quest contents prepared and restore your previous view after combat.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
 Party Quests Forever 1.1.6-beta11
 
 - Settings requested during combat open automatically once combat ends.
