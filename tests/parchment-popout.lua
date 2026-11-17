@@ -56,11 +56,11 @@ assert(A.child.height>1 and A.body.shown and A.resizeGrip.shown)
 local hasDarkObjective,hasHeading=false,false
 for _,w in ipairs(widgets) do
  if type(w.text)=='string' and w.text:find('Boar tusks',1,true) then
-  assert(w.text:find('|cff332112',1,true),'objective ink is not parchment-safe')
+  assert(w.text:find(A:QuestDialogColorCode('body'),1,true),'objective ink is not parchment-safe')
   hasDarkObjective=true
  end
  if type(w.text)=='string' and w.text:find('Shared quests',1,true) then
-  assert(w.color and w.color[1]<0.5 and w.color[2]<0.5,'heading color illegible on parchment')
+  assert(w.color and w.color[1]>0.5 and w.color[2]>0.5,'heading color illegible on parchment')
   hasHeading=true
  end
 end
@@ -68,7 +68,7 @@ assert(hasHeading)
 -- Expand sample shared quest and validate its dark inline ink.
 A.demoQuestExpanded['all:101']=true;A:Render()
 for _,w in ipairs(widgets) do if type(w.text)=='string' and w.text:find('Boar tusks',1,true) then
- assert(w.text:find('|cff332112',1,true));hasDarkObjective=true
+ assert(w.text:find(A:QuestDialogColorCode('body'),1,true));hasDarkObjective=true
 end end
 assert(hasDarkObjective)
 A.scroll.scroll=99999;A:Render();assert(A.scroll.scroll<99999,'shrunk list retained an unreachable scroll offset')

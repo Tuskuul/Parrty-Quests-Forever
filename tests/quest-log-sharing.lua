@@ -115,7 +115,7 @@ C_PlayerInfo={GetContentDifficultyQuestForPlayer=function(id) return id end}
 GetDifficultyColor=function() return {r=1,g=0.1,b=0.1} end
 A:OpenQuestLogShare(draft);A:ShowQuestShareSelection()
 assert(f.rows[1].caption.text:find('|cffff1a1aAlpha|r',1,true),'selector title lacks native difficulty')
-assert(f.rows[2].caption.text:find('|cff195c21[Ready]|r',1,true),'difficulty replaced Ready status')
+assert(f.rows[2].caption.text:find(A:QuestDialogColorCode('ready')..'[Ready]|r',1,true),'difficulty replaced Ready status')
 A:ShowSharedQuestLog('colors',{quests=own,owner='Tester',created=0})
 assert(A.sharedQuestLogWindow.rows[1].label.text:find('|cffff1a1aAlpha|r',1,true),'snapshot title lacks native difficulty')
 assert(not A:Serialize():find('|c',1,true),'presentation color leaked into packets')

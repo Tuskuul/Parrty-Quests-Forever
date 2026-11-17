@@ -1,11 +1,9 @@
-# Party Quests Forever 1.1.6-beta17 beta build record
+# Party Quests Forever 1.1.7-alpha4 build record
 
-Baseline: beta16, 86780be1b9b08269ca1d44fc93433abe6c5f180c.
+Selected mockup: warmer aged umber parchment. The native paper texture is tinted at 65% brightness by default, with a saved 35–100% brightness slider and reset action under Quest windows. Ordinary text, ready and error states use a contrasting light palette below 80%, and dark ink above that. Difficulty colors remain native. Copy/Import text uses an independent dark input role.
 
-Quest title presentation uses GetDifficultyColor with C_PlayerInfo.GetContentDifficultyQuestForPlayer, matching the native quest list. A legacy native level/color API is a fallback. Invalid, missing or restricted values leave the existing text color. Acceptance minimum levels are never used as difficulty levels. Colors are computed locally and never serialized.
+The shared styling registry updates existing windows and font strings immediately without rebuilding input fields or selections. Alpha also recolors its parchment pop-out rows and inline objective/status text. Native Blizzard frames and beta's standalone dark window are not reskinned.
 
-Applies to the joined tracker, standalone combined/member lists, received log and offer titles, selected/shareable quest lists and owner confirmation. Completion/objective text and eligibility reasons retain their existing status colors. Level-up and quest-data events refresh open lists without resetting selections.
+Validation: Lua syntax and full regression suites on each branch, including saved/invalid values, live palette/texture updates, input contrast and existing draft/selection preservation. Tagging tests run for each branch. Live verification remains necessary for actual client texture appearance and the slider.
 
-Validation: source syntax, complete Lua regression suite, tagging tests. Live verification: compare red/orange/yellow/green/gray quests against the native list; check selected/offer/received logs and level-up with an open list. Confirm ready and ineligible labels remain readable on parchment.
-
-The prior intermittent map-marker CopyToClipboard block and earlier combat blocked-action reports remain unresolved. The provided post-reload taint capture did not reproduce them. This build makes no map, chat routing or combat protection changes. Main remains 1.1.5; Questie alpha work is separate.
+Prior intermittent map-marker clipboard taint and combat blocked-action reports remain unresolved; no change here claims to fix them. Main is unchanged.

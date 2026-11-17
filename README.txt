@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.7-alpha3
+Party Quests Forever 1.1.7-alpha4
 ALPHA: Optional Questie coexistence and parchment popout.
 See docs/QUESTIE-COMPATIBILITY.md for scope and live tests.
 For WoW Forever 1.60.1 (interface 16001)

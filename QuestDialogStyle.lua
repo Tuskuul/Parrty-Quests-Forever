@@ -1,19 +1,56 @@
 local _,A=...
 -- One shared parchment treatment for addon-owned share dialogs. Never reskin the
 -- real QuestFrame or inherit its quest acceptance scripts/protected controls.
-local colors={
+local light={
     body={0.20,0.13,0.07},heading={0.25,0.14,0.04},muted={0.36,0.29,0.21},
     ready={0.10,0.36,0.13},error={0.57,0.09,0.05},title={1,0.82,0},
 }
+local dark={
+    body={0.96,0.88,0.70},heading={1,0.90,0.72},muted={0.77,0.69,0.55},
+    ready={0.40,0.90,0.40},error={1,0.32,0.24},title={1,0.82,0},
+}
+function A:QuestPaperBrightness()
+    local value=self.db and self.db.questPaperBrightness
+    if not self.public(value,"number") or value~=value then return 65 end
+    return math.max(35,math.min(100,value))
+end
+function A:QuestDialogColor(role)
+    if role=="input" then return light.body end
+    if role=="inputMuted" then return light.muted end
+    local colors=self:QuestPaperBrightness()<80 and dark or light
+    return colors[role] or colors.body
+end
+function A:QuestDialogColorCode(role)
+    local c=self:QuestDialogColor(role)
+    return string.format("|cff%02x%02x%02x",math.floor(c[1]*255+0.5),math.floor(c[2]*255+0.5),math.floor(c[3]*255+0.5))
+end
 function A:StyleQuestDialogText(text,role,heading)
-    local color=colors[role] or colors.body
+    self.questDialogTexts=self.questDialogTexts or setmetatable({},{__mode="k"})
+    self.questDialogTexts[text]=role or "body"
+    local color=self:QuestDialogColor(role)
     local font=(heading or role=="heading") and (QuestFont or GameFontNormal)
         or (role=="title" and GameFontNormal or (QuestFontNormalSmall or GameFontHighlightSmall))
     if font then text:SetFontObject(font) end
     text:SetTextColor(color[1],color[2],color[3],1)
 end
+function A:ApplyQuestPaper(frame)
+    local brightness=self:QuestPaperBrightness()/100
+    -- Preserve the native paper fibers; warm the tint as it darkens.
+    local warmth=(1-brightness)
+    frame.questPaper:SetVertexColor(brightness,brightness*(1-warmth*0.34),brightness*(1-warmth*0.57),1)
+end
+function A:SetQuestPaperBrightness(value)
+    if not self.public(value,"number") or value~=value or not self.db then return end
+    self.db.questPaperBrightness=math.floor(math.max(35,math.min(100,value))+0.5)
+    for frame in pairs(self.questDialogFrames or {}) do self:ApplyQuestPaper(frame) end
+    for text,role in pairs(self.questDialogTexts or {}) do
+        local c=self:QuestDialogColor(role);text:SetTextColor(c[1],c[2],c[3],1)
+    end
+    if self.RefreshQuestDifficultyViews then self:RefreshQuestDifficultyViews() end
+    if self.window and self.Render then self:Render() end
+end
 function A:StyleQuestDialog(frame)
-    if frame.questPaper then return end
+    if frame.questPaper then self:ApplyQuestPaper(frame);return end
     frame:SetClampedToScreen(true)
     -- Both template variants use decorative dark insets. No dialog content
     -- lives inside them; hide the fill while retaining the native border art.
@@ -37,6 +74,8 @@ function A:StyleQuestDialog(frame)
         paper:SetTexCoord(0.09,0.92,0.30,0.94)
     end
     frame.questPaper=paper
+    self.questDialogFrames=self.questDialogFrames or setmetatable({},{__mode="k"})
+    self.questDialogFrames[frame]=true;self:ApplyQuestPaper(frame)
     if self.readable(frame.TitleText) then self:StyleQuestDialogText(frame.TitleText,"title") end
 end
 function A:StyleQuestShareTabs(frame)

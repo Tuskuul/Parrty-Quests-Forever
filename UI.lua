@@ -25,11 +25,11 @@ local function objective(o, remote)
         text="Unnamed quest step (see requirements)"
     end
     if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." ("..(o.done or "?").."/"..o.total..")" end
-    local color=o.total and o.done and o.total>0 and o.done>=o.total and "|cff195c21" or "|cff332112"
+    local color=o.total and o.done and o.total>0 and o.done>=o.total and A:QuestDialogColorCode("ready") or A:QuestDialogColorCode("body")
     local suffix=""
     if remote then
-        if o.done==nil or o.total==nil then suffix=" |cff62503b[progress unknown]|r"
-        elseif o.observedAt then suffix=" |cff62503b["..age(o.observedAt).."]|r" end
+        if o.done==nil or o.total==nil then suffix=(" "..A:QuestDialogColorCode("muted").."[progress unknown]|r")
+        elseif o.observedAt then suffix=" "..A:QuestDialogColorCode("muted").."["..age(o.observedAt).."]|r" end
     end
     return color..text.."|r"..suffix
 end
@@ -139,7 +139,9 @@ function A:Render()
         -- Dark ink on parchment, including class-colored names. Font height
         -- stays explicit so resizing and reused rows preserve their hierarchy.
         local ink=color or {0.48,0.34,0.20}
-        row.text:SetTextColor(ink[1]*0.48,ink[2]*0.48,ink[3]*0.48)
+        if A:QuestPaperBrightness()<80 then
+            row.text:SetTextColor(0.50+ink[1]*0.48,0.50+ink[2]*0.48,0.50+ink[3]*0.48)
+        else row.text:SetTextColor(ink[1]*0.48,ink[2]*0.48,ink[3]*0.48) end
         local height=math.max(20,row.text:GetStringHeight()+7)
         row:SetHeight(height);row:Show();y=y+height
         return row
@@ -186,7 +188,7 @@ function A:Render()
             questRows(combined,"all",8,function(q)
                 local key="all:"..q.id
                 local open=questExpansion[key]
-                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title).." |cff62503b["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title).." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements
@@ -217,7 +219,7 @@ function A:Render()
         local shared,other,count=data.shared,data.other,data.count
         local expanded=self.db.expanded[m.guid]
         local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[m.class]
-        local header=textRow((expanded and "[-] " or "[+] ")..m.name.."  |cff62503b("..count..")|r",14,c and {c.r,c.g,c.b} or nil)
+        local header=textRow((expanded and "[-] " or "[+] ")..m.name.."  "..A:QuestDialogColorCode("muted").."("..count..")|r",14,c and {c.r,c.g,c.b} or nil)
         header:EnableMouse(true);header:SetScript("OnClick",function() self.db.expanded[m.guid]=not self.db.expanded[m.guid];self:Render() end)
         if expanded then
             local status
@@ -243,7 +245,7 @@ function A:Render()
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title)..(self:IsQuestReady(q) and " |cff195c21[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title)..(self:IsQuestReady(q) and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""),13,{0.98,0.82,0.42},26)
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()

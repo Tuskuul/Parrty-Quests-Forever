@@ -70,7 +70,7 @@ function A:RefreshQuestDifficultyViews()
     if picker and picker:IsShown() then
         for i,q in ipairs(picker.quests or {}) do
             local row=picker.rows[i]
-            if row then row.caption:SetText(self:QuestTitleText(q.id,q.title)..(q.ready and " |cff195c21[Ready]|r" or "")) end
+            if row then row.caption:SetText(self:QuestTitleText(q.id,q.title)..(q.ready and (" "..self:QuestDialogColorCode("ready").."[Ready]|r") or "")) end
         end
     end
     local viewer=self.sharedQuestLogWindow
