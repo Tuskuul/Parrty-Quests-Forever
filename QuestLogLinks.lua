@@ -100,7 +100,8 @@ function A:CaptureQuestLogChatDraft(box)
     end
     return draft
 end
-function A:InsertQuestLogChatLink(marker,draft)
+function A:InsertQuestLogChatLink(marker,draft,destination)
+    if destination and destination.kind~="CURRENT" then return self:InsertQuestLogDestination(marker,destination) end
     local util=ChatFrameUtil or {}
     local active=util.GetActiveWindow or ChatEdit_GetActiveWindow
     local last=util.GetLastActiveWindow or ChatEdit_GetLastActiveWindow
@@ -135,14 +136,18 @@ function A:InsertQuestLogChatLink(marker,draft)
     if type(ChatFrame_OpenChat)=="function" then ChatFrame_OpenChat(marker);return true end
     return false
 end
-function A:DraftQuestLogLink(draft,questIDs,offer)
+function A:DraftQuestLogLink(draft,questIDs,offer,destination)
+    if destination and destination.kind~="CURRENT" then
+        local box,reason=self:QuestLogDestinationBox(destination)
+        if not box then print("Party Quests: "..reason);return false end
+    end
     draft=draft or self:CaptureQuestLogChatDraft()
     if not self:InitQuestLogLinks() then print("Party Quests: chat linking is unavailable in this client.");return false end
     if not self.questLinkComms then print("Party Quests: addon communication is unavailable.");return false end
     if offer then
         local marker,err=self:CreateCopiedQuestLogLink(questIDs,true)
         if not marker then print("Party Quests: "..err);return false end
-        local inserted,reason=self:InsertQuestLogChatLink(marker,draft)
+        local inserted,reason=self:InsertQuestLogChatLink(marker,draft,destination)
         if not inserted then print("Party Quests: "..(reason or "The chat entry box is unavailable.")) end
         return inserted
     end
@@ -150,7 +155,7 @@ function A:DraftQuestLogLink(draft,questIDs,offer)
     if not token then print("Party Quests: "..err);return false end
     -- A plain marker survives normal chat transport. Receiving copies turn it
     -- into Blizzard's local-only addon hyperlink without sending custom markup.
-    local inserted,reason=self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft)
+    local inserted,reason=self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft,destination)
     if not inserted then
         print("Party Quests: "..(reason or "The chat entry box is unavailable."))
         return false

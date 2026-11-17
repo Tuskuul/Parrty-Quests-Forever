@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.6-beta15**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+**1.1.6-beta16**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
 
 Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
 
@@ -43,6 +43,14 @@ These checks run on the requester. They do not change the publisher's Open share
 Beta15 applies the approved parchment quest-dialog treatment to the sharing chooser, received logs/offers, Copy/Import and owner share confirmation. Dark brown quest text, green completion text, native quest icons and red eligibility reasons are readable against parchment. The selected Full log, Select quests or Open shareable mode is highlighted. Copy and Import retain a distinct bordered input field. Unavailable offer rows show the reason beneath the title as well as on hover/click. All share dialogs remain draggable and are clamped to the screen.
 
 The theme uses client quest artwork and retains the existing native button/close-frame trim. It does not reskin Blizzard's actual NPC quest dialog, objective tracker, Settings or the general diagnostic report. Link lifetime, eligibility rules and sharing protocols are unchanged.
+
+## Chat destinations and copied Battle.net links
+
+Beta16 adds a parchment **Share to chat** destination popup. Choose **Current chat / whisper** to preserve the original conversation, including WIM or Battle.net. Alternatively choose Party, Guild, Say, Yell, or a joined numbered chat channel. The channel list reflects the character's current channels; unavailable group/guild/channel choices are disabled and membership/number/name are rechecked when clicked. The link opens in the chosen Blizzard chat entry; press Enter to send. Cancel returns to the chooser with its selections and draft intact.
+
+Choosing a public destination starts a fresh public draft and never copies a private whisper's text. If the public chat entry already contains text, send or clear that draft first, or choose Current chat / whisper. Nothing is posted automatically.
+
+Copied full/selected log markers in native Battle.net messages now become clickable and use the sender's Battle.net data route when their active WoW character matches the encoded original publisher. Forwarded copies retain the original character rather than requesting the forwarding friend's log. Importing a copy already observed through Battle.net preserves its route. Copied offers can be displayed in Battle.net text but still use same-party character communication and all existing eligibility guards.
 
 ## Install
 

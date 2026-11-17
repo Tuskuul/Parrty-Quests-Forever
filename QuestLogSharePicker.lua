@@ -82,18 +82,23 @@ function A:ShowQuestShareFullLog()
     f.submit:SetEnabled(true);f.copy:SetEnabled(true)
 end
 
-function A:SubmitQuestLogShare(questIDs)
+function A:SubmitQuestLogShare(questIDs,destination)
     local f=self.questSharePicker
     if questIDs and not next(questIDs) then return end
-    if self:DraftQuestLogLink(f.draft,questIDs,f.scope=="offer") then
+    if self:DraftQuestLogLink(f.draft,questIDs,f.scope=="offer",destination) then
+        local shown=f:IsShown()
         f.committed=true;f:Hide()
+        if not shown then self:FinishQuestLogSharePicker() end
+        return true
     end
+    return false
 end
 
 function A:FinishQuestLogSharePicker()
     local f=self.questSharePicker
     if not f then return end
-    f.transferActive=nil
+    f.transferActive=nil;f.destinationActive=nil
+    if self.questShareDestination then self.questShareDestination:Hide() end
     if self.questLogTransfer then
         self.questLogTransfer.returnToPicker=nil
         self.questLogTransfer:Hide()
@@ -105,6 +110,7 @@ function A:FinishQuestLogSharePicker()
 end
 
 function A:OpenQuestLogShare(draft)
+    if self.questSharePicker and self.questSharePicker.destinationActive and self.questShareDestination then self.questShareDestination:Raise();return end
     if self.questSharePicker and self.questSharePicker.transferActive and self.questLogTransfer then
         self.questLogTransfer:Raise();self.questLogTransfer.edit:SetFocus();return
     end
@@ -137,7 +143,7 @@ function A:OpenQuestLogShare(draft)
         f.scroll:SetScrollChild(f.child);f.rows={}
         f.status=label(f,"");f.status:SetPoint("BOTTOMLEFT",16,106);f.status:SetWidth(480)
         f.submit=button(f,"Share to chat",145,function()
-            A:SubmitQuestLogShare(f.scope~="full" and f.selected or nil)
+            A:OpenQuestShareDestinations()
         end)
         f.submit:SetPoint("BOTTOMLEFT",16,62)
         f.copy=button(f,"Copy Share link",175,function()
@@ -151,7 +157,7 @@ function A:OpenQuestLogShare(draft)
         f:SetScript("OnHide",function()
             -- Copy/import temporarily replaces this window. Keep its scope,
             -- selections and chat draft until the user returns or imports.
-            if not f.transferActive then A:FinishQuestLogSharePicker() end
+            if not f.transferActive and not f.destinationActive then A:FinishQuestLogSharePicker() end
         end)
     end
     local f=self.questSharePicker

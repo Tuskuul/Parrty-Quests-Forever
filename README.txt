@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta15
+Party Quests Forever 1.1.6-beta16
 BETA: Quest offers, chat links, copied links and in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -161,3 +161,9 @@ All sharing dialogs now use a matching parchment quest-window style: Share
 quests, received logs/offers, Copy/Import and owner share confirmation.
 Unavailable quests show their reason in red beneath the title. Selected modes
 are highlighted, and Copy/Import retains a clear bordered input field.
+
+CHAT DESTINATIONS (BETA16)
+Share to chat now opens a destination list: Current chat / whisper, Party, Guild,
+Say, Yell and joined numbered channels. The link is prepared for Enter to send.
+Private drafts are not copied into public channels or overwritten.
+Copied quest-log links in Battle.net whispers now retain their Battle.net route.

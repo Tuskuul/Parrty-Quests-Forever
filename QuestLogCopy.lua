@@ -43,7 +43,14 @@ end
 function A:RegisterCopiedQuestLogLink(ref)
     self:PruneQuestLinks()
     local s=self:QuestLinkState();local previous=s.observed[ref.token]
-    if previous and (previous.owner:lower()~=ref.owner:lower() or (previous.offer==true)~=(ref.offer==true)) then return false end
+    if previous then
+        local owner=previous.publisher or previous.owner
+        local same=owner:lower()==ref.owner:lower()
+        if not same and previous.accountID and self.QuestLogCharacterOwnerMatches then
+            same=self:QuestLogCharacterOwnerMatches(ref.owner,owner,previous.realm)
+        end
+        if not same or (previous.offer==true)~=(ref.offer==true) then return false end
+    end
     local mine=s.published[ref.token]
     if mine and (mine.owner:lower()~=ref.owner:lower() or (mine.offer==true)~=(ref.offer==true)) then return false end
     -- Repeated observation must not replace an existing Battle.net route.
@@ -147,9 +154,9 @@ function A:ShowQuestLogTransfer(mode,questIDs,offer)
     local f=self.questLogTransfer
     f.mode=mode;f.copyText=text;f.title:SetText(mode=="copy" and "Copy Share link" or "Import shared quests")
     f.fieldLabel:SetText(mode=="copy" and "Share link - Ctrl+C to copy" or "Share link - Ctrl+V to paste")
-    f.help:SetText(mode=="copy" and "Press Ctrl+C to copy the selected link, then paste it into a WoW character chat. Recipients need this beta or newer. The owner must stay online; links last 15 minutes."
+    f.help:SetText(mode=="copy" and "Press Ctrl+C to copy the selected link, then paste it into WoW chat or a Battle.net whisper. Recipients need this beta or newer. The owner must stay online; links last 15 minutes."
         or "Paste a complete in-game string from Copy Share link with Ctrl+V, then click Import. The owner's addon supplies the snapshot; the owner must be online and the link still available.")
-    f.status:SetText(mode=="copy" and "Copying does not change or send your current chat draft." or "")
+    f.status:SetText(mode=="copy" and (offer and "Quest offers can only be requested by current party members." or "Copying does not change or send your current chat draft.") or "")
     f.submit:SetShown(mode=="import");f.close:SetText(mode=="copy" and "Done" or "Cancel")
     f.edit:SetText(text or "");f.scroll:SetVerticalScroll(0)
     local picker=self.questSharePicker
