@@ -57,7 +57,7 @@ C_BattleNet={
 }
 character='Guest-Realm';A.questLinks=nil
 local shown
-function A:ShowSharedQuestLog(token,snapshot,message) shown={token=token,snapshot=snapshot,message=message} end
+function A:ShowSharedQuestLog(token,snapshot,message) self.sharedQuestLogToken=token;shown={token=token,snapshot=snapshot,message=message} end
 local rendered=A:ObserveBattleNetQuestLogLink(copied,'CHAT_MSG_BN_WHISPER',42)
 assert(rendered:find('|Haddon:SPQLOG:',1,true),'copied Battle.net marker was not clickable')
 local observed=A:QuestLinkState().observed[ref.token]
