@@ -460,7 +460,7 @@ function A:BuildTrackerEntries()
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=A:DisplayText(q.title)..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
+                    local title=A:QuestTitleText(q.id,q.title)..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
                     entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end

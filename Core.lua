@@ -37,6 +37,48 @@ function A:DisplayText(value)
     if not public(value,"string") then return "" end
     return value:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):gsub("|","||")
 end
+-- Use the viewer's native difficulty rules, never the sender's level or a
+-- minimum acceptance level. Unavailable/restricted data keeps the normal text.
+function A:QuestTitleText(id,title)
+    local text=self:DisplayText(title)
+    if not finiteInteger(id,1,10000000) then return text end
+    local function call(fn,...)
+        if type(fn)~="function" then return nil end
+        local ok,value=pcall(fn,...)
+        if ok and not secret(value) then return value end
+    end
+    local function rgb(color)
+        if not readable(color) then return end
+        local r,g,b=color.r,color.g,color.b
+        for _,value in ipairs({r,g,b}) do
+            if not public(value,"number") or value~=value or value<0 or value>1 then return end
+        end
+        if r==nil or g==nil or b==nil then return end
+        return string.format("|cff%02x%02x%02x",math.floor(r*255+0.5),math.floor(g*255+0.5),math.floor(b*255+0.5))
+    end
+    local difficulty=call(C_PlayerInfo and C_PlayerInfo.GetContentDifficultyQuestForPlayer,id)
+    local color=difficulty~=nil and rgb(call(GetDifficultyColor,difficulty)) or nil
+    if not color then
+        local level=call(C_QuestLog and C_QuestLog.GetQuestDifficultyLevel,id)
+        if public(level,"number") and level>0 then color=rgb(call(GetQuestDifficultyColor,level)) end
+    end
+    return color and (color..text.."|r") or text
+end
+function A:RefreshQuestDifficultyViews()
+    self:Changed()
+    local picker=self.questSharePicker
+    if picker and picker:IsShown() then
+        for i,q in ipairs(picker.quests or {}) do
+            local row=picker.rows[i]
+            if row then row.caption:SetText(self:QuestTitleText(q.id,q.title)..(q.ready and " |cff195c21[Ready]|r" or "")) end
+        end
+    end
+    local viewer=self.sharedQuestLogWindow
+    if viewer and viewer:IsShown() and viewer.questSnapshot then
+        self:ShowSharedQuestLog(self.sharedQuestLogToken,viewer.questSnapshot)
+    end
+    if self.questOfferConfirmation and self.questOfferConfirmation:IsShown() then self:UpdateQuestOfferConfirmation() end
+end
 function A:NormalizeSavedSettings()
     local db=self.db
     for _,key in ipairs({"expanded","questExpanded","sectionCollapsed","zoneCollapsed","trackerGroupsClosed","trackerMembersClosed","trackerOwnProgressExpanded"}) do
@@ -575,9 +617,13 @@ frame:SetScript("OnEvent",function(_,event,...)
         A.liveSources={};A.liveTasks=nil;A.liveDue=GetTime()+2
         A.partyQueryCache={}
         A.triggerPending,A.triggerTasks,A.triggerActive=nil,nil,nil
+    elseif event=="PLAYER_LEVEL_UP" then
+        -- UnitLevel/difficulty may still expose the old level in this event.
+        A.questColorsDue=GetTime()+0.2
     elseif event=="QUEST_DATA_LOAD_RESULT" then
         local id,success=...
         if public(success,"boolean") and success and A.UpdateQuestTitle then A:UpdateQuestTitle(id) end
+        if public(success,"boolean") and success then A.questColorsDue=GetTime()+0.2 end
     elseif event=="UPDATE_MOUSEOVER_UNIT" then A:ScanUnit("mouseover")
     elseif event=="PLAYER_TARGET_CHANGED" then A:ScanUnit("target")
     elseif event=="CHAT_MSG_ADDON" then
@@ -585,7 +631,7 @@ frame:SetScript("OnEvent",function(_,event,...)
         if prefix==A.prefix and channel=="PARTY" then A:Receive(message,sender) end
     else A:ScheduleOwn() end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","UNIT_NAME_UPDATE","GROUP_ROSTER_UPDATE","NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","ZONE_CHANGED_NEW_AREA","UPDATE_MOUSEOVER_UNIT","PLAYER_TARGET_CHANGED","CHAT_MSG_ADDON","QUEST_DATA_LOAD_RESULT","QUEST_LOG_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED","QUEST_TURNED_IN"}) do frame:RegisterEvent(event) end
+for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","PLAYER_LEVEL_UP","UNIT_NAME_UPDATE","GROUP_ROSTER_UPDATE","NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","ZONE_CHANGED_NEW_AREA","UPDATE_MOUSEOVER_UNIT","PLAYER_TARGET_CHANGED","CHAT_MSG_ADDON","QUEST_DATA_LOAD_RESULT","QUEST_LOG_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED","QUEST_TURNED_IN"}) do frame:RegisterEvent(event) end
 frame:SetScript("OnUpdate",function(_,delta)
     if not A.db then return end
     elapsed,refreshElapsed=elapsed+delta,refreshElapsed+delta
@@ -593,6 +639,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     elapsed=0
     if A.layoutDirty then A.layoutDirty=nil;A:Render() end
     local now=GetTime()
+    if A.questColorsDue and now>=A.questColorsDue then A.questColorsDue=nil;A:RefreshQuestDifficultyViews() end
     if A.ApplyPendingSettings then A:ApplyPendingSettings() end
     if A.QuestieCompatibilityTick then A:QuestieCompatibilityTick() end
     A:CombatOwnTick()

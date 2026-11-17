@@ -110,6 +110,25 @@ local publisher=A.questLinks
 assert(publisher.published[ref.token].published,'copied log cannot be fetched')
 local selected=A:ValidateQuestLinkPayload(publisher.published[ref.token].payload)
 assert(size(selected)==2 and not selected[303],'copy leaked unselected quest')
+-- Difficulty coloring is presentation only, including quests in snapshots.
+C_PlayerInfo={GetContentDifficultyQuestForPlayer=function(id) return id end}
+GetDifficultyColor=function() return {r=1,g=0.1,b=0.1} end
+A:OpenQuestLogShare(draft);A:ShowQuestShareSelection()
+assert(f.rows[1].caption.text:find('|cffff1a1aAlpha|r',1,true),'selector title lacks native difficulty')
+assert(f.rows[2].caption.text:find('|cff195c21[Ready]|r',1,true),'difficulty replaced Ready status')
+A:ShowSharedQuestLog('colors',{quests=own,owner='Tester',created=0})
+assert(A.sharedQuestLogWindow.rows[1].label.text:find('|cffff1a1aAlpha|r',1,true),'snapshot title lacks native difficulty')
+assert(not A:Serialize():find('|c',1,true),'presentation color leaked into packets')
+f.selected[101]=true
+local selectedBefore=f.selected
+GetDifficultyColor=function() return {r=0.5,g=0.5,b=0.5} end
+A:RefreshQuestDifficultyViews()
+assert(f.selected==selectedBefore and f.selected[101],'recolor reset selection')
+assert(f.rows[1].caption.text:find('|cff808080Alpha|r',1,true),'open selector did not recolor')
+assert(A.sharedQuestLogWindow.rows[1].label.text:find('|cff808080Alpha|r',1,true),'open snapshot did not recolor')
+
+A.sharedQuestLogWindow:Hide();f:Hide()
+C_PlayerInfo=nil;GetDifficultyColor=nil
 local sends,shown={},{}
 function A:SendQuestLogPacket(message,target) sends[#sends+1]={message=message,target=target};return true end
 function A:WakeQuestLinkTransfers() end

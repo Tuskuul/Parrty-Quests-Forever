@@ -186,7 +186,7 @@ function A:Render()
             questRows(combined,"all",8,function(q)
                 local key="all:"..q.id
                 local open=questExpansion[key]
-                local hq=textRow((open and "[-] " or "[+] ")..self:DisplayText(q.title).." |cff62503b["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title).." |cff62503b["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements
@@ -243,7 +243,7 @@ function A:Render()
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:DisplayText(q.title)..(self:IsQuestReady(q) and " |cff195c21[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title)..(self:IsQuestReady(q) and " |cff195c21[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()

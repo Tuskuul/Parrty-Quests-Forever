@@ -212,7 +212,7 @@ function A:UpdateQuestOfferConfirmation()
     local p=s.confirmations[1]
     if not p then f:Hide();return end
     local q=self.own[p.id]
-    f.message:SetText(self:DisplayText(p.target).." requested:\n"..self:DisplayText(q and q.title or "Quest no longer in your log"))
+    f.message:SetText(self:DisplayText(p.target).." requested:\n"..(q and self:QuestTitleText(p.id,q.title) or "Quest no longer in your log"))
     f.share:SetEnabled(not locked())
     f.status:SetText(locked() and "Share after combat ends." or "Shares through the normal party quest prompt.")
     f:Show()

@@ -367,6 +367,7 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         f.rows={}
     end
     local f=self.sharedQuestLogWindow
+    f.questSnapshot=snapshot
     if self.sharedQuestLogToken~=token then f.expanded={};f.scroll:SetVerticalScroll(0) end
     self.sharedQuestLogToken=token;f.expanded=f.expanded or {}
     f.title:SetText(snapshot and (safe(snapshot.displayOwner or snapshot.owner).."'s Quest Log") or "Shared Quest Log")
@@ -441,9 +442,9 @@ function A:ShowSharedQuestLog(token,snapshot,message)
             if snapshot.offer then
                 local eligible,reason=self:CheckQuestOfferEligibility(q.id,completionReader)
                 local suffix=self.own[q.id] and " [Already in your log]" or (eligible==false and " [Not eligible]" or (eligible==nil and " [Check requirements]" or " [Request share]"))
-                row(safe(q.title)..suffix,true,q.id,false,eligible==false,reason)
+                row(self:QuestTitleText(q.id,q.title)..suffix,true,q.id,false,eligible==false,reason)
             else
-                row((expanded and "- " or "+ ")..safe(q.title)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
+                row((expanded and "- " or "+ ")..self:QuestTitleText(q.id,q.title)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
                 if expanded then
                     if #q.objectives==0 then row(q.ready and "Ready for turn-in." or "Objective progress unavailable.",false,nil,q.ready) end
                     for _,o in ipairs(q.objectives) do
