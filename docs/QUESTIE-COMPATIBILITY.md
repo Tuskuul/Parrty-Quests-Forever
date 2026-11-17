@@ -52,7 +52,9 @@ Uses `BasicFrameTemplateWithInset` and the existing shared `StyleQuestDialog` pa
 
 Mocked UI tests verify control actions, narrow layout construction, text palette, parchment fallback and scroll behavior. They do not verify final pixels. Inspect the window in-game at 380 px minimum width, typical 460 px width, and larger sizes; also test UI scale, long names, wrapped objectives and all supported locales.
 
-## Live acceptance matrix (pending)
+## Live acceptance matrix (party coverage pending)
+
+[User-reported live observations](QUESTIE-LIVE-TESTS.md): alpha2 has no reported glaring issues or Lua errors with Questie while solo. Questie versions, tracker setting and combat coverage were not specified. This is not party validation.
 
 | Test | Expected result |
 |---|---|
