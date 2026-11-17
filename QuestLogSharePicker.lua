@@ -59,7 +59,7 @@ function A:ShowQuestShareSelection(offers)
             end
         end)
         b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
-        b.caption:SetText(A:QuestTitleText(q.id,q.title)..(q.ready and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""))
+        b.caption:SetText(A:QuestTitleText(q.id,q.title,true)..(q.ready and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y);b:Show()
         y=y+math.max(40,b.caption:GetStringHeight()+16)
     end
@@ -119,7 +119,7 @@ function A:OpenQuestLogShare(draft)
         self.questSharePicker=f
         self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSharePicker" end
-        f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:EnableMouse(true)
+        f:SetPoint("CENTER");f:SetFrameStrata("MEDIUM");f:EnableMouse(true)
         f:SetMovable(true);f:RegisterForDrag("LeftButton")
         f:SetClampedToScreen(true)
         f:SetScript("OnDragStart",function() f:StartMoving() end)

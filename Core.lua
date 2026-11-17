@@ -39,7 +39,7 @@ function A:DisplayText(value)
 end
 -- Use the viewer's native difficulty rules, never the sender's level or a
 -- minimum acceptance level. Unavailable/restricted data keeps the normal text.
-function A:QuestTitleText(id,title)
+function A:QuestTitleText(id,title,parchment)
     local text=self:DisplayText(title)
     if not finiteInteger(id,1,10000000) then return text end
     local function call(fn,...)
@@ -54,6 +54,7 @@ function A:QuestTitleText(id,title)
             if not public(value,"number") or value~=value or value<0 or value>1 then return end
         end
         if r==nil or g==nil or b==nil then return end
+        if parchment and self.QuestPaperDifficultyColor then r,g,b=self:QuestPaperDifficultyColor(r,g,b) end
         return string.format("|cff%02x%02x%02x",math.floor(r*255+0.5),math.floor(g*255+0.5),math.floor(b*255+0.5))
     end
     local difficulty=call(C_PlayerInfo and C_PlayerInfo.GetContentDifficultyQuestForPlayer,id)
@@ -70,7 +71,7 @@ function A:RefreshQuestDifficultyViews()
     if picker and picker:IsShown() then
         for i,q in ipairs(picker.quests or {}) do
             local row=picker.rows[i]
-            if row then row.caption:SetText(self:QuestTitleText(q.id,q.title)..(q.ready and (" "..self:QuestDialogColorCode("ready").."[Ready]|r") or "")) end
+            if row then row.caption:SetText(self:QuestTitleText(q.id,q.title,true)..(q.ready and (" "..self:QuestDialogColorCode("ready").."[Ready]|r") or "")) end
         end
     end
     local viewer=self.sharedQuestLogWindow

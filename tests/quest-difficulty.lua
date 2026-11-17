@@ -48,3 +48,22 @@ assert(A.db.questPaperBrightness==35 and refreshed==2,'invalid setting was saved
 A.db.questPaperBrightness='bad'
 assert(A:QuestPaperBrightness()==65,'invalid saved preference lost the default')
 print('PASS: saved/default/clamped parchment brightness, live texture/text changes and independent Copy/Import ink')
+
+local function luminance(c)
+ local function linear(v) return v<=0.04045 and v/12.92 or ((v+0.055)/1.055)^2.4 end
+ return linear(c[1])*0.2126+linear(c[2])*0.7152+linear(c[3])*0.0722
+end
+local function contrast(a,b)
+ local x,y=luminance(a),luminance(b)
+ return (math.max(x,y)+0.05)/(math.min(x,y)+0.05)
+end
+local native={{1,0.1,0.1},{1,0.5,0.25},{1,1,0},{0.25,0.75,0.25},{0.5,0.5,0.5}}
+for _,setting in ipairs({65,100}) do
+ A.db.questPaperBrightness=setting
+ local background=setting==65 and {0.55,0.38,0.24} or {0.88,0.70,0.43}
+ for _,c in ipairs(native) do
+  local adjusted={A:QuestPaperDifficultyColor(c[1],c[2],c[3])}
+  assert(contrast(adjusted,background)>=contrast(c,background),'difficulty contrast regressed')
+ end
+end
+print('PASS: all five difficulty colors improve or retain contrast on representative dark/light parchment')

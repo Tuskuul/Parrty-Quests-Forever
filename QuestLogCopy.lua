@@ -88,7 +88,7 @@ function A:ShowQuestLogTransfer(mode,questIDs,offer)
         self.questLogTransfer=f
         self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsShareTransfer" end
-        f:SetSize(540,280);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:EnableMouse(true)
+        f:SetSize(540,280);f:SetPoint("CENTER");f:SetFrameStrata("MEDIUM");f:EnableMouse(true)
         f:SetMovable(true);f:RegisterForDrag("LeftButton");f:SetClampedToScreen(true)
         f:SetScript("OnDragStart",function() f:StartMoving() end)
         f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
