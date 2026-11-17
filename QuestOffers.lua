@@ -171,7 +171,7 @@ function A:ShowQuestOfferConfirmation()
         self.questOfferConfirmation=f
         self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsOfferConfirm" end
-        f:SetSize(440,180);f:SetPoint("CENTER",0,140);f:SetFrameStrata("DIALOG")
+        f:SetSize(440,180);f:SetPoint("CENTER",0,140);f:SetFrameStrata("MEDIUM")
         if self.readable(f.TitleText) then f.TitleText:SetText("Requested quest share") end
         f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
         f:SetScript("OnDragStart",function() f:StartMoving() end);f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
@@ -212,7 +212,7 @@ function A:UpdateQuestOfferConfirmation()
     local p=s.confirmations[1]
     if not p then f:Hide();return end
     local q=self.own[p.id]
-    f.message:SetText(self:DisplayText(p.target).." requested:\n"..(q and self:QuestTitleText(p.id,q.title) or "Quest no longer in your log"))
+    f.message:SetText(self:DisplayText(p.target).." requested:\n"..(q and self:QuestTitleText(p.id,q.title,true) or "Quest no longer in your log"))
     f.share:SetEnabled(not locked())
     f.status:SetText(locked() and "Share after combat ends." or "Shares through the normal party quest prompt.")
     f:Show()

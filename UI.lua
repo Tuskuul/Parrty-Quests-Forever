@@ -142,6 +142,7 @@ function A:Render()
         if A:QuestPaperBrightness()<80 then
             row.text:SetTextColor(0.50+ink[1]*0.48,0.50+ink[2]*0.48,0.50+ink[3]*0.48)
         else row.text:SetTextColor(ink[1]*0.48,ink[2]*0.48,ink[3]*0.48) end
+        A:ApplyQuestTextContrast(row.text,"body")
         local height=math.max(20,row.text:GetStringHeight()+7)
         row:SetHeight(height);row:Show();y=y+height
         return row
@@ -188,7 +189,7 @@ function A:Render()
             questRows(combined,"all",8,function(q)
                 local key="all:"..q.id
                 local open=questExpansion[key]
-                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title).." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true).." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements
@@ -245,7 +246,7 @@ function A:Render()
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title)..(self:IsQuestReady(q) and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""),13,{0.98,0.82,0.42},26)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(self:IsQuestReady(q) and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""),13,{0.98,0.82,0.42},26)
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()

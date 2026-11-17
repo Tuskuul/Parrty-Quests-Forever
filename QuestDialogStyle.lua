@@ -6,13 +6,38 @@ local light={
     ready={0.10,0.36,0.13},error={0.57,0.09,0.05},title={1,0.82,0},
 }
 local dark={
-    body={0.96,0.88,0.70},heading={1,0.90,0.72},muted={0.77,0.69,0.55},
-    ready={0.40,0.90,0.40},error={1,0.32,0.24},title={1,0.82,0},
+    body={0.96,0.88,0.70},heading={1,0.90,0.72},muted={0.85,0.79,0.68},
+    ready={0.55,0.95,0.45},error={1,0.62,0.58},title={1,0.82,0},
 }
 function A:QuestPaperBrightness()
     local value=self.db and self.db.questPaperBrightness
     if not self.public(value,"number") or value~=value then return 65 end
     return math.max(35,math.min(100,value))
+end
+-- Parchment-specific tints keep the five native difficulty categories while
+-- lifting red/gray/green against dark fibers and darkening yellow on light paper.
+function A:QuestPaperDifficultyColor(r,g,b)
+    local category
+    if r>=0.8 and g<0.35 and b<0.35 then category="red"
+    elseif r>=0.8 and g<0.8 and b<0.5 then category="orange"
+    elseif r>=0.8 and g>=0.8 and b<0.5 then category="yellow"
+    elseif math.max(r,g,b)-math.min(r,g,b)<0.15 then category="gray"
+    elseif g>=0.5 and r<0.6 and b<0.6 then category="green" end
+    local colors=self:QuestPaperBrightness()<80 and {
+        red={1,0.62,0.58},orange={1,0.72,0.40},yellow={1,1,0},
+        green={0.55,0.95,0.45},gray={0.88,0.85,0.80},
+    } or {
+        red={0.65,0.04,0.02},orange={0.58,0.25,0},yellow={0.45,0.34,0},
+        green={0.12,0.40,0.10},gray={0.32,0.30,0.27},
+    }
+    local c=colors[category]
+    if c then return c[1],c[2],c[3] end
+    return r,g,b
+end
+function A:ApplyQuestTextContrast(text,role)
+    local shadow=self:QuestPaperBrightness()<80 and role~="input" and role~="inputMuted" and role~="title"
+    if type(text.SetShadowColor)=="function" then text:SetShadowColor(0,0,0,shadow and 0.9 or 0) end
+    if type(text.SetShadowOffset)=="function" then text:SetShadowOffset(shadow and 1 or 0,shadow and -1 or 0) end
 end
 function A:QuestDialogColor(role)
     if role=="input" then return light.body end
@@ -31,7 +56,7 @@ function A:StyleQuestDialogText(text,role,heading)
     local font=(heading or role=="heading") and (QuestFont or GameFontNormal)
         or (role=="title" and GameFontNormal or (QuestFontNormalSmall or GameFontHighlightSmall))
     if font then text:SetFontObject(font) end
-    text:SetTextColor(color[1],color[2],color[3],1)
+    text:SetTextColor(color[1],color[2],color[3],1);self:ApplyQuestTextContrast(text,role)
 end
 function A:ApplyQuestPaper(frame)
     local brightness=self:QuestPaperBrightness()/100
@@ -44,14 +69,27 @@ function A:SetQuestPaperBrightness(value)
     self.db.questPaperBrightness=math.floor(math.max(35,math.min(100,value))+0.5)
     for frame in pairs(self.questDialogFrames or {}) do self:ApplyQuestPaper(frame) end
     for text,role in pairs(self.questDialogTexts or {}) do
-        local c=self:QuestDialogColor(role);text:SetTextColor(c[1],c[2],c[3],1)
+        local c=self:QuestDialogColor(role);text:SetTextColor(c[1],c[2],c[3],1);self:ApplyQuestTextContrast(text,role)
     end
     if self.RefreshQuestDifficultyViews then self:RefreshQuestDifficultyViews() end
     if self.window and self.Render then self:Render() end
 end
 function A:StyleQuestDialog(frame)
     if frame.questPaper then self:ApplyQuestPaper(frame);return end
-    frame:SetClampedToScreen(true)
+    frame:SetClampedToScreen(true);frame:SetToplevel(true)
+    -- The shared frame used by alpha's pop-out has its own titlebar controls.
+    if frame~=self.window then
+        local settings=CreateFrame("Button",nil,frame)
+        settings:SetSize(20,20);settings:SetPoint("TOPRIGHT",-33,-4)
+        settings:SetNormalTexture("Interface\\Buttons\\UI-OptionsButton")
+        settings:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square","ADD")
+        settings:SetScript("OnClick",function() A:OpenSettings() end)
+        settings:SetScript("OnEnter",function(button)
+            if GameTooltip then GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Party Quests settings");GameTooltip:Show() end
+        end)
+        settings:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
+        frame.questSettingsButton=settings
+    end
     -- Both template variants use decorative dark insets. No dialog content
     -- lives inside them; hide the fill while retaining the native border art.
     for _,key in ipairs({"Inset","InsetBg"}) do

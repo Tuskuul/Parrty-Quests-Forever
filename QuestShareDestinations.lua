@@ -83,7 +83,7 @@ function A:OpenQuestShareDestinations()
         local f=CreateFrame("Frame","SimplyPartyQuestsShareDestination",UIParent,"BasicFrameTemplateWithInset")
         self.questShareDestination=f;self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsShareDestination" end
-        f:SetSize(360,390);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:EnableMouse(true)
+        f:SetSize(360,390);f:SetPoint("CENTER");f:SetFrameStrata("MEDIUM");f:EnableMouse(true)
         f:SetMovable(true);f:RegisterForDrag("LeftButton")
         f:SetScript("OnDragStart",function() f:StartMoving() end);f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
         if self.readable(f.TitleText) then f.TitleText:SetText("Share to chat") end

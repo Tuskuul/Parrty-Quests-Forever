@@ -1,3 +1,12 @@
+Party Quests Forever 1.1.7-alpha5
+
+- Improved red, orange, yellow, green and gray quest-title contrast on parchment, with brighter status labels and subtle text shadows on dark paper.
+- Settings opens in a movable window alongside quest and sharing windows. Added a settings button to sharing windows.
+- Party Quests windows no longer use the dialog layer, allowing the map and other game panels to open normally alongside them.
+- Parchment brightness still updates open windows immediately without changing selections or Copy/Import text.
+
+For WoW Forever 1.60.1 (interface 16001). Includes the Questie compatibility preview. Existing settings are preserved.
+
 Party Quests Forever 1.1.7-alpha4
 
 - Quest windows now default to warmer, darker parchment with ivory text for clearer quest difficulty colors.

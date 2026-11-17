@@ -344,7 +344,7 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         self.sharedQuestLogWindow=f
         self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSharedLog" end
-        f:SetSize(550,560);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG")
+        f:SetSize(550,560);f:SetPoint("CENTER");f:SetFrameStrata("MEDIUM")
         f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
         f:SetScript("OnDragStart",function() f:StartMoving() end);f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
         f.title=self.readable(f.TitleText) and f.TitleText or f:CreateFontString(nil,"OVERLAY","GameFontNormal")
@@ -442,9 +442,9 @@ function A:ShowSharedQuestLog(token,snapshot,message)
             if snapshot.offer then
                 local eligible,reason=self:CheckQuestOfferEligibility(q.id,completionReader)
                 local suffix=self.own[q.id] and " [Already in your log]" or (eligible==false and " [Not eligible]" or (eligible==nil and " [Check requirements]" or " [Request share]"))
-                row(self:QuestTitleText(q.id,q.title)..suffix,true,q.id,false,eligible==false,reason)
+                row(self:QuestTitleText(q.id,q.title,true)..suffix,true,q.id,false,eligible==false,reason)
             else
-                row((expanded and "- " or "+ ")..self:QuestTitleText(q.id,q.title)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
+                row((expanded and "- " or "+ ")..self:QuestTitleText(q.id,q.title,true)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
                 if expanded then
                     if #q.objectives==0 then row(q.ready and "Ready for turn-in." or "Objective progress unavailable.",false,nil,q.ready) end
                     for _,o in ipairs(q.objectives) do
@@ -458,7 +458,7 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         end
     else f.subtitle:SetText("Shared quest-log snapshot");row(message or "Snapshot unavailable.",false) end
     for i=used+1,#f.rows do f.rows[i].questID=nil;f.rows[i]:Hide() end
-    f.child:SetHeight(math.max(1,y));f:Show()
+    f.child:SetHeight(math.max(1,y));f:Show();f:Raise()
 end
 function A:InstallQuestLogShareButton()
     local map=WorldMapFrame
