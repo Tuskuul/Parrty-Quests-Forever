@@ -74,9 +74,12 @@ function A:ValidationStep(task)
     if removed then self.liveDirty=true;self:Changed() end
 end
 function A:QuestTitle(id)
-    if not (C_QuestLog and C_QuestLog.GetTitleForQuestID) then return nil end
-    local ok,title=pcall(C_QuestLog.GetTitleForQuestID,id)
-    if ok and public(title,"string") and title~="" then return title end
+    if C_QuestLog and C_QuestLog.GetTitleForQuestID then
+        local ok,title=pcall(C_QuestLog.GetTitleForQuestID,id)
+        if ok and public(title,"string") and title~="" then return title end
+    end
+    local title=self.QuestieField and self:QuestieField(id,"name")
+    if public(title,"string") and title~="" then return title end
 end
 function A:UpdateQuestTitle(id)
     if not public(id,"number") then return end

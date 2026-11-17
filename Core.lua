@@ -64,6 +64,16 @@ function A:NormalizeSavedSettings()
     end
     db.diagLines=nil;db.diagChanges=nil;db.diagEvents=nil
 end
+function A:EffectiveDisplayMode()
+    if self.QuestieOwnsTracker and self:QuestieOwnsTracker() then return "window" end
+    return self.db and self.db.displayMode or "blizzard"
+end
+function A:NativeTrackerWritesAllowed()
+    return not (self.QuestieOwnsTracker and self:QuestieOwnsTracker())
+end
+function A:NativeCombatControlsAllowed()
+    return not (self.QuestieLoaded and self:QuestieLoaded())
+end
 function A:Changed()
     if self.InvalidateTrackerIntegration then self:InvalidateTrackerIntegration() end
     if self.batchNative then self.liveDirty=true elseif self.Render then self:Render() end
@@ -520,8 +530,8 @@ A.events=frame
 frame:SetScript("OnEvent",function(_,event,...)
     if event=="ADDON_LOADED" then
         if (...)~="SimplyPartyQuests" then return end
-        SimplyPartyQuestsDB=readable(SimplyPartyQuestsDB) and SimplyPartyQuestsDB or {}
-        A.db=SimplyPartyQuestsDB;A:NormalizeSavedSettings()
+        SimplyPartyQuestsAlphaDB=readable(SimplyPartyQuestsAlphaDB) and SimplyPartyQuestsAlphaDB or {}
+        A.db=SimplyPartyQuestsAlphaDB;A:NormalizeSavedSettings()
         A.db.expanded=A.db.expanded or {}
         A.db.questExpanded=A.db.questExpanded or {}
         A.db.sectionCollapsed=A.db.sectionCollapsed or {}
@@ -531,6 +541,7 @@ frame:SetScript("OnEvent",function(_,event,...)
         if A.db.groupByZone==nil then A.db.groupByZone=true end
         if A.db.nativeTrackerRepair==nil then A.db.nativeTrackerRepair=true end
         if A.db.combatAutoHide==nil then A.db.combatAutoHide=true end
+        if A.QuestieCompatibilityTick then A:QuestieCompatibilityTick() end
         if A.InitUI then A:InitUI() end
         if A.InitSettings then A:InitSettings() end
     elseif event=="PLAYER_LOGIN" then
@@ -583,6 +594,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     if A.layoutDirty then A.layoutDirty=nil;A:Render() end
     local now=GetTime()
     if A.ApplyPendingSettings then A:ApplyPendingSettings() end
+    if A.QuestieCompatibilityTick then A:QuestieCompatibilityTick() end
     A:CombatOwnTick()
     if A.PollTick then A:PollTick() end
     if A.TriggerTick then A:TriggerTick() end

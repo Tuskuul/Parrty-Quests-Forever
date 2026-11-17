@@ -1,6 +1,7 @@
 unpack=unpack or table.unpack
 CreateFrame=function() return {RegisterEvent=function() end,SetScript=function() end} end
-local A={readable=function(v) return type(v)=='table' end,public=function(v,k) return type(v)==k end,db={}}
+local A={db={}}
+assert(loadfile('Core.lua'))('SimplyPartyQuests',A)
 assert(loadfile('TrackerIntegration.lua'))('SimplyPartyQuests',A)
 local function region()
  local r={points={{'LEFT','original','LEFT',7,0}},width=300}

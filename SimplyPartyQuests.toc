@@ -1,13 +1,15 @@
 ## Interface: 16001
-## Title: Party Quests Forever
+## Title: Party Quests Forever |cffff9933[Alpha]|r
 ## Notes: Party quest progress beside the Blizzard tracker or a resizable window. Built for WoW Forever.
 ## IconTexture: Interface\AddOns\SimplyPartyQuests\Assets\Icon
 ## X-Category: Quests & Leveling
 ## X-License: GPL-3.0-only
 ## Author: Wolfie
-## Version: 1.1.6-beta16
-## SavedVariables: SimplyPartyQuestsDB
+## Version: 1.1.7-alpha1
+## OptionalDeps: Questie, QuestieDB
+## SavedVariables: SimplyPartyQuestsAlphaDB
 Core.lua
+QuestieCompatibility.lua
 QuestCatalog.lua
 QuestZones.lua
 QuestItemSources.lua

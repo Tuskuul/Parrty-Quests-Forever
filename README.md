@@ -9,7 +9,17 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.6-beta16**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+**1.1.7-alpha1**, an isolated Questie compatibility experiment based on beta16. It uses its own settings table, `SimplyPartyQuestsAlphaDB`, and does not read or overwrite stable/beta settings. Only the `alpha` branch and alpha tags carry this work.
+
+Questie's tracker enabled, initializing or unknown: Party Quests temporarily uses the parchment popout. Questie's tracker off: the existing Blizzard sidebar is available. Your requested display mode is preserved. Native tracker repair pauses while Questie owns the tracker; Party Quests native combat controls pause whenever Questie is loaded. The independent popout can still collapse during combat.
+
+QuestieDB is optional and supplies fallback quest names and zones through its public API. Native data retains precedence. Private Questie progress and network protocols are unused. Full-log/selected sharing, copied Battle.net links, chat destinations and quest offers from beta16 remain included.
+
+[Detailed compatibility audit and live test matrix](docs/QUESTIE-COMPATIBILITY.md) · [Alpha release notes](docs/RELEASE-1.1.7-alpha1.txt)
+
+**Installation:** keep a copy of your working addon folder, then install one build at a time as `Interface/AddOns/SimplyPartyQuests`. Do not load two copies together. Restore the previous folder to return to stable/beta; its settings remain separate. This is an alpha requiring in-game validation.
+
+Previous beta base: **1.1.6-beta16**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
 
 Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
 
@@ -56,7 +66,7 @@ Copied full/selected log markers in native Battle.net messages now become clicka
 
 The addon folder must be named **SimplyPartyQuests**. Put this repository's addon files directly inside `Interface/AddOns/SimplyPartyQuests/`, so `SimplyPartyQuests.toc` sits directly inside that folder. A GitHub source ZIP's repository-named wrapper must be renamed appropriately.
 
-Existing Simply Party Quests users keep their settings. Replace files and `/reload`; a first installation may need a full client restart.
+Stable and beta keep their existing settings. This alpha starts with independent settings. Replace files and `/reload`; a first installation may need a full client restart.
 
 Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click the minimap button. `/spq` remains supported.
 

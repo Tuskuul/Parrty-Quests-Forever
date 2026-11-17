@@ -8,7 +8,7 @@ end
 local A={}
 assert(loadfile('Core.lua'))('SimplyPartyQuests',A)
 local function init(saved)
- SimplyPartyQuestsDB=saved
+ SimplyPartyQuestsAlphaDB=saved
  A.events.scripts.OnEvent(nil,'ADDON_LOADED','SimplyPartyQuests')
  return A.db
 end

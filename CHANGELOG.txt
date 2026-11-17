@@ -1,3 +1,18 @@
+Party Quests Forever 1.1.7-alpha1
+
+ALPHA: Questie coexistence and Blizzard parchment popout.
+
+- Uses an independent SimplyPartyQuestsAlphaDB settings table. Stable/beta settings are not read or overwritten. Install one build at a time in the SimplyPartyQuests folder; keep a copy of your working folder to switch back.
+- Detects Questie's tracker setting without changing it. Tracker enabled, initializing or unknown: use the party popout. Tracker disabled: allow the existing Blizzard sidebar. Saved display preferences are preserved. Native reattachment waits until combat ends.
+- Pauses native tracker redraw repair while Questie owns the tracker, including manual requests, without changing the saved repair preference.
+- Pauses Party Quests native combat-collapse controls whenever Questie is loaded. The party popout can collapse and reopen independently. Maps-only Questie leaves native combat behavior to the client/Questie.
+- Adds optional QuestieDB fallback quest names and zone labels through its public, contract-checked API. Native quest titles take precedence. Completion, acceptance requirements and remote progress are not inferred from QuestieDB.
+- Uses Questie's supported update callback when available to wake our existing local-log reader. No private progress imports, network impersonation, map pins or Questie settings writes.
+- Restyles the party popout with the same parchment treatment as share dialogs, dark readable text, gold title, standard Blizzard frame/buttons/scrollbar, section panels, and a Share quest log button. Adds persistent close behavior and clamps scrolling after list contraction.
+- Adds compatibility status to settings and /spq report, plus isolated alpha tagging checks.
+
+Based on beta16 and its follow-up regression fixture correction. Lua syntax and mocked regressions pass. This alpha still requires in-game Questie/Forever visual, combat and mixed-party validation; it is not a verified full-compatibility release.
+
 Party Quests Forever 1.1.6-beta16
 
 - Fixed copied quest-log links pasted into Battle.net whispers.

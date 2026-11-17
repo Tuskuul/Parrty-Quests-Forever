@@ -1,5 +1,6 @@
-Party Quests Forever 1.1.6-beta16
-BETA: Quest offers, chat links, copied links and in-game quest snapshots.
+Party Quests Forever 1.1.7-alpha1
+ALPHA: Optional Questie coexistence and parchment popout.
+See docs/QUESTIE-COMPATIBILITY.md for scope and live tests.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -9,8 +10,9 @@ progress, and organize entries by collapsible players, zones and quest sections.
 INSTALL OR UPDATE
 Extract SimplyPartyQuests into Interface\AddOns. The final path is:
 Interface\AddOns\SimplyPartyQuests\SimplyPartyQuests.toc
-Keep that folder name. Existing Simply Party Quests users retain their settings;
-this release changes the displayed name, not the saved-variable or addon folder.
+Keep that folder name. Install ONE version at a time and keep a copy of your
+working folder before replacing it. Alpha uses SimplyPartyQuestsAlphaDB;
+stable/beta settings are left untouched. Restore your working folder to return.
 Replace files and /reload for an existing installation. A new installation may
 need a full client restart before the addon appears in the AddOns list.
 Disable the older PoofPartyQuests addon if it is still installed.

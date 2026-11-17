@@ -44,7 +44,7 @@ def remote_ref(ref):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--branch", required=True, choices=("main", "beta"))
+    parser.add_argument("--branch", required=True, choices=("main", "beta", "alpha"))
     parser.add_argument("--commit", required=True)
     parser.add_argument("--previous", default="")
     args = parser.parse_args()
@@ -53,9 +53,9 @@ def main():
     if git("rev-parse", "HEAD").stdout.strip() != args.commit:
         raise ValueError("Checkout differs from the checked commit.")
     version = version_from(Path(TOC).read_text(encoding="utf-8"))
-    pattern = r"\d+\.\d+\.\d+" if args.branch == "main" else r"\d+\.\d+\.\d+-beta[1-9]\d*"
+    pattern = r"\d+\.\d+\.\d+" + ("" if args.branch == "main" else "-" + args.branch + r"[1-9]\d*")
     if not re.fullmatch(pattern, version):
-        raise ValueError("Version must be X.Y.Z on main or X.Y.Z-betaN on beta.")
+        raise ValueError("Version must be X.Y.Z on main, X.Y.Z-betaN on beta or X.Y.Z-alphaN on alpha.")
     diagnostic = Path("LiveProgress.lua").read_text(encoding="utf-8")
     if '"Party Quests Forever ' + version + '"' not in diagnostic:
         raise ValueError("Diagnostic and TOC versions do not match.")
