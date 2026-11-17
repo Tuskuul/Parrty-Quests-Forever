@@ -1,3 +1,7 @@
+Party Quests Forever 1.1.7-alpha2
+
+- Preserve the working settings table in the shared per-addon saved-variable file while alpha uses its own settings. Supersedes alpha1 before live testing.
+
 Party Quests Forever 1.1.7-alpha1
 
 ALPHA: Questie coexistence and Blizzard parchment popout.

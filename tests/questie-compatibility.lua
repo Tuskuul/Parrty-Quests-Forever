@@ -114,4 +114,7 @@ A.InitSettings=nil
 A.events.scripts.OnEvent(nil,'ADDON_LOADED','SimplyPartyQuests')
 assert(SimplyPartyQuestsDB==working and working.marker=='working settings' and A.db~=working)
 assert(A.db==SimplyPartyQuestsAlphaDB)
+local toc=assert(io.open('SimplyPartyQuests.toc')):read('*a')
+assert(toc:find('## SavedVariables: SimplyPartyQuestsDB, SimplyPartyQuestsAlphaDB',1,true),
+ 'WoW would discard working settings from the shared addon save file')
 print('PASS: Questie absent/starting/maps-only/tracker/unknown states, saved preference, native-write isolation, visibility and manual collapse, combat toggle deferral, callbacks/backoff, native-first provider reads and contract failure')

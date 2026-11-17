@@ -1,6 +1,7 @@
-Party Quests Forever 1.1.7-alpha1
+Party Quests Forever 1.1.7-alpha2
 
 ALPHA: Questie coexistence and Blizzard parchment popout.
+Supersedes alpha1 before live testing: preserves the working settings table in WoW's shared per-addon saved-variable file. Alpha logic uses only its separate table.
 
 - Uses an independent SimplyPartyQuestsAlphaDB settings table. Stable/beta settings are not read or overwritten. Install one build at a time in the SimplyPartyQuests folder; keep a copy of your working folder to switch back.
 - Detects Questie's tracker setting without changing it. Tracker enabled, initializing or unknown: use the party popout. Tracker disabled: allow the existing Blizzard sidebar. Saved display preferences are preserved. Native reattachment waits until combat ends.

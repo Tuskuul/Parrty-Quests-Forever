@@ -1,6 +1,6 @@
-# Questie compatibility audit — 1.1.7-alpha1
+# Questie compatibility audit — 1.1.7-alpha2
 
-This alpha is based on Party Quests beta16 plus commit `86780be` (the Battle.net regression fixture correction). It changes only the alpha line. Main/beta builds and their tags are not moved. Alpha uses `SimplyPartyQuestsAlphaDB`; it neither imports nor rewrites `SimplyPartyQuestsDB`. The installation folder remains `SimplyPartyQuests`: install one version at a time, keep the working folder before replacing it, and restore that folder to roll back. Two copies must not be loaded together: their frame names, slash commands and protocol would collide.
+This alpha is based on Party Quests beta16 plus commit `86780be` (the Battle.net regression fixture correction). It changes only the alpha line. Main/beta builds and their tags are not moved. Alpha uses `SimplyPartyQuestsAlphaDB`; alpha logic neither imports nor edits `SimplyPartyQuestsDB`. Both globals are declared in the TOC because WoW writes them to the same per-addon save file. Retaining the working declaration preserves that table when alpha logs out. Returning to a stable build can discard the alpha-only table, but preserves the working configuration. Alpha1 lacked this retention declaration and is superseded; do not install it. The installation folder remains `SimplyPartyQuests`: install one version at a time, keep the working folder before replacing it, and restore that folder to roll back. Two copies must not be loaded together: their frame names, slash commands and protocol would collide.
 
 ## Evidence and limits
 
