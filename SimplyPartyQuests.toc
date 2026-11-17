@@ -5,7 +5,7 @@
 ## X-Category: Quests & Leveling
 ## X-License: GPL-3.0-only
 ## Author: Wolfie
-## Version: 1.1.6-beta17
+## Version: 1.1.6-beta18
 ## SavedVariables: SimplyPartyQuestsDB
 Core.lua
 QuestCatalog.lua

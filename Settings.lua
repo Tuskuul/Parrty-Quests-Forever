@@ -65,6 +65,10 @@ function A:SyncSettings()
     local suffix=pending and ("   |   "..(pending=="blizzard" and "Tracker" or "Window").." queued after combat")
         or ((InCombatLockdown and InCombatLockdown()) and "   |   Layout changes apply after combat" or "")
     self.settingsStatus:SetText("View: "..(self.db.displayMode=="blizzard" and "Tracker sidebar" or "Pop-out window").."   |   Party members: "..count..suffix)
+    if self.settingsPaperSlider then
+        self.settingsPaperSync=true;self.settingsPaperSlider:SetValue(self:QuestPaperBrightness());self.settingsPaperSync=nil
+        self.settingsPaperLabel:SetText("Parchment brightness: "..self:QuestPaperBrightness().."%")
+    end
     if self.settingsWidthLabel then self.settingsWidthLabel:SetText("Sidebar width: "..(self.db.sidebarWidth or 420).." pixels") end
     if self.settingsControls.advanced then self.settingsControls.advanced:SetText((self.settingsAdvancedOpen and "Hide" or "Show").." troubleshooting") end
     if self.settingsLayout and self.settingsPanel:IsShown() then self.settingsLayout() end
@@ -133,6 +137,22 @@ function A:InitSettings()
     check("combine","Combine shared quests","One entry per shared quest, with each player's progress underneath.",function() return A.db.combineShared end,function(v) A:SetCombineShared(v) end)
     check("zones","Group by zone","Organizes quests into collapsible zone headings.",function() return A.db.groupByZone end,function(v) A:SetGroupByZone(v) end)
     check("requestShares","Double-click to request a quest share","Checks known eligibility before whispering the quest owner.",function() return A.db.requestShares~=false end,function(v) A.db.requestShares=v end)
+    section("Quest windows")
+    self.settingsPaperLabel=text("")
+    local paperSlider=CreateFrame("Slider","SimplyPartyQuestsParchmentBrightness",body,"OptionsSliderTemplate")
+    paperSlider:SetMinMaxValues(35,100);paperSlider:SetValueStep(5);paperSlider:SetObeyStepOnDrag(true)
+    for _,key in ipairs({"Low","High","Text"}) do
+        local region=_G["SimplyPartyQuestsParchmentBrightness"..key]
+        if A.readable(region) then region:SetText("") end
+    end
+    paperSlider:SetScript("OnValueChanged",function(_,value)
+        if A.settingsPaperSync then return end
+        A:SetQuestPaperBrightness(value);A:SyncSettings()
+    end)
+    self.settingsPaperSlider=paperSlider
+    items[#items+1]={kind="slider",slider=paperSlider,when=condition}
+    text("Darker paper improves yellow quest text. Text contrast adjusts with brightness; Copy/Import fields keep dark ink.")
+    actions("resetPaper","Reset parchment brightness",function() A:SetQuestPaperBrightness(65) end)
     section("Tools")
     actions("shareLog","Share quest log",function() A:OpenQuestLogShare() end,"refresh","Refresh party quests",function() A:RefreshParty() end)
     text("Sharing opens full-log or selected-quest options. Refresh also scans for undiscovered party quests.")
@@ -149,6 +169,7 @@ function A:InitSettings()
         for _,row in ipairs(items) do
             local shown=not row.when or not not row.when()
             if row.label then row.label:SetShown(shown) end
+            if row.slider then row.slider:SetShown(shown) end
             if row.button then
                 row.button:SetShown(shown);row.button.label:SetShown(shown);row.button.help:SetShown(shown)
             end
@@ -158,6 +179,9 @@ function A:InitSettings()
                 if row.heading then y=y+12 end
                 row.label:ClearAllPoints();row.label:SetPoint("TOPLEFT",0,-y);row.label:SetWidth(width-8)
                 y=y+row.label:GetStringHeight()+12
+            elseif row.kind=="slider" then
+                row.slider:ClearAllPoints();row.slider:SetPoint("TOPLEFT",8,-y);row.slider:SetWidth(width-24)
+                y=y+38
             elseif row.kind=="check" then
                 local b=row.button
                 b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y)

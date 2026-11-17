@@ -1,0 +1,6 @@
+Party Quests Forever 1.1.6-beta18
+
+- Quest windows now default to warmer, darker parchment with ivory text for clearer quest difficulty colors.
+- Added Settings > Quest windows > Parchment brightness, with live updates and a reset button. Text contrast adjusts automatically; Copy/Import fields retain dark text.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
