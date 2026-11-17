@@ -1,3 +1,10 @@
+Party Quests Forever 1.1.6-beta17
+
+- Quest titles now use Blizzard's difficulty colors in the party tracker, standalone window, shared logs, quest-selection lists and quest offers.
+- Colors reflect your character's difficulty. Ready markers and eligibility messages retain their distinct colors.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
 Party Quests Forever 1.1.6-beta16
 
 - Fixed copied quest-log links pasted into Battle.net whispers.

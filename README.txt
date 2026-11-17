@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.6-beta16
+Party Quests Forever 1.1.6-beta17
 BETA: Quest offers, chat links, copied links and in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 

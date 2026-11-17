@@ -8,10 +8,6 @@ local function button(parent,text,width,callback)
     local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
     b:SetSize(width,24);b:SetText(text);b:SetScript("OnClick",callback);return b
 end
-local function plain(text)
-    -- Quest titles are display text, never executable chat markup.
-    return text:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):gsub("|","||")
-end
 
 function A:UpdateQuestShareSelection()
     local f=self.questSharePicker;local selected=0
@@ -63,7 +59,7 @@ function A:ShowQuestShareSelection(offers)
             end
         end)
         b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
-        b.caption:SetText(plain(q.title)..(q.ready and " |cff195c21[Ready]|r" or ""))
+        b.caption:SetText(A:QuestTitleText(q.id,q.title)..(q.ready and " |cff195c21[Ready]|r" or ""))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y);b:Show()
         y=y+math.max(40,b.caption:GetStringHeight()+16)
     end
