@@ -1,3 +1,4 @@
+securecallfunction=function(fn,...) return fn(...) end
 unpack=unpack or table.unpack
 GetTime=function() return 100 end
 local locked=false
@@ -121,3 +122,25 @@ A:SyncTrackerBackgroundJoin(tracker,true)
 assert(background.point[5]==100 and background.height==950,'normal native bounds not restored when timer disappeared')
 QuestTimerFrame=nil
 print('PASS: header-only collapsed art, native-only and joined collapse, no duplicate module button, background behind native text, one union backdrop, alpha-safe suppression, redraw hooks, one main collapse including combat, visibility toggles, scale/both sides, standalone and native restoration')
+
+
+assert(loadfile('QuestieCompatibility.lua'))('SimplyPartyQuests',A)
+Questie={db={profile={trackerEnabled=false}}}
+ObjectiveTrackerFrame=tracker
+locked=false
+tracker:SetCollapsed(true)
+A:SyncTrackerBackgroundJoin(tracker,true)
+for i=1,3 do A:ReleaseNativeCombatControl() end
+assert(A.integration.nativeCollapsed==true and not A.questieCompatibility.cleanupError)
+locked=true
+A:ResizeCombatTrackerBackground()
+assert(tracker:IsCollapsed() and not background:IsShown(),'maps-only combat refresh resurrected collapsed backdrop')
+-- Missing/stale cached state cannot resurrect a natively collapsed tracker.
+A.integration.nativeCollapsed=nil
+A:ResizeCombatTrackerBackground()
+assert(not background:IsShown())
+locked=false;tracker:SetCollapsed(false)
+A:SyncTrackerBackgroundJoin(tracker,true);A:ReleaseNativeCombatControl()
+locked=true;A:ResizeCombatTrackerBackground()
+assert(background:IsShown(),'maps-only expanded tracker lost its backdrop')
+print('PASS: Questie maps-only repeated cleanup preserves collapse and combat background follows live native collapse')

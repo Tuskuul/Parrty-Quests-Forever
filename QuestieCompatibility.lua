@@ -51,14 +51,16 @@ function A:ReleaseNativeCombatControlUnsafe()
     -- Undo our visual-only collapse once. Do not expand or redraw a tracker
     -- merely because Questie was detected.
     if native and type(native.SetCollapsed)=="function" then
-        local ok,err=pcall(native.SetCollapsed,native,not not collapsed)
+        local ok,err=self:CallNativeTrackerMethod(native,"SetCollapsed",not not collapsed)
         if not ok then
             s.preparedNative=native;s.preparedCollapsed=collapsed
             error(err)
         end
     end
     s.autoHideArmed=nil;s.autoHideActive=nil;s.autoCollapseNative=nil
-    s.autoCollapseNativeShown=nil;s.combatVisualCollapsed=nil;s.nativeCollapsed=nil
+    s.autoCollapseNativeShown=nil;s.combatVisualCollapsed=nil
+    -- Sidebar collapse is independent of secure-controller ownership. Preserve
+    -- it when Questie maps-only cleanup runs on each integration tick.
     s.expandAfterCombat=nil;s.blockedRestore=nil;s.restoreNativeLayout=nil
     s.combatSetupStatus="paused while Questie is loaded"
 end

@@ -15,7 +15,7 @@ Adjust **Parchment brightness** under **Settings → Quest windows** (35–100%,
 
 Quest titles now use viewer-relative Blizzard difficulty colors across party and sharing windows, including the parchment popout. Open lists refresh after leveling or quest-data loading; Ready and eligibility markers stay distinct.
 
-**1.1.7-alpha5**, an isolated Questie compatibility experiment updated through beta17. It uses its own settings table, `SimplyPartyQuestsAlphaDB`, and does not read or overwrite stable/beta settings. Only the `alpha` branch and alpha tags carry this work. Alpha2 supersedes alpha1: both settings globals are declared so WoW retains the working table when writing the shared addon save file; alpha logic uses only its own table. Do not install alpha1.
+**1.1.7-alpha6**, an isolated Questie compatibility experiment updated through beta17. It uses its own settings table, `SimplyPartyQuestsAlphaDB`, and does not read or overwrite stable/beta settings. Only the `alpha` branch and alpha tags carry this work. Alpha2 supersedes alpha1: both settings globals are declared so WoW retains the working table when writing the shared addon save file; alpha logic uses only its own table. Do not install alpha1.
 
 Questie's tracker enabled, initializing or unknown: Party Quests temporarily uses the parchment popout. Questie's tracker off: the existing Blizzard sidebar is available. Your requested display mode is preserved. Native tracker repair pauses while Questie owns the tracker; Party Quests native combat controls pause whenever Questie is loaded. The independent popout can still collapse during combat.
 

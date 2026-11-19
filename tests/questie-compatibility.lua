@@ -1,3 +1,4 @@
+securecallfunction=function(fn,...) return fn(...) end
 unpack=unpack or table.unpack
 local locked,now=false,100
 GetTime=function() return now end

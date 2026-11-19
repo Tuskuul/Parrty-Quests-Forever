@@ -4,6 +4,7 @@ local function invoke(fn,...)
     if type(fn)~="function" then return nil end
     local ok,a=pcall(fn,...);if ok then return a end
 end
+local function readNativeCollapse(tracker) return tracker:IsCollapsed() end
 local function nativeColor(role)
     local c=OBJECTIVE_TRACKER_COLOR and OBJECTIVE_TRACKER_COLOR[role]
     if c then return {c.r,c.g,c.b} end
@@ -203,14 +204,15 @@ function A:PrepareCombatCollapseUnsafe()
         end
         if invoke(native.IsCollapsed,native)==true then
             s.preparedCollapsed=true;s.preparingCollapse=true
-            local ok,err=pcall(native.SetCollapsed,native,false)
+            local ok,err=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
             s.preparingCollapse=nil
-            if not ok then error(err) end
+            if not ok or invoke(native.IsCollapsed,native)==true then error(err or "native tracker did not expand") end
         end
     elseif s.preparedNative then
         local previous,collapsed=s.preparedNative,s.preparedCollapsed
+        local ok,err=self:CallNativeTrackerMethod(previous,"SetCollapsed",not not collapsed)
+        if not ok or invoke(previous.IsCollapsed,previous)~=(not not collapsed) then error(err or "native collapse restoration failed") end
         s.preparedNative=nil;s.preparedCollapsed=nil
-        previous:SetCollapsed(not not collapsed)
     end
     c:SetAttribute("rest-collapsed",s.preparedCollapsed==true)
     local count=c:GetAttribute("count") or 0
@@ -361,24 +363,10 @@ function A:RestoreNativeExpandedLayout(tracker)
     if combat() or not s.restoreNativeLayout or not tracker then return end
     s.restoreNativeLayout=nil
     if self:IsNativeTrackerCollapsed(tracker) or invoke(tracker.IsShown,tracker)==false then return end
-    -- A main expand must not leave module contents hidden by an earlier collapse.
-    -- Use native module methods, then the same full layout as a native main expand.
-    local seen={}
-    local function restore(module)
-        if not self.readable(module) or seen[module] then return end
-        seen[module]=true
-        if invoke(module.IsCollapsed,module)==true then invoke(module.SetCollapsed,module,false) end
-        local contents=self.readable(module.ContentsFrame) and module.ContentsFrame
-        if contents and type(contents.Show)=="function" then contents:Show() end
-    end
-    if self:EffectiveDisplayMode()=="blizzard" then
-        invoke(tracker.ForEachModule,tracker,restore)
-        for _,module in pairs(tracker.modules or {}) do restore(module) end
-    end
-    if type(tracker.Update)=="function" then
-        local ok,err=pcall(tracker.Update,tracker)
-        if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "native expand layout failed" end
-    end
+    -- Secure/ordinary visibility restoration already ran in the controller.
+    -- Do not rebuild every Blizzard module merely because combat ended or
+    -- our sidebar opened. Blizzard owns layout and its restricted aura reads.
+    self:InvalidateTrackerIntegration()
 end
 local function progress(lines,kinds,name,q,remote,connected,ownKey)
     local expanded=ownKey and (A.db.trackerOwnProgressExpanded or {})[ownKey]
@@ -547,7 +535,10 @@ function A:ApplyPendingTrackerRestore()
         self.db.trackerHidden=false;self.db.trackerCollapsed=false
         if self:IsNativeTrackerCollapsed(native) and type(native.SetCollapsed)=="function" then
             local ok,err=pcall(function()
-                if s.preparedNative==native then self:SetPreparedTrackerCollapsed(false) else native:SetCollapsed(false) end
+                if s.preparedNative==native then self:SetPreparedTrackerCollapsed(false) else
+                    local success,reason=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
+                    if not success or invoke(native.IsCollapsed,native)==true then error(reason or "native tracker did not expand") end
+                end
             end)
             if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "queued tracker expansion failed";return end
         end
@@ -566,7 +557,10 @@ function A:TogglePartyTracker()
         if native and self:IsNativeTrackerCollapsed(native) then
             self:SetViewShown(true)
             if self.integration.preparedNative==native then self:SetPreparedTrackerCollapsed(false)
-            elseif type(native.SetCollapsed)=="function" then native:SetCollapsed(false) end
+            elseif type(native.SetCollapsed)=="function" then
+                local ok,err=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
+                if not ok then self.integration.lastError=err end
+            end
             self.integration.restoreNativeLayout=true
             self:InvalidateTrackerIntegration();self:TrackerIntegrationTick()
             return
@@ -710,7 +704,12 @@ function A:ResizeCombatTrackerBackground()
     local native=self.integration.nativeBackdrop and bounds.native
     local party=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     local background=f.trackerBackground
-    if self.integration.nativeCollapsed or (not native and not party) then background:Hide();return end
+    local collapsed=self.integration.nativeCollapsed
+    if ObjectiveTrackerFrame and not self.integration.preparedNative then
+        local ok,current=pcall(readNativeCollapse,ObjectiveTrackerFrame)
+        if ok and self.public(current,"boolean") then collapsed=current;self.integration.nativeCollapsed=collapsed end
+    end
+    if collapsed or (not native and not party) then background:Hide();return end
     local left,right,top,bottom=0,f:GetWidth(),0,f:GetHeight()
     if native then
         if party then
@@ -1160,6 +1159,10 @@ function A:PrepareTrackerJoinVisuals(tracker)
         local header=self.readable(module.Header) and module.Header
         local button=header and self.readable(header.MinimizeButton) and header.MinimizeButton
         if button and not s.moduleButtons[button] then
+            if invoke(module.IsCollapsed,module)==true then
+                local ok=self:CallNativeTrackerMethod(module,"SetCollapsed",false)
+                if not ok or invoke(module.IsCollapsed,module)==true then return end
+            end
             s.moduleButtons[button]={shown=button:IsShown()}
             if not s.moduleButtonHooks[button] then
                 button:HookScript("OnShow",function(frame)
@@ -1168,8 +1171,6 @@ function A:PrepareTrackerJoinVisuals(tracker)
                 end)
                 s.moduleButtonHooks[button]=true
             end
-            -- An independently collapsed module must not stay stuck behind a hidden button.
-            if invoke(module.IsCollapsed,module)==true then invoke(module.SetCollapsed,module,false) end
         end
         if button then button:Hide() end
     end

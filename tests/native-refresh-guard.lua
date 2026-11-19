@@ -1,3 +1,4 @@
+securecallfunction=function(fn,...) return fn(...) end
 -- Run from the test addon directory with Lua 5.1+.
 local now=10
 local combat=false
