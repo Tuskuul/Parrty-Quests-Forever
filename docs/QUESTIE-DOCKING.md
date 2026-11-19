@@ -1,0 +1,11 @@
+# Questie docking — 1.1.7-beta2
+
+Source inspected: [Questie at 58f8a2c2b08560283e7a1bd2bd4a81e2284c505e](https://github.com/Questie/Questie/tree/58f8a2c2b08560283e7a1bd2bd4a81e2284c505e), especially Modules/Tracker/TrackerBaseFrame.lua, TrackerHeaderFrame.lua and QuestieTracker.lua. The first two create named Questie_BaseFrame and Questie_HeaderFrame frames. QuestieTracker computes manual/automatic width and height; header location changes with collapse and the header-at-bottom option. This upstream snapshot is not proof of every installed package's internals.
+
+Party Quests reads these named frames' visible bounds and effective scale, then positions its own sidebar numerically relative to UIParent. It does not anchor to Questie, import private modules, add secure children or replace tracker scripts. No shared background is stretched across Questie's tracker. The existing party sidebar renderer and controls are reused in a separate visual column.
+
+Height follows the visible Questie tracker up to screen bounds; a minimized tracker retains the last expanded party height so the independent pane remains usable. A top header aligns the party title; a bottom header does not pull the party pane down to the bottom. Side preference is respected when it fits, otherwise the roomier side is used. If neither side has 320 UI units, the existing standalone mode is used temporarily. Requested preferences are not rewritten.
+
+All named-frame reads are guarded and missing/hidden/invalid geometry falls back. Entry/handoff is deferred during combat; an already-independent pane may follow geometry changes during combat. Our collapse and visibility preferences never toggle Questie's tracker. Native Blizzard refresh and secure combat control remain paused as in beta1. The named UI frames are an integration surface rather than a public stability contract; a future Questie redesign may require an adapter update.
+
+Map share-button placement is generic and does not assume Questie caused the collision. It reads visible button rectangles in a bounded subtree of WorldMapFrame and moves only the Party Quests control. Other controls and map-marker handlers are untouched. This does not claim to resolve the older intermittent clipboard taint report.

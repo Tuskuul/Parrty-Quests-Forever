@@ -1,4 +1,4 @@
-# Questie compatibility audit — 1.1.7-beta1
+# Questie compatibility audit — 1.1.7-beta2
 
 This beta promotes the alpha6 compatibility work, includes all stable 1.1.6 features and shared tracker fixes, and uses the normal `SimplyPartyQuestsDB` settings. The older `SimplyPartyQuestsAlphaDB` declaration remains so its separate table survives beta logout; beta does not import or overwrite it. Install only one version in the `SimplyPartyQuests` folder. Alpha6 remains available on its original branch/tag for reference.
 
@@ -15,13 +15,13 @@ The automation checks Lua syntax and executes mocked regression suites. It canno
 | Questie absent | Saved sidebar/window choice | Saved preference | Existing behavior |
 | QuestieDB only | Saved choice; fallback names/zones | Saved preference | Existing behavior |
 | Questie loaded, tracker explicitly false | Saved choice, including Blizzard sidebar | Saved preference | Paused |
-| Questie tracker true | Temporary popout | Paused, including manual requests | Paused |
+| Questie tracker true | Independent dock beside Questie when requested and available; popout fallback | Paused, including manual requests | Paused |
 | Questie loaded, profile missing/invalid | Temporary popout | Paused | Paused |
 | Tracker switched off during combat | Keep popout until combat ends | Paused until safe transition | Paused |
 
 Questie tracker ownership comes from a guarded, read-only check of `Questie.db.profile.trackerEnabled`. That setting is an internal read surface, not part of the stable public API; an unreadable or changed structure takes the conservative popout route. Hiding Questie's map markers is independent of disabling its tracker. No Questie setting is written, and its tracker is never automatically disabled.
 
-`db.displayMode` remains the requested preference. A common effective-mode function is used by visibility, minimap/slash toggles, settings, collapse and docking. Docking while Questie owns the tracker records the preference but does not seize the native frame. Disabling Questie's tracker allows the saved sidebar choice again. Existing window hide state is respected. Beta uses existing normal settings; there is no silent import from the earlier alpha table.
+`db.displayMode` remains the requested preference. A common effective-mode function is used by visibility, minimap/slash toggles, settings, collapse and docking. Docking while Questie owns the tracker records the preference but does not seize the native frame. With Questie's tracker enabled, beta2 docks our independent pane beside its named UI frame when requested and available. Disabling Questie's tracker returns to the Blizzard sidebar. Existing window hide state is respected. Beta uses existing normal settings; there is no silent import from the earlier alpha table.
 
 ## Paths examined
 
@@ -80,3 +80,7 @@ If a blocked-action notification appears, capture `/spq report` before a manual 
 ## Deferred integration
 
 Docking into Questie's own frame, publishing SPQ party locations through Questie, using private Questie remote progress, and replacing acceptance metadata are intentionally outside alpha1. None has a stable supported interface verified here. A future adapter should have an explicit read contract and version tests before depending on it. This alpha establishes ownership boundaries and preserves our existing group-browsing/sharing engine.
+
+## Beta2 docking
+
+[Read-only docking design and source reference](QUESTIE-DOCKING.md). Questie owns its own tracker; Party Quests follows its geometry in an independent pane without changing that ownership. The separate window remains selectable. Beta2 live validation is pending.

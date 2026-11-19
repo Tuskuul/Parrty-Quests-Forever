@@ -489,9 +489,6 @@ function A:SetDisplayMode(mode)
         return
     end
     self.db.displayMode=mode;self.db.trackerHidden=false
-    if mode=="blizzard" and not self:NativeTrackerWritesAllowed() then
-        self:CombatControlNotice("Questie's tracker is enabled; your sidebar choice will apply when it is disabled.")
-    end
     if mode=="window" then self.db.hidden=false end
     self.integration.nextTry=0;self:InvalidateTrackerIntegration()
     if self.window then self.window:SetShown(mode=="window") end
@@ -547,6 +544,9 @@ function A:ApplyPendingTrackerRestore()
     self:InvalidateTrackerIntegration()
 end
 function A:TogglePartyTracker()
+    if self.QuestieDockActive and self:QuestieDockActive() then
+        self:SetViewShown(not not self.db.trackerHidden);return
+    end
     if combat() and self:EffectiveDisplayMode()=="blizzard" then
         if self.integration.combatVisualCollapsed or self.integration.nativeCollapsed then
             self:QueueTrackerExpand();return
@@ -650,6 +650,7 @@ function A:RenderCombatTrackerSidebar()
     return ok
 end
 function A:RefreshCombatTrackerPane()
+    if self.QuestieDockActive and self:QuestieDockActive() then self:QuestieDockTick();return end
     if self:SyncCombatAutoHide() then return end
     if not combat() or self:EffectiveDisplayMode()~="blizzard" then return end
     local f,s=self.sidebar,self.integration
@@ -695,6 +696,7 @@ function A:MeasureCombatTrackerBackground()
         bottom=(ownTop*scale-bottom*nativeScale)/scale}}
 end
 function A:ResizeCombatTrackerBackground()
+    if self.QuestieDockActive and self:QuestieDockActive() then self:SyncQuestieDockBackground();return end
     if self.integration.autoHideActive and self.integration.combatVisualCollapsed then return end
     self:MeasureCombatTrackerBackground()
     local f=self.sidebar
@@ -766,7 +768,7 @@ function A:InitTrackerSidebar()
         b:SetScript("OnLeave",function() labelFont:SetTextColor(unpack(nativeColor("Header"))) end)
         return b
     end
-    f.collapse=button("-",18,function() A:SetViewCollapsed(not A.db.trackerCollapsed);A:SyncSettings() end)
+    f.collapse=button("-",18,function() A:SetViewCollapsed(not A.sidebar.viewCollapsed);A:SyncSettings() end)
     f.collapse.caption:Hide()
     f.collapse.normal=f.collapse:CreateTexture(nil,"ARTWORK");f.collapse.normal:SetAllPoints(f.collapse)
     f.collapse.pushed=f.collapse:CreateTexture(nil,"ARTWORK");f.collapse.pushed:SetAllPoints(f.collapse)
@@ -1306,14 +1308,17 @@ function A:TrackerIntegrationTick()
     if not self:NativeTrackerWritesAllowed() then
         local s=self.integration
         if not combat() and s.pendingDisplayMode then self:ApplyPendingDisplayMode();return end
+        if self.UpdateMinimapButton then self:UpdateMinimapButton() end
+        if self.QuestieDockTick and self:QuestieDockTick() then return end
+        if self.LeaveQuestieDock then self:LeaveQuestieDock() end
         if self.sidebar then self.sidebar:Hide() end
         if self.partyTrackerButton and not combat() then self.partyTrackerButton:Hide() end
-        if self.UpdateMinimapButton then self:UpdateMinimapButton() end
         if self.QuestieWindowCombatTick then self:QuestieWindowCombatTick() end
         if self.window then self.window:SetShown(not self.db.hidden and self:ShouldShowPartyView()) end
         s.attached=false;s.status="Questie compatibility popout"
         return
     end
+    if self.LeaveQuestieDock then self:LeaveQuestieDock() end
     if self.integration.pendingDisplayMode and not combat() then self:ApplyPendingDisplayMode();return end
     if self:SyncCombatAutoHide() then return end
     self:ApplyPendingTrackerRestore()

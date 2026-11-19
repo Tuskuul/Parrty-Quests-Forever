@@ -23,7 +23,10 @@ function A:QuestieOwnsTracker()
 end
 function A:QuestieSummary()
     if not self:QuestieLoaded() then return "Questie: not loaded" end
-    if self:QuestieOwnsTracker() then return "Questie: tracker enabled or initializing; party popout active" end
+    if self:QuestieOwnsTracker() then
+        if self.QuestieDockActive and self:QuestieDockActive() then return "Questie: tracker enabled; independent party sidebar active" end
+        return "Questie: tracker enabled or initializing; party popout active"
+    end
     return "Questie: maps only; Blizzard sidebar available; native combat controls paused"
 end
 function A:ReleaseNativeCombatControl()
@@ -70,7 +73,8 @@ function A:QuestieCompatibilityTick()
     local loaded,blocked=self:QuestieLoaded(),self:QuestieOwnsTracker()
     if not (InCombatLockdown and InCombatLockdown()) then s.lastBlocked=blocked
     elseif blocked then s.lastBlocked=true end
-    local signature=tostring(loaded)..":"..tostring(blocked)
+    if self.RefreshQuestieDockTarget then self:RefreshQuestieDockTarget() end
+    local signature=tostring(loaded)..":"..tostring(blocked)..":"..tostring(s.dockReady==true)
     if signature~=s.signature then
         s.signature=signature;s.layoutPending=true;self.layoutDirty=true
         self:InvalidateTrackerIntegration()
@@ -130,5 +134,8 @@ function A:QuestieCompatibilityReport()
         .."\nQuestie public update callback="..tostring(s.callbackAPI~=nil).."; updates="..s.updates
         .."; registration errors="..s.errors.."; QuestieDB reads="..(s.databaseReads or 0)
         .."\nNative combat cleanup: "..(s.cleanupError or "no error")
+        .."\nQuestie dock: ready="..tostring(s.dockReady==true).."; active="..tostring(s.dockActive==true)
+        .."; side="..(s.dockRect and s.dockRect.side or "none")
+        .."; map share button="..(self.questLogSharePlacement or "not placed")
         .."\nQuestie private progress/protocol: unused; native/SPQ progress remains authoritative"
 end

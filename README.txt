@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.7-beta1
-BETA: Optional Questie coexistence and parchment popout.
+Party Quests Forever 1.1.7-beta2
+BETA: Dock beside Questie, with an independent party pane and map-button spacing.
 See docs/QUESTIE-COMPATIBILITY.md for scope and live tests.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -18,9 +18,14 @@ need a full client restart before the addon appears in the AddOns list.
 Disable the older PoofPartyQuests addon if it is still installed.
 
 QUICK START
-With Questie loaded, native combat collapse controls are paused. Questie tracker
-enabled: separate Party Quests window. Questie maps-only: sidebar available.
-The separate Party Quests window can still be opened and collapsed in combat.
+Choose Beside the active quest tracker to dock beside Questie (or Blizzard
+when Questie's tracker is disabled). Tracker layout chooses left/right and
+width. Our pane follows Questie's position, size and scale and has independent
+collapse, scrolling and visibility controls. Combat collapse affects only our
+pane; click its collapse button to reopen. Questie's own controls are unchanged.
+Separate-window mode remains available and is the fallback for an unavailable
+or hidden Questie tracker, or when neither side has room. Native Blizzard
+combat controls remain paused whenever Questie is loaded.
 
 Without Questie:
 Display > Collapse tracker during combat defaults ON, keeps the compact header

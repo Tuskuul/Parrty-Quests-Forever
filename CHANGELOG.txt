@@ -1,3 +1,11 @@
+Party Quests Forever 1.1.7-beta2
+
+- Party Quests can now dock beside Questie's tracker, following its position, size and scale. Choose the left or right side in Tracker layout.
+- The party pane keeps its own collapse, combat reopening, scrolling and visibility controls. Separate-window mode remains available.
+- Share Quest Log on the map now shifts around other title-bar buttons instead of overlapping them.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
 Party Quests Forever 1.1.7-beta1
 
 - Added optional Questie compatibility. Party Quests uses a separate parchment window when Questie's tracker is enabled or initializing.

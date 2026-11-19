@@ -460,7 +460,79 @@ function A:ShowSharedQuestLog(token,snapshot,message)
     for i=used+1,#f.rows do f.rows[i].questID=nil;f.rows[i]:Hide() end
     f.child:SetHeight(math.max(1,y));f:Show();f:Raise()
 end
+local function mapCall(fn,...)
+    if type(fn)~="function" then return end
+    local ok,v=pcall(fn,...)
+    if ok and not A.secret(v) then return v end
+end
+local function mapNumber(v) return A.public(v,"number") and v==v and math.abs(v)<100000 end
+local function mapRect(frame,scale)
+    local fs=frame and mapCall(frame.GetEffectiveScale,frame)
+    local l,r,t,b=frame and mapCall(frame.GetLeft,frame),frame and mapCall(frame.GetRight,frame),frame and mapCall(frame.GetTop,frame),frame and mapCall(frame.GetBottom,frame)
+    if not mapNumber(fs) or fs<=0 or not mapNumber(l) or not mapNumber(r) or not mapNumber(t) or not mapNumber(b) or r<=l or t<=b then return end
+    local ratio=fs/scale
+    return {left=l*ratio,right=r*ratio,top=t*ratio,bottom=b*ratio}
+end
+function A:PositionQuestLogShareButton()
+    local b,map=self.questLogShareButton,WorldMapFrame
+    if not b or not map or (InCombatLockdown and InCombatLockdown()) then return end
+    local border=map.BorderFrame
+    local arrow=border and border.MaximizeMinimizeFrame
+    if not arrow then return end
+    local scale=mapCall(border.GetEffectiveScale,border)
+    local a=mapNumber(scale) and scale>0 and mapRect(arrow,scale)
+    if not a then return end
+    local right,cy=a.left-5,(a.top+a.bottom)/2
+    local mapBounds=mapRect(map,scale)
+    local obstacles,seen={},{}
+    local visited=0
+    local function scan(frame,depth)
+        if not frame or frame==b or seen[frame] or visited>=200 then return end
+        seen[frame]=true;visited=visited+1
+        if frame~=map and mapCall(frame.IsShown,frame)~=true then return end
+        if mapCall(frame.IsObjectType,frame,"Button")==true then
+            local rect=mapRect(frame,scale)
+            if rect and rect.right-rect.left<350 and rect.top-rect.bottom<60 then obstacles[#obstacles+1]=rect end
+        end
+        if depth>0 and type(frame.GetChildren)=="function" then
+            local ok,children=pcall(function() return {frame:GetChildren()} end)
+            if ok then for _,child in ipairs(children) do scan(child,depth-1) end end
+        end
+    end
+    scan(map,3)
+    -- Move only our button, left of all intersecting title-bar controls.
+    for _=1,16 do
+        local shifted=false
+        for _,o in ipairs(obstacles) do
+            if right>o.left-4 and right-132<o.right+4 and cy+11>o.bottom and cy-11<o.top then
+                right=o.left-6;shifted=true
+            end
+        end
+        if not shifted then break end
+    end
+    local fits=not mapBounds or right-132>=mapBounds.left+80
+    if not fits then b:Hide();self.questLogSharePlacement="title bar full; use tracker Share";return end
+    local dx=right-a.left
+    local signature=tostring(dx)..":"..tostring(arrow)
+    if self.questLogSharePlacementSignature~=signature then
+        b:ClearAllPoints();b:SetPoint("RIGHT",arrow,"LEFT",dx,0)
+        self.questLogSharePlacementSignature=signature
+    end
+    self.questLogSharePlacement=dx< -5 and "shifted around another map control" or "normal"
+    b:Show()
+end
+function A:UpdateQuestLogSharePlacement()
+    if InCombatLockdown and InCombatLockdown() then return end
+    local map=WorldMapFrame
+    if not map or mapCall(map.IsShown,map)~=true then return end
+    local now=GetTime()
+    if self.questLogSharePlacementAt and now<self.questLogSharePlacementAt then return end
+    self.questLogSharePlacementAt=now+0.5
+    if not self.questLogShareButton then self:InstallQuestLogShareButton() end
+    self:PositionQuestLogShareButton()
+end
 function A:InstallQuestLogShareButton()
+    if InCombatLockdown and InCombatLockdown() then return end
     local map=WorldMapFrame
     if not self.readable(map) then return end
     local border=map.BorderFrame
@@ -511,8 +583,10 @@ function A:InstallQuestLogShareButton()
     b:SetParent(border);b:SetFrameStrata(arrow:GetFrameStrata())
     b:SetFrameLevel(math.max(border:GetFrameLevel(),arrow:GetFrameLevel())+10)
     b:SetAlpha(1)
-    b:ClearAllPoints();b:SetPoint("RIGHT",arrow,"LEFT",-5,0)
-    b:Show()
+    if not self.questLogSharePlacementSignature then
+        b:ClearAllPoints();b:SetPoint("RIGHT",arrow,"LEFT",-5,0)
+    end
+    b:Show();self:PositionQuestLogShareButton()
 end
 function A:InitQuestLogLinks()
     if self.InstallQuestLogChatCompatibility then self:InstallQuestLogChatCompatibility() end

@@ -9,15 +9,19 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.7-beta1** brings the Questie compatibility preview to the normal beta branch, including all stable **1.1.6** features and fixes.
+**1.1.7-beta2** brings the Questie compatibility preview to the normal beta branch, including all stable **1.1.6** features and fixes.
 
-Questie's tracker enabled, initializing or unknown: Party Quests temporarily uses its separate parchment window. Questie's tracker disabled: the existing Blizzard sidebar remains available. Your preferred display mode is preserved. Native tracker refresh pauses while Questie owns the tracker; native combat controls pause whenever Questie is loaded. The independent Party Quests window remains usable during combat.
+Choose **Beside the active quest tracker** to dock beside Questie when its tracker is enabled, or beside Blizzard when Questie's tracker is disabled. The party pane follows Questie's position, size and scale using read-only screen geometry. Choose left/right and width under Tracker layout; if your chosen side has too little room, the other side is used without changing your preference. Separate-window mode remains available, and is the fallback when Questie's tracker is hidden, unavailable or neither side has room. Your requested display mode is preserved.
+
+The docked pane has its own collapse, scrolling, Share, Refresh and Settings controls. Combat auto-collapse affects only our pane, and you can reopen it during combat; Questie's tracker keeps its own controls. Native tracker refresh pauses while Questie owns the tracker; native Blizzard combat controls remain paused whenever Questie is loaded.
+
+The map's **Share Quest Log** button moves left around other visible title-bar buttons. Crowded title bars can use the tracker Share button instead. Placement changes wait until combat ends.
 
 QuestieDB is optional and supplies fallback quest names and zones; native information takes priority. Private Questie progress and network protocols are unused. Questie settings are never changed.
 
 This beta uses the normal `SimplyPartyQuestsDB` settings, just like 1.1.6. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Beta release notes](docs/RELEASE-1.1.7-beta1.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Beta release notes](docs/RELEASE-1.1.7-beta2.txt)
 
 ## Quest offers
 

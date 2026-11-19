@@ -18,6 +18,11 @@ function A:SetCombatAutoHide(value)
     self:InvalidateTrackerIntegration();self:SyncSettings()
 end
 function A:SetViewCollapsed(value)
+    if self.QuestieDockActive and self:QuestieDockActive() then
+        if InCombatLockdown and InCombatLockdown() then self.questieCompatibility.dockCombatCollapsed=not not value
+        else self.db.trackerCollapsed=not not value end
+        self:QuestieDockTick();return
+    end
     if self:EffectiveDisplayMode()=="blizzard" then
         local tracker=ObjectiveTrackerFrame
         if tracker and tracker:IsShown() and tracker.Header and tracker.Header:IsShown() then
@@ -122,17 +127,17 @@ function A:InitSettings()
     local function window() return A:EffectiveDisplayMode()=="window" end
     local function advanced() return A.settingsAdvancedOpen end
     section("Display")
-    check("blizzard","Beside Blizzard's objective tracker","Uses the tracker's fonts, colors and Edit Mode appearance.",sidebar,function() A:SetDisplayMode("blizzard") end,true)
+    check("blizzard","Beside the active quest tracker","Docks beside Blizzard or Questie; choose a separate window for independent placement.",sidebar,function() A:SetDisplayMode("blizzard") end,true)
     check("window","Separate window","Move and resize the party quest window independently.",window,function() A:SetDisplayMode("window") end,true)
     check("minimap","Show minimap button","Click to toggle party quests; right-click for settings; Shift-click to refresh.",function() return not A.db.hideMinimapButton end,function(v) A.db.hideMinimapButton=not v;A:UpdateMinimapButton() end)
-    check("combatAutoHide","Collapse during combat","Restores the previous view after combat. With Questie loaded, only our separate window collapses; Blizzard tracker controls are left to Questie. Changes during combat apply afterward.",function() return A.db.combatAutoHide~=false end,function(v) A:SetCombatAutoHide(v) end)
+    check("combatAutoHide","Collapse during combat","Restores the previous view after combat. With Questie loaded, only the Party Quests pane collapses; Questie's tracker keeps its own controls. Changes during combat apply afterward.",function() return A.db.combatAutoHide~=false end,function(v) A:SetCombatAutoHide(v) end)
     self.settingsQuestieStatus=text("")
     section("Tracker layout",sidebar)
     check("sidebarLeft","Party quests on the left","",function() return A.db.trackerSide~="right" end,function() A:SetTrackerSide("left") end,true)
     check("sidebarRight","Party quests on the right","",function() return A.db.trackerSide=="right" end,function() A:SetTrackerSide("right") end,true)
     self.settingsWidthLabel=text("")
     actions("narrower","Narrower",function() A:SetSidebarWidth((A.db.sidebarWidth or 420)-40) end,"wider","Wider",function() A:SetSidebarWidth((A.db.sidebarWidth or 420)+40) end)
-    text("Height follows Blizzard's Objective Tracker setting in Edit Mode. Longer lists scroll.")
+    text("Height follows the active tracker: Questie's visible height, or Blizzard's Edit Mode setting. Longer lists scroll.")
     section("Window layout",window)
     check("locked","Lock position and size","",function() return A.db.locked end,function(v) A.db.locked=v end)
     actions("resetWindow","Reset position and size",function() A:ResetWindowLayout(false) end)

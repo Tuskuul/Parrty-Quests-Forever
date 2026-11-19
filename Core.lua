@@ -108,7 +108,10 @@ function A:NormalizeSavedSettings()
     db.diagLines=nil;db.diagChanges=nil;db.diagEvents=nil
 end
 function A:EffectiveDisplayMode()
-    if self.QuestieOwnsTracker and self:QuestieOwnsTracker() then return "window" end
+    if self.QuestieOwnsTracker and self:QuestieOwnsTracker() then
+        if self.QuestieDockActive and self:QuestieDockActive() then return "blizzard" end
+        return "window"
+    end
     return self.db and self.db.displayMode or "blizzard"
 end
 function A:NativeTrackerWritesAllowed()
@@ -668,6 +671,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     if A.TriggerTick then A:TriggerTick() end
     if A.NativeTrackerTick then A:NativeTrackerTick() end
     if A.TrackerIntegrationTick then A:TrackerIntegrationTick() end
+    if A.UpdateQuestLogSharePlacement then A:UpdateQuestLogSharePlacement() end
     if A.LiveTick then A:LiveTick() end
     if A.ownDue and now>=A.ownDue then
         A.ownDue=nil; A:ReadOwn()
