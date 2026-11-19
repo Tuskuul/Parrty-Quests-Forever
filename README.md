@@ -9,26 +9,15 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-Open settings alongside sharing windows using their settings button, the minimap right-click or `/spq settings`. The movable settings window raises among addon windows without claiming Blizzard's Settings panel. The map and other game panels can open alongside it. Parchment uses contrasting versions of all five difficulty colors, with light/dark text and subtle dark-paper shadows; normal tracker colors are unchanged.
+**1.1.7-beta1** brings the Questie compatibility preview to the normal beta branch, including all stable **1.1.6** features and fixes.
 
-Adjust **Parchment brightness** under **Settings → Quest windows** (35–100%, default 65%). Changes apply immediately to parchment windows; ordinary text switches contrast automatically, and Copy/Import fields keep dark ink. Reset restores the warmer, darker default.
+Questie's tracker enabled, initializing or unknown: Party Quests temporarily uses its separate parchment window. Questie's tracker disabled: the existing Blizzard sidebar remains available. Your preferred display mode is preserved. Native tracker refresh pauses while Questie owns the tracker; native combat controls pause whenever Questie is loaded. The independent Party Quests window remains usable during combat.
 
-Quest titles use Blizzard difficulty colors relative to your character throughout the party tracker, standalone window and sharing dialogs. Ready and eligibility labels remain distinct. Unknown difficulty retains the normal title color. Open lists recolor after leveling or quest-data loading without changing their selection.
+QuestieDB is optional and supplies fallback quest names and zones; native information takes priority. Private Questie progress and network protocols are unused. Questie settings are never changed.
 
-**1.1.6-beta20**, a testing build with **Share to chat**, **Copy Share link** and **Import**. Choose a full log or selected quests, then prepare a chat link or copy an in-game share string. Copy uses Ctrl+C; Import uses Ctrl+V. The original owner must stay online and the link must still be available. Copied strings use character-addon whispers and require this beta or newer; existing Battle.net sharing stays on Share to chat. All stable tracker fixes remain included. Native discovery remains limited to what the client exposes. Copy and Import replace the chooser until closed, preserving its selection and draft.
+This beta uses the normal `SimplyPartyQuestsDB` settings, just like 1.1.6. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-Beta8 adds compact quest progress updates between backward-compatible full-log syncs, quicker event-driven native queries, bounded tooltip-cache retries, native objective completion flags, and an inset selection highlight. Native polling remains limited to readable client data. Combat visibility no longer adds secure children to Blizzard's module layout frames; the intermittent native-pane blanking report still needs live verification.
-
-
-Combat auto-collapse is under **Display → Collapse during combat**. It leaves the compact header visible; the Party Quests button can reopen the prepared contents during combat. Beta12 was visually verified reopening a tracker closed before combat on the tested Forever client. A manually opened view stays open until collapsed again or combat ends. It restores the previous expanded or collapsed view afterward; disable it to leave the tracker expanded during combat. Changes to this setting during combat apply afterward.
-
-Beta9 streamlines Settings into Display, mode-specific Layout, Quests and Tools. Duplicate show/collapse/scan controls and developer-only actions are removed from the menu. Diagnostics and native recovery are under **Show troubleshooting**; saved preferences remain unchanged. The API inspector remains available with `/spq inspect`, and existing developer slash commands remain available.
-
-Beta10 follows a full code audit: transient quest-data failures retain the last known log; party/snapshot packets retry bounded transport failures; delta updates stay authoritative over native observations; and Share preserves chat drafts edited while its chooser is open. Combat refresh uses budgeted data queries, display-mode changes wait for combat exit, and native modules are no longer forcibly reopened on every hide. `/spq report` now records frame protection and secure click stages. Native +/- and spontaneous blanking still require live verification; the build does not claim those reports resolved.
-
-Beta11 queues Settings requests made in combat and opens the panel once combat ends. Unrelated blocked UI actions no longer disable native tracker recovery. `/spq report` distinguishes disabled combat setup, unavailable APIs and failed initialization, with the failed phase and error when available.
-
-Beta12 prepares the underlying native layout outside combat even when the tracker is visually collapsed. While combat auto-collapse is enabled, the main button uses that prepared visibility path outside combat as well. Both combat buttons can then reopen prepared modules without calling the native full layout; combat exit restores the prior visual collapse. Disabling the option returns collapse control to Blizzard. The closed-before-combat case was subsequently verified in the user's beta12 recording; group progress and quest offers are separate tests.
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Beta release notes](docs/RELEASE-1.1.7-beta1.txt)
 
 ## Quest offers
 
@@ -62,7 +51,7 @@ Copied full/selected log markers in native Battle.net messages now become clicka
 
 The addon folder must be named **SimplyPartyQuests**. Put this repository's addon files directly inside `Interface/AddOns/SimplyPartyQuests/`, so `SimplyPartyQuests.toc` sits directly inside that folder. A GitHub source ZIP's repository-named wrapper must be renamed appropriately.
 
-Existing Simply Party Quests users keep their settings. Replace files and `/reload`; a first installation may need a full client restart.
+Stable and beta keep their existing settings. This alpha starts with independent settings. Replace files and `/reload`; a first installation may need a full client restart.
 
 Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click the minimap button. `/spq` remains supported.
 
@@ -80,7 +69,7 @@ Ready tags and turn-in text are bright green. Guarded Blizzard tracker refresh d
 
 ## Quest-log links
 
-Share now offers **Full log** or **Select quests**. Choose one or more quests and click **Share selected** to share just those entries and their objective progress. Cancel or Escape restores the original chat draft.
+Share now offers **Full log** or **Select quests**. Choose one or more quests, then use **Share to chat** or **Copy Share link** to share those entries and their objective progress. Cancel or Escape restores the original chat draft.
 
 Click **Share** in the Party Quests tracker header, or **Share Quest Log** in the main Map & Quest Log title bar, left of fullscreen. It inserts a snapshot link into your current chat draft for you to send. Compatible recipients click to inspect the active quests and objective completion. This is a timestamped snapshot, not lifetime completion history or a live view.
 

@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6-beta20.zip
+- **Release file:** PartyQuestsForever_1.1.7-beta1.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,13 +63,15 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6-beta16
+Party Quests Forever 1.1.7-beta1
 
-- Fixed copied quest-log links pasted into Battle.net whispers.
-- Share to chat now offers a destination picker for Party, Guild, Say, Yell and your joined chat channels.
-- Current chat / whisper preserves the existing Battle.net or WIM conversation. Links are prepared in chat for you to send with Enter.
+- Added optional Questie compatibility. Party Quests uses a separate parchment window when Questie's tracker is enabled or initializing.
+- With Questie's tracker disabled, the Blizzard sidebar remains available. Your preferred display mode is preserved.
+- Native tracker refresh pauses while Questie owns the tracker. Native combat collapse controls pause whenever Questie is loaded.
+- Added optional QuestieDB fallback quest names and zones, with native information taking priority.
+- Fixed an empty background appearing in combat with Questie while the Blizzard tracker was collapsed.
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+For WoW Forever 1.60.1 (interface 16001). Includes all 1.1.6 changes and uses your normal saved settings. Questie remains optional.
 
 ## Submission references checked 2026-11-13
 

@@ -107,6 +107,16 @@ function A:NormalizeSavedSettings()
     end
     db.diagLines=nil;db.diagChanges=nil;db.diagEvents=nil
 end
+function A:EffectiveDisplayMode()
+    if self.QuestieOwnsTracker and self:QuestieOwnsTracker() then return "window" end
+    return self.db and self.db.displayMode or "blizzard"
+end
+function A:NativeTrackerWritesAllowed()
+    return not (self.QuestieOwnsTracker and self:QuestieOwnsTracker())
+end
+function A:NativeCombatControlsAllowed()
+    return not (self.QuestieLoaded and self:QuestieLoaded())
+end
 -- Native Lua methods must enter through the client's call barrier. Calling
 -- them directly from addon execution can taint the fields their layouts write.
 -- Callers enforce UI ownership; compatibility cleanup may release an old layout.
@@ -594,6 +604,7 @@ frame:SetScript("OnEvent",function(_,event,...)
         if A.db.groupByZone==nil then A.db.groupByZone=true end
         if A.db.nativeTrackerRepair==nil then A.db.nativeTrackerRepair=true end
         if A.db.combatAutoHide==nil then A.db.combatAutoHide=true end
+        if A.QuestieCompatibilityTick then A:QuestieCompatibilityTick() end
         if A.InitUI then A:InitUI() end
         if A.InitSettings then A:InitSettings() end
     elseif event=="PLAYER_LOGIN" then
@@ -651,6 +662,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     local now=GetTime()
     if A.questColorsDue and now>=A.questColorsDue then A.questColorsDue=nil;A:RefreshQuestDifficultyViews() end
     if A.ApplyPendingSettings then A:ApplyPendingSettings() end
+    if A.QuestieCompatibilityTick then A:QuestieCompatibilityTick() end
     A:CombatOwnTick()
     if A.PollTick then A:PollTick() end
     if A.TriggerTick then A:TriggerTick() end

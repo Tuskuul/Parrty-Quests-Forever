@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.7-alpha3
+
+- Integrates beta17 quest difficulty colors throughout party/sidebar, parchment popout, shared quest logs, quest-selection lists and share confirmations.
+- Colors use Blizzard rules relative to the viewer, with existing safe fallbacks and automatic refresh after leveling or loading quest data. Selection and expansion state are retained.
+- Keeps alpha Questie ownership guards, parchment-readable Ready/count markers and working-settings preservation.
+
+For WoW Forever 1.60.1 (interface 16001). Questie integration remains alpha and needs live testing.

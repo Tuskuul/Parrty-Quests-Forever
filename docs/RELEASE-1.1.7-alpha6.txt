@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.7-alpha6
+
+- Fixed an empty tracker background appearing in combat while the Blizzard tracker was collapsed with Questie enabled.
+- Returning from combat no longer forces a full Blizzard objective-tracker rebuild.
+- Native tracker expansion and refresh requests now use guarded client calls; unavailable or replaced methods are skipped safely.
+
+For WoW Forever 1.60.1 (interface 16001). Includes the Questie compatibility preview. Existing settings are preserved.

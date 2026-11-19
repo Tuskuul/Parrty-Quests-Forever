@@ -53,6 +53,16 @@ class AutoTagTests(unittest.TestCase):
         self.assertIn("already exists", result.stdout)
         self.assertTrue(self.remote_tag("1.1.6-beta2").startswith(self.sha))
 
+    def test_alpha_tag_is_isolated_from_beta_and_main(self):
+        sha = self.commit("1.1.7-alpha1")
+        self.git("push", "origin", "HEAD:refs/heads/alpha")
+        result = self.run_tag("alpha", sha)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self.remote_tag("1.1.7-alpha1").startswith(sha))
+        self.assertEqual(self.git("rev-parse", "origin/beta"), self.sha)
+        self.assertNotEqual(self.run_tag("beta", sha).returncode, 0)
+        self.assertNotEqual(self.run_tag("main", sha).returncode, 0)
+
     def test_stable_version_bump_tags_main(self):
         old = self.commit("1.1.5")
         newer = self.commit("1.1.6")

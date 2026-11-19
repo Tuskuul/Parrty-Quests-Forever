@@ -1,5 +1,6 @@
-Party Quests Forever 1.1.6-beta20
-BETA: Quest offers, chat links, copied links and in-game quest snapshots.
+Party Quests Forever 1.1.7-beta1
+BETA: Optional Questie coexistence and parchment popout.
+See docs/QUESTIE-COMPATIBILITY.md for scope and live tests.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -9,13 +10,19 @@ progress, and organize entries by collapsible players, zones and quest sections.
 INSTALL OR UPDATE
 Extract SimplyPartyQuests into Interface\AddOns. The final path is:
 Interface\AddOns\SimplyPartyQuests\SimplyPartyQuests.toc
-Keep that folder name. Existing Simply Party Quests users retain their settings;
-this release changes the displayed name, not the saved-variable or addon folder.
+Keep that folder name. Install ONE version at a time. This beta uses normal
+SimplyPartyQuestsDB settings. Prior alpha settings remain separate and are not
+imported or overwritten.
 Replace files and /reload for an existing installation. A new installation may
 need a full client restart before the addon appears in the AddOns list.
 Disable the older PoofPartyQuests addon if it is still installed.
 
 QUICK START
+With Questie loaded, native combat collapse controls are paused. Questie tracker
+enabled: separate Party Quests window. Questie maps-only: sidebar available.
+The separate Party Quests window can still be opened and collapsed in combat.
+
+Without Questie:
 Display > Collapse tracker during combat defaults ON, keeps the compact header
 visible and restores your prior expanded/collapsed view afterward. Turn it off
 to leave the tracker expanded during combat. Changes during combat
@@ -28,8 +35,9 @@ both columns; Party Quests toggles the party panel while expanded. Expanding
 the compact docked tracker during combat uses a prepared secure click handler.
 With combat collapse enabled, closing before a fight keeps the underlying quest
 layout prepared for reopening. Turning the option off restores native collapse.
-Click Party Quests to reopen it in combat; native +/- remains unreliable. Native layout rebuilds
-still wait until combat ends. Player/zone/quest expanders
+Use Party Quests to reopen the prepared tracker in combat. Native availability
+depends on the client and other tracker addons. Combat exit restores visibility
+without forcing a full Blizzard tracker rebuild. Player/zone/quest expanders
 remain available. An empty native tracker uses one compact party-only control.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
