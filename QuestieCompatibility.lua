@@ -136,6 +136,7 @@ function A:QuestieCompatibilityReport()
         .."\nNative combat cleanup: "..(s.cleanupError or "no error")
         .."\nQuestie dock: ready="..tostring(s.dockReady==true).."; active="..tostring(s.dockActive==true)
         .."; side="..(s.dockRect and s.dockRect.side or "none")
+        .."; backdrop alpha="..tostring(s.dockBackdropAlpha or "unknown").."; overall alpha="..tostring(s.dockOverallAlpha or "unknown")
         .."; map share button="..(self.questLogSharePlacement or "not placed")
         .."\nQuestie private progress/protocol: unused; native/SPQ progress remains authoritative"
 end

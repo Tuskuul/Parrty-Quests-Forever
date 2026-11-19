@@ -846,6 +846,7 @@ function A:UpdateTrackerQuestFocus()
 end
 function A:RenderTrackerSidebar(entries,memberCount)
     local f=self.sidebar;local width=math.max(1,f:GetWidth()-22)
+    local plain=f.questiePlain==true
     f.child:SetWidth(width)
     local used,y=0,0
     local function row(label,role,color,indent,entry,liveQuestKey,liveLine)
@@ -880,11 +881,11 @@ function A:RenderTrackerSidebar(entries,memberCount)
             b.headerBackground:SetAtlas("UI-QuestTracker-Secondary-Objective-Header")
             b.headerBackground:SetAllPoints(b)
         end
-        if b.headerBackground then b.headerBackground:SetShown(not not heading) end
+        if b.headerBackground then b.headerBackground:SetShown(not not heading and not plain) end
         b.label:ClearAllPoints()
-        b.label:SetPoint("TOPLEFT",heading and 7 or 0,heading and -5 or 0)
-        b.label:SetWidth(width-indent-(heading and 14 or 0));b.label:SetText(label)
-        local height=math.max(heading and 26 or 1,b.label:GetStringHeight()+(heading and 10 or 3))
+        b.label:SetPoint("TOPLEFT",heading and not plain and 7 or 0,heading and not plain and -5 or 0)
+        b.label:SetWidth(width-indent-(heading and not plain and 14 or 0));b.label:SetText(label)
+        local height=math.max(heading and not plain and 26 or 1,b.label:GetStringHeight()+(heading and not plain and 10 or 3))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",indent,-y);b:SetSize(width-indent,height)
         b:EnableMouse(entry~=nil);b:Show();y=y+height+2
     end
@@ -940,7 +941,7 @@ function A:SizeTrackerSidebar()
     local f=self.sidebar
     local limit=f.heightLimit or 420
     local content=f.contentHeight or 1
-    local padding=44+(f.headerOffset or 38)
+    local padding=(f.questiePlain and 34 or 44)+(f.headerOffset or 38)
     local overflow=content+padding>limit
     local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
     f.scroll:SetSize(math.max(1,f:GetWidth()-14),math.max(1,viewport))

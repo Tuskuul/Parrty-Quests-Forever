@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.7-beta2.zip
+- **Release file:** PartyQuestsForever_1.1.7-beta3.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -63,11 +63,12 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.7-beta2
+Party Quests Forever 1.1.7-beta3
 
-- Party Quests can now dock beside Questie's tracker, following its position, size and scale. Choose the left or right side in Tracker layout.
-- The party pane keeps its own collapse, combat reopening, scrolling and visibility controls. Separate-window mode remains available.
-- Share Quest Log on the map now shifts around other title-bar buttons instead of overlapping them.
+- The party pane now follows Questie's backdrop color, opacity, border and live background fades, including a fully transparent background.
+- Tightened docking alignment and spacing, matched the Questie header font, and removed the heavy header bars in Questie mode.
+- Replaced the Questie-side toolbar with compact controls. Open the ... menu or right-click the Party Quests heading for Share, Refresh and Settings.
+- Solo mode now uses a compact heading instead of a wide empty panel. Joining a party restores the full party column.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
 

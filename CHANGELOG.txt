@@ -1,3 +1,12 @@
+Party Quests Forever 1.1.7-beta3
+
+- The party pane now follows Questie's backdrop color, opacity, border and live background fades, including a fully transparent background.
+- Tightened docking alignment and spacing, matched the Questie header font, and removed the heavy header bars in Questie mode.
+- Replaced the Questie-side toolbar with compact controls. Open the ... menu or right-click the Party Quests heading for Share, Refresh and Settings.
+- Solo mode now uses a compact heading instead of a wide empty panel. Joining a party restores the full party column.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
 Party Quests Forever 1.1.7-beta2
 
 - Party Quests can now dock beside Questie's tracker, following its position, size and scale. Choose the left or right side in Tracker layout.

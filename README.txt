@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.7-beta2
-BETA: Dock beside Questie, with an independent party pane and map-button spacing.
+Party Quests Forever 1.1.7-beta3
+BETA: Compact Questie docking with matching backdrop opacity and live fades.
 See docs/QUESTIE-COMPATIBILITY.md for scope and live tests.
 For WoW Forever 1.60.1 (interface 16001)
 
@@ -21,7 +21,10 @@ QUICK START
 Choose Beside the active quest tracker to dock beside Questie (or Blizzard
 when Questie's tracker is disabled). Tracker layout chooses left/right and
 width. Our pane follows Questie's position, size and scale and has independent
-collapse, scrolling and visibility controls. Combat collapse affects only our
+collapse, scrolling and visibility controls. The ... menu or a right-click on
+Party Quests opens Share, Refresh and Settings. Background color, opacity and
+border follow Questie's rendered backdrop, including fades and zero opacity.
+Solo mode stays compact. Combat collapse affects only our
 pane; click its collapse button to reopen. Questie's own controls are unchanged.
 Separate-window mode remains available and is the fallback for an unavailable
 or hidden Questie tracker, or when neither side has room. Native Blizzard

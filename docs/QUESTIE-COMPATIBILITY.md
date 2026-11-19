@@ -1,4 +1,4 @@
-# Questie compatibility audit — 1.1.7-beta2
+# Questie compatibility audit — 1.1.7-beta3
 
 This beta promotes the alpha6 compatibility work, includes all stable 1.1.6 features and shared tracker fixes, and uses the normal `SimplyPartyQuestsDB` settings. The older `SimplyPartyQuestsAlphaDB` declaration remains so its separate table survives beta logout; beta does not import or overwrite it. Install only one version in the `SimplyPartyQuests` folder. Alpha6 remains available on its original branch/tag for reference.
 
@@ -84,3 +84,5 @@ Docking into Questie's own frame, publishing SPQ party locations through Questie
 ## Beta2 docking
 
 [Read-only docking design and source reference](QUESTIE-DOCKING.md). Questie owns its own tracker; Party Quests follows its geometry in an independent pane without changing that ownership. The separate window remains selectable. Beta2 live validation is pending.
+
+Beta3 follows the rendered Questie background/border opacity and fade without writing Questie settings, and refines the dock into compact controls/plain headings. See the docking record for appearance fallback and restoration details. Live beta3 appearance validation remains pending.
