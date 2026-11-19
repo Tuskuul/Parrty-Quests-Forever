@@ -1,3 +1,4 @@
+securecallfunction=function(fn,...) return fn(...) end
 unpack=unpack or table.unpack
 GetTime=function() return 100 end
 local locked=false
@@ -121,3 +122,4 @@ A:SyncTrackerBackgroundJoin(tracker,true)
 assert(background.point[5]==100 and background.height==950,'normal native bounds not restored when timer disappeared')
 QuestTimerFrame=nil
 print('PASS: header-only collapsed art, native-only and joined collapse, no duplicate module button, background behind native text, one union backdrop, alpha-safe suppression, redraw hooks, one main collapse including combat, visibility toggles, scale/both sides, standalone and native restoration')
+

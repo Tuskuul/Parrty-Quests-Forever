@@ -107,6 +107,26 @@ function A:NormalizeSavedSettings()
     end
     db.diagLines=nil;db.diagChanges=nil;db.diagEvents=nil
 end
+-- Native Lua methods must enter through the client's call barrier. Calling
+-- them directly from addon execution can taint the fields their layouts write.
+-- Callers enforce UI ownership; compatibility cleanup may release an old layout.
+-- This does not grant combat permission or repair already-tainted native state.
+function A:CallNativeTrackerMethod(frame,method,...)
+    if InCombatLockdown and InCombatLockdown() then return false,"native layout deferred during combat" end
+    if not frame or secret(frame) then return false,"native tracker unavailable" end
+    local fn=frame[method]
+    if type(fn)~="function" then return false,"native method unavailable: "..method end
+    if type(securecallfunction)~="function" then return false,"secure native call unavailable" end
+    if type(issecurevariable)=="function" then
+        local ok,clean=pcall(issecurevariable,frame,method)
+        if not ok or clean~=true then return false,"native method replaced or tainted: "..method end
+    end
+    -- Pass the native function itself, never an addon closure which would
+    -- reintroduce addon execution before the native call.
+    local ok,err=pcall(securecallfunction,fn,frame,...)
+    if not ok then return false,public(err,"string") and err:sub(1,180) or "native call failed" end
+    return true
+end
 function A:Changed()
     if self.InvalidateTrackerIntegration then self:InvalidateTrackerIntegration() end
     if self.batchNative then self.liveDirty=true elseif self.Render then self:Render() end

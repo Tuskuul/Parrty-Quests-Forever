@@ -1,3 +1,4 @@
+securecallfunction=function(fn,...) return fn(...) end
 unpack=unpack or table.unpack
 local locked=false
 local restricted=false

@@ -136,7 +136,7 @@ function A:NativeTrackerTick()
     -- One normal native dirty request per distinct mismatch. No direct edits
     -- to counters, block state, module contents, visibility or watched quests.
     s.refreshInFlight=true
-    local ok,err=pcall(tracker.MarkDirty,tracker)
+    local ok,err=self:CallNativeTrackerMethod(tracker,"MarkDirty")
     s.refreshInFlight=nil
     if ok and not s.suspended then
         s.requested=s.requested+1;s.result="redraw requested; awaiting counter verification"

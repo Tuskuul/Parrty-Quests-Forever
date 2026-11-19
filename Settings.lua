@@ -22,7 +22,8 @@ function A:SetViewCollapsed(value)
         local tracker=ObjectiveTrackerFrame
         if tracker and tracker:IsShown() and tracker.Header and tracker.Header:IsShown() then
             if InCombatLockdown and InCombatLockdown() then return end
-            tracker:SetCollapsed(not not value)
+            local ok,err=self:CallNativeTrackerMethod(tracker,"SetCollapsed",not not value)
+            if not ok then self.integration.lastError=err end
         else
             self.db.trackerCollapsed=not not value
             if self.RefreshCombatTrackerPane then self:RefreshCombatTrackerPane() end
