@@ -48,4 +48,6 @@ assert(A.integration.dirty,'post-combat layout did not remain schedulable')
 locked=true;C_QuestLog={IsUnitOnQuest=function() error('catalog sweep queried during combat') end}
 A.sweep={};A:PollTick()
 assert(A.sweepStatus=='Quest sweep paused (combat)')
+A.sweep=nil;A:StartSweep();assert(not A.sweep and A.sweepDue>now,'manual discovery built a catalog pass during combat')
 print('PASS: combat queries/triggers, own-log read deadlines and heartbeat, membership/discovery deferral')
+

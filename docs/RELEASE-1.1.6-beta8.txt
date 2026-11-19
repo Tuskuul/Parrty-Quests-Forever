@@ -1,0 +1,11 @@
+Party Quests Forever 1.1.6-beta8
+
+- Faster party progress updates, with small quest updates between full-log syncs.
+- More responsive checks for party members without the addon, including retries
+  when Blizzard tooltip data becomes available.
+- Recognizes objective completion flags supplied by native party tooltips.
+- Adjusted combat visibility handling to reduce interference with Blizzard's
+  quest tracker refreshes.
+- Keeps the selected-quest highlight inside the party tracker pane.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

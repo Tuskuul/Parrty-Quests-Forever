@@ -1,3 +1,4 @@
+securecallfunction=function(fn,...) return fn(...) end
 -- Run from the test addon directory with Lua 5.1+.
 local now=10
 local combat=false
@@ -61,5 +62,25 @@ local invalidations=0
 function A:InvalidateTrackerIntegration() invalidations=invalidations+1 end
 A.nativeTrackerEvents.scripts.OnEvent(nil,'ADDON_ACTION_BLOCKED','SimplyPartyQuests','test expansion')
 assert(A.db.displayMode=='blizzard' and A.integration.blockedRestore and invalidations==1,'blocked action changed docked mode')
-assert(A.nativeTracker.suspended and not A.db.nativeTrackerRepair,'blocked action lost repair suspension')
+assert(not A.nativeTracker.suspended and A.db.nativeTrackerRepair,'unrelated UI block disabled native repair')
+local before=invalidations
+A.nativeTracker.verify={at=100}
+A.nativeTrackerEvents.scripts.OnEvent(nil,'ADDON_ACTION_BLOCKED','SimplyPartyQuests','OpenSettingsPanel()')
+assert(A.nativeTracker.verify and A.db.nativeTrackerRepair and invalidations==before,'settings block interfered with repair or docked state')
+A.nativeTrackerEvents.scripts.OnEvent(nil,'ADDON_ACTION_BLOCKED','SimplyPartyQuests','Frame:Show()')
+assert(A.nativeTracker.suspended and not A.nativeTracker.verify and not A.db.nativeTrackerRepair,'blocked action during verification did not pause repair')
+reset('fix')
+QuestObjectiveTracker.MarkDirty=function()
+ A.nativeTrackerEvents.scripts.OnEvent(nil,'ADDON_ACTION_BLOCKED','SimplyPartyQuests','Frame:Show()')
+end
+queue()
+assert(A.nativeTracker.suspended and not A.nativeTracker.verify and not A.db.nativeTrackerRepair,'synchronously blocked repair started verification anyway')
 print('PASS: mismatch-only requests, result verification, duplicate suppression, blank/error pauses, busy/combat deferral and no progress guessing')
+
+
+-- A visual collapse must defer repair even though its prepared native layout is expanded.
+reset('fix')
+A.IsNativeTrackerCollapsed=function(self,container) assert(container==parent);return true end
+queue()
+assert(requests==0 and A.nativeTracker.due,'visually collapsed prepared tracker was redrawn')
+A.IsNativeTrackerCollapsed=nil

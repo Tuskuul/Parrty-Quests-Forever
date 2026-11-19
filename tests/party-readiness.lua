@@ -111,3 +111,10 @@ ownReady.ready=true
 member.quests={}
 assert(not parent().title:find('[Ready]',1,true),'missing participant quest marked Ready')
 print('PASS: other-player-only Ready tags, complete counts, all-step coverage, unknown/incomplete rejection, authoritative flags and no local progress access')
+
+
+C_PlayerInfo={GetContentDifficultyQuestForPlayer=function() return 1 end}
+GetDifficultyColor=function() return {r=1,g=0.1,b=0.1} end
+member.quests={[ownReady.id]=remoteReady}
+assert(parent().title:find('|cffff1a1a',1,true),'party title lacks native difficulty')
+assert(parent().title:find('|cff00ff00[Ready]|r',1,true),'difficulty replaced party Ready tag')

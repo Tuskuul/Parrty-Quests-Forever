@@ -1,6 +1,6 @@
 local _, A = ...
 local function value(v)
-    if issecretvalue and issecretvalue(v) then return "restricted" end
+    if A.secret and A.secret(v) then return "restricted" end
     if type(v)=="boolean" or type(v)=="number" then return tostring(v) end
     if type(v)=="string" then return v:gsub("[\r\n]"," "):sub(1,180) end
     if v==nil then return "nil" end
@@ -59,7 +59,7 @@ function A:StartShareApiProbe()
 end
 function A:ShareApiReport()
     local p=self.shareApiProbe
-    if not p then return "Share API inspector: not run. Use Inspect share APIs in Settings > Troubleshooting." end
+    if not p then return "Share API inspector: not run. Use /spq inspect to inspect share APIs." end
     local lines={"Share API inspector (read-only; never whispers or shares):",
         "Selected quest plus up to 4 own and 4 foreign IDs. False outside the log is not treated as proof of unshareability.",
         "Capture: "..(GetTime()<p.untilTime and "active; reopen the report after testing" or "finished")}

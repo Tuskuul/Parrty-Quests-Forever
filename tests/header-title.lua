@@ -1,9 +1,11 @@
 unpack=unpack or table.unpack
 CreateFrame=function() return {RegisterEvent=function() end,SetScript=function() end} end
-local A={readable=function(v) return type(v)=='table' end,db={}}
+local A={readable=function(v) return type(v)=='table' end,public=function(v,k) return type(v)==k end,db={}}
 assert(loadfile('TrackerIntegration.lua'))('SimplyPartyQuests',A)
 local function region()
- local r={points={{'LEFT','original','LEFT',7,0}}}
+ local r={points={{'LEFT','original','LEFT',7,0}},width=300}
+ function r:GetWidth() return self.width end
+ function r:SetWidth(v) self.width=v end
  function r:GetNumPoints() return #self.points end
  function r:GetPoint(i) return unpack(self.points[i]) end
  function r:ClearAllPoints() self.points={} end
@@ -13,6 +15,7 @@ end
 local background,title=region(),region()
 local header={Background=background,Text=title}
 local tracker={Header=header,IsCollapsed=function() return false end}
+ObjectiveTrackerFrame=tracker
 A.sidebar={SetShown=function() end}
 GetTime=function() return 100 end
 InCombatLockdown=function() return true end
@@ -54,5 +57,17 @@ for _,side in ipairs({'left','right'}) do
  assert(title.points[1][1]=='CENTER','expanded layout failed to restore joined header')
  A:JoinTrackerHeader(tracker,false)
  assert(title.points[1][2]=='original' and title.points[1][4]==7,'native title anchors not restored')
+ assert(background.points[1][4]==-17 and background.width==324,'native-only artwork did not fill left inset')
+ A:JoinTrackerHeader(tracker,false)
+ assert(background.points[1][4]==-17 and background.width==324,'native-only extension accumulated')
+ A:FitNativeTrackerHeader(nil,false)
+ assert(background.points[1][4]==7 and background.width==300,'native artwork not exactly restored on detach')
 end
+-- Two-edge native textures keep the right edge, width constraints and height.
+background.points={{'TOPLEFT',header,'TOPLEFT',0,0},{'BOTTOMRIGHT',header,'BOTTOMRIGHT',8,-32}}
+A:FitNativeTrackerHeader(tracker,true)
+assert(background.points[1][4]==-24 and background.points[2][4]==8 and background.points[2][5]==-32,'two-edge fit moved the right/bottom art')
+A:FitNativeTrackerHeader(nil,false)
+assert(background.points[1][4]==0 and background.points[2][4]==8,'two-edge art did not restore')
 print('PASS: expanded title center, compact collapsed header, combat collapse and party toggles, both sidebar sides and native anchor restoration')
+

@@ -1,5 +1,5 @@
-Party Quests Forever 1.1.5
-Stable release: combat collapse and restoration, focused quests and timer layout fixes.
+Party Quests Forever 1.1.6
+Stable release: quest offers, chat links, copied links and in-game quest snapshots.
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside Blizzard's objective tracker or in a movable,
@@ -25,13 +25,18 @@ opacity setting and its live fonts, text size, outlines, shadows, colors and
 scale. Appearance changes apply outside combat without needing a reload.
 Joined columns use one background. Blizzard's main collapse button controls
 both columns; Party Quests toggles the party panel while expanded. Expanding
-the compact docked tracker during combat shows a warning and queues reopening
-until combat ends. Player/zone/quest expanders
+the compact docked tracker during combat uses a prepared secure click handler.
+With combat collapse enabled, closing before a fight keeps the underlying quest
+layout prepared for reopening. Turning the option off restores native collapse.
+Use Party Quests to reopen the prepared tracker in combat. Native availability
+depends on the client and other tracker addons. Combat exit restores visibility
+without forcing a full Blizzard tracker rebuild. Player/zone/quest expanders
 remain available. An empty native tracker uses one compact party-only control.
 Open Esc > Settings > AddOns > Party Quests Forever, or right-click the minimap
 button. /spq remains available; /ppq remains an older shortcut.
 Choose a left/right tracker sidebar or the separate window. Settings contain
-display, grouping, resizing, visibility, refresh and diagnostic controls.
+display, mode-specific layout, grouping and refresh controls. Diagnostics and
+native recovery are under Show troubleshooting.
 Click player, zone and quest headings to expand/collapse them. Mouse wheel
 scrolls long lists. The separate window moves by its title bar and resizes from
 its bottom-right corner. The party pane automatically hides when solo; use the
@@ -42,7 +47,8 @@ QUEST INFORMATION
 Progress queries continue during combat. Existing sidebar rows update their
 counts and Ready text. Player, zone and quest sections can expand during combat
 using known data while the party pane is open, creating rows when needed.
-Expanding the fully collapsed docked tracker waits until combat ends.
+Use Party Quests to reopen the automatically collapsed docked tracker.
+If a secure click handler is unavailable, expansion queues until combat ends.
 Automatic party updates also reflow changed rows during combat. Discovery and
 membership checks and native repair still wait. Client
 restrictions can still limit the information available during combat.
@@ -61,19 +67,23 @@ that its owner share it. A single click expands it. Unknown eligibility sends
 nothing; actual quest acceptance and manual sharing remain server/player decisions.
 
 SHARE A QUEST LOG
-Share opens a popup: choose Full log or Select quests. Select quests lets you
-check one or more active quests, then Share selected drafts a link containing
-only those quests. Cancel or Escape returns to your original chat draft.
-Click Share in the Party Quests tracker header, between its title and Refresh.
-Click Share Quest Log in the main Map & Quest Log title bar, left of fullscreen.
-It captures your active quests, objective counts/completion and turn-in status,
-then inserts a marker at your current chat cursor. Your draft/channel/recipient
-are preserved. You choose when to send. Settings also contains the share action.
-Recipients with a compatible addon click to view a timestamped, collapsible log.
-It is a fixed snapshot, not a live view or lifetime completed-quest history.
-The owner must stay online with the addon for a first fetch. Links last fifteen
-minutes; the six newest local snapshots are retained. Reload clears published
-snapshots. Already received copies remain cached for thirty minutes.
+Choose Full log or Select quests, then choose an action:
+- Share to chat prepares the existing short link in your original chat draft.
+- Copy Share link shows a string to select and copy with Ctrl+C. Paste it into
+  WoW character chat; receivers with this beta or newer can click it. The link
+  carries its original owner when forwarded by another character.
+- Import opens a box for Ctrl+V. Paste a complete copied string, then Import
+  opens the shared-log viewer and requests data from the original owner.
+These actions do not send ordinary chat messages automatically. Cancel/Escape
+restores your draft and recipient. The Copy screen does not change that draft.
+Sharing is available in the party header, map/quest-log header and Settings.
+The snapshot includes selected active quests, objective counts/completion and
+turn-in status. It is a fixed snapshot, not a live view or lifetime history.
+The owner must remain online with the addon for a first fetch. Links last
+fifteen minutes, the six newest local snapshots are retained, and reload clears
+published snapshots. Received copies remain cached for thirty minutes.
+Copied links use character routing and remain subject to the client's whisper
+restrictions. Use Share to chat for existing Battle.net snapshot sharing.
 
 WIM character sending/receiving and Battle.net transfer were confirmed in user
 testing. Battle.net uses its own addon-data route for cross-faction/realm use;
@@ -85,7 +95,7 @@ Blizzard-based chat replacements and advertised chat-focus overrides use their
 existing editor paths. Independent unsupported chat windows may need adapters.
 
 TROUBLESHOOTING
-Use Settings > Open diagnostic report. For stuck snapshot transfers, use
+Use Settings > Show troubleshooting > Open diagnostic report. For stuck snapshot transfers, use
 Transfer diagnostics in the shared-log viewer on both sender and recipient.
 Basic transfer counters work without enabling broader diagnostic capture.
 Reports may contain names, quest IDs and routing IDs; review before sharing.
@@ -103,3 +113,58 @@ Code is distributed under GPLv3. Static fallback data adapts QuestieDB snapshot
 0f7d8adc92b28ac6594f4ad8745257f4d9784edf and historic Questie contributions.
 Full upstream attribution, licensing statement and historical caveat remain in
 third_party. This project is not affiliated with Questie.
+
+BETA8 UPDATES
+Compact quest changes are sent between full-log snapshots. Older addon versions
+continue receiving full snapshots. Native polling reacts sooner to party quest
+events and tooltip cache resolution. Blizzard data availability still varies.
+Combat setup no longer adds protected children to native module layout frames.
+The selected-quest highlight stays inset from the adjacent tracker pane.
+
+BETA9 SETTINGS
+Removed duplicate visibility, collapse and scan controls and developer-only menu
+actions. Diagnostics and native recovery expand on demand. Saved preferences are
+preserved. /spq inspect runs the share API inspector; /spq demo and /spq clear
+remain available for troubleshooting.
+
+BETA10 AUDIT
+Temporary quest API failures retain last known progress. Party and snapshot
+transfers retry transient send failures. New chat drafts are preserved while
+sharing. Refresh works in combat; catalog discovery waits. Display-mode changes
+queue until combat ends and choosing the active mode cancels a queued change.
+/spq report includes combat frame protection and click-stage history. Native +/-
+and intermittent native-pane blanking still need live testing.
+
+BETA11 FOLLOW-UP
+Opening Settings in combat queues one request until combat ends. Unrelated UI
+blocks no longer disable native repair. Reports include combat auto-collapse
+preference, setup status, API availability, controller/driver state, module count
+and initialization errors. Native +/- still needs live verification.
+
+QUEST OFFERS (BETA13)
+Share quests > Open shareable lists your shareable quests missing from a recent
+party member log. Select offers, then Share to chat or Copy Share link.
+Hover a quest for missing member names. Completion history is not required.
+The recipient opens the link and clicks a quest to request its normal share.
+Both players need beta13 or newer and must remain in the same party.
+Combat or client restrictions may require the owner to click Share quest.
+Links last 15 minutes. Native share delivery/acceptance still needs live testing.
+
+REQUESTER ELIGIBILITY (BETA14)
+Offered quests show Not eligible for a known acceptance failure. Hover for the
+reason or click to display it; no request is sent when a check fails.
+Unavailable or incomplete rules show Check requirements and leave the native
+acceptance decision available. Publisher filtering still uses current logs only.
+The requester needs beta14 for these notices; beta13 owners remain compatible.
+
+PARCHMENT SHARE WINDOWS (BETA15)
+All sharing dialogs now use a matching parchment quest-window style: Share
+quests, received logs/offers, Copy/Import and owner share confirmation.
+Unavailable quests show their reason in red beneath the title. Selected modes
+are highlighted, and Copy/Import retains a clear bordered input field.
+
+CHAT DESTINATIONS (BETA16)
+Share to chat now opens a destination list: Current chat / whisper, Party, Guild,
+Say, Yell and joined numbered channels. The link is prepared for Enter to send.
+Private drafts are not copied into public channels or overwritten.
+Copied quest-log links in Battle.net whispers now retain their Battle.net route.

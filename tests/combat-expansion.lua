@@ -40,7 +40,8 @@ f.viewCollapsed=false;f.heightLimit=140;f.headerOffset=38;f.trackerBackground=wi
 f.combatBackgroundBounds={native={left=412,right=680,top=-5,bottom=120}}
 ObjectiveTrackerFrame=setmetatable({},{__index=function() error('native tracker accessed in combat') end})
 function A:Render() error('popout/full render accessed in combat') end
-function A:RefreshParty() error('discovery started in combat') end
+local refreshes=0
+function A:RefreshParty() refreshes=refreshes+1 end
 function A:BuildTrackerEntries()
  local entries={{kind='member',key='m',title='Member',closed=self.db.trackerMembersClosed.m}}
  if not self.db.trackerMembersClosed.m then
@@ -125,10 +126,28 @@ A:SetJoinedCollapseVisual(false)
 assert(f:IsShown() and f.rows[1]:IsShown())
 IsShiftKeyDown=function() return true end
 A:TrackerEntryClick(q,'LeftButton')
-assert(not A.db.questExpanded.q,'shift-refresh unexpectedly toggled a quest')
+assert(not A.db.questExpanded.q and refreshes==1,'combat refresh failed or unexpectedly toggled a quest')
 IsShiftKeyDown=function() return false end
+A.own[101]={id=101}
+QuestMapFrame_OpenToQuestDetails=function() error('native quest details opened in combat') end
+local prior=A.db.questExpanded.q
+A:TrackerEntryClick(q,'RightButton')
+assert(A.db.questExpanded.q==prior,'combat right-click changed expansion instead of preserving its action')
+A:SetDisplayMode('window')
+assert(A.db.displayMode=='blizzard' and A.integration.pendingDisplayMode=='window','mode changed midway through combat')
+A:SetDisplayMode('blizzard')
+assert(not A.integration.pendingDisplayMode,'choosing the active mode did not cancel the pending change')
+A.integration.pendingDisplayMode=nil
 function A:RenderTrackerSidebar() error('simulated layout rejection') end
 local message;print=function(v) message=v end
 A:TrackerEntryClick(q,'LeftButton')
 assert(A.integration.lastError:find('simulated layout rejection') and message and A.integration.dirty)
 io.write('PASS: combat first-open layout, all section toggles, scrolling, cached backdrop resize, native isolation and error deferral\n')
+
+
+-- A queued display choice is applied once after combat, rather than changing mid-fight.
+A.window=widget();A:SetDisplayMode('window')
+local modeTicks=0;A.TrackerIntegrationTick=function() modeTicks=modeTicks+1 end
+InCombatLockdown=function() return false end
+A:ApplyPendingDisplayMode();A:ApplyPendingDisplayMode()
+assert(A.db.displayMode=='window' and not A.integration.pendingDisplayMode and modeTicks==1,'queued display mode was lost or applied repeatedly')

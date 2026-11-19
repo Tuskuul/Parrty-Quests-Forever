@@ -1,3 +1,213 @@
+Party Quests Forever 1.1.6
+
+- Added Share to chat, Copy Share link and Import for full or selected quest logs.
+- Added Open shareable: offer quests your party members are not on, then let them browse and request a share. Both players need the addon.
+- Quest offers show known eligibility problems, including level requirements, prerequisites and a full quest log.
+- Share to chat now offers Party, Guild, Say, Yell, joined channels and the current chat or whisper. Fixed copied Battle.net links.
+- Restyled sharing windows with parchment, adjustable brightness and clearer quest difficulty colors. Improved Copy/Import fields and scrolling.
+- Settings opens in a movable window alongside sharing windows, the map and other game panels.
+- Improved party progress updates, completion detection and recovery when quest data is temporarily unavailable.
+- Improved tracker collapse, combat reopening, restored visibility, selected-quest highlighting and window spacing.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta20
+
+- Returning from combat no longer forces a full Blizzard objective-tracker rebuild.
+- Native tracker expansion and refresh requests now use guarded client calls; unavailable or replaced methods are skipped safely.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta19
+
+- Improved red, orange, yellow, green and gray quest-title contrast on parchment, with brighter status labels and subtle text shadows on dark paper.
+- Settings opens in a movable window alongside quest and sharing windows. Added a settings button to sharing windows.
+- Party Quests windows no longer use the dialog layer, allowing the map and other game panels to open normally alongside them.
+- Parchment brightness still updates open windows immediately without changing selections or Copy/Import text.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta18
+
+- Quest windows now default to warmer, darker parchment with ivory text for clearer quest difficulty colors.
+- Added Settings > Quest windows > Parchment brightness, with live updates and a reset button. Text contrast adjusts automatically; Copy/Import fields retain dark text.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta17
+
+- Quest titles now use Blizzard's difficulty colors in the party tracker, standalone window, shared logs, quest-selection lists and quest offers.
+- Colors reflect your character's difficulty. Ready markers and eligibility messages retain their distinct colors.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta16
+
+- Fixed copied quest-log links pasted into Battle.net whispers.
+- Share to chat now offers a destination picker for Party, Guild, Say, Yell and your joined chat channels.
+- Current chat / whisper preserves the existing Battle.net or WIM conversation. Links are prepared in chat for you to send with Enter.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta15
+
+- Share, quest-offer, received-log, Copy/Import and share-confirmation windows now use a parchment quest-window style.
+- Added quest icons, highlighted sharing modes and readable dark text with green completion markers.
+- Unavailable offered quests show their eligibility reason in red beneath the quest. Copy/Import keeps a clearly bordered text field.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta14
+
+- Offered quests now show Not eligible when the requester fails known acceptance requirements.
+- Hover or click an unavailable quest to see the reason, including required level, prerequisites or a full quest log.
+- Ineligible requests are stopped before contacting the owner. Unverified requirements are identified separately.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta13
+
+- Added Open shareable to find quests you can offer that a party member is not currently on.
+- Select quests and post or copy an offer link. Party members can open the list and click a quest to request a share.
+- Quest offers use current party logs without checking completion history. The owner can confirm sharing if combat or the client delays it.
+
+For WoW Forever 1.60.1 (interface 16001). Both players need beta13 or newer for quest offers. Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta12
+
+- Improved combat reopening when the tracker was collapsed before the fight.
+- Collapse controls keep quest contents prepared and restore your previous view after combat.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta11
+
+- Settings requested during combat open automatically once combat ends.
+- Unrelated settings and UI failures no longer disable Blizzard tracker recovery.
+- Diagnostic reports now identify disabled, unavailable or failed combat setup.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta10
+
+- Improved combat handling for tracker modules and display-mode changes.
+- Refresh remains available during combat; discovery resumes afterward.
+- Keeps last known progress when quest data is temporarily unavailable.
+- Retries interrupted party updates and shared-log transfers.
+- Protects fresh party updates from stale or incomplete responses.
+- Preserves newer chat drafts when using the Share window.
+- Recovers invalid saved layout values while retaining valid preferences.
+- Detailed diagnostic captures now stay in session memory.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta9
+
+- Simplified settings into display, layout, quests and tools sections.
+- Layout options now show only for the selected tracker or window mode.
+- Removed duplicate visibility, collapse and scan controls, plus developer tools
+  from the settings menu.
+- Moved diagnostics and Blizzard tracker recovery into expandable troubleshooting.
+- Shortened option descriptions and added the current sidebar width.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta8
+
+- Faster party progress updates, with small quest updates between full-log syncs.
+- More responsive checks for party members without the addon, including retries
+  when Blizzard tooltip data becomes available.
+- Recognizes objective completion flags supplied by native party tooltips.
+- Adjusted combat visibility handling to reduce interference with Blizzard's
+  quest tracker refreshes.
+- Keeps the selected-quest highlight inside the party tracker pane.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta7
+
+- Updated the main +/- button's combat click handling to use a dedicated secure
+  control, matching the working Party Quests reopening path.
+- Leaves the original Blizzard button in control outside combat and when combat
+  auto-collapse is disabled.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta6
+
+- Allows the main +/- button or Party Quests button to reopen the automatically
+  collapsed tracker during combat.
+- Keeps a manually reopened tracker available until you collapse it again or
+  combat ends, then restores the previous view.
+- Reopens prepared tracker contents without forcing a full native layout rebuild
+  during combat.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta5
+
+- Extended the All Objectives header bars to the left when the party pane is
+  closed or the tracker is collapsed, filling the gap above the background.
+- Preserved title and button positions, the right edge and the joined layout.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.6-beta4
+
+- Reserved a footer below the shared quest log for Transfer diagnostics.
+- Quest rows and the scrollbar now stop above that button, with a clear gap.
+- Clips scrolling quest contents to the list viewport so text cannot spill
+  over the footer.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Retains beta3's visible copy/import fields and earlier sharing fixes.
+Live-client verification of the footer spacing is pending.
+
+Party Quests Forever 1.1.6-beta3
+
+- Added a visible bordered text box to Copy Share link and Import, with a dark
+  background, readable white text and padding.
+- Labels show where to copy or paste. Empty imports display a paste hint.
+- Clicking the field focuses it; copied links remain selected for Ctrl+C.
+- Retains beta2's window switching, dragging and selection/draft preservation.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Live-client verification of the revised text fields is pending.
+
+Party Quests Forever 1.1.6-beta2
+
+- Copy Share link and Import now temporarily replace the share chooser instead
+  of opening over it in the center of the screen.
+- Done, Cancel, the close button and Escape return to the chooser with your
+  full-log/selected-quest choice, checked quests and chat draft preserved.
+- Successful imports close the sharing dialogs before opening the shared log.
+- Both sharing windows can be dragged and are kept within the screen bounds.
+  Their positions remain in place when reopened during the same session.
+- Reopening Share while Copy or Import is active brings that dialog forward.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Retains beta1's three sharing actions and in-game copy/import transport.
+Live-client verification of the revised window flow is pending.
+
+Party Quests Forever 1.1.6-beta1
+
+- Added Share to chat, Copy Share link and Import to the sharing screen.
+- Full log and Select quests now choose what to share before choosing an action.
+- Share to chat prepares the existing short quest-log link in your chat draft.
+- Copy Share link shows selectable text for Ctrl+C and pasting into WoW character
+  chats. Forwarded links retain the original snapshot owner.
+- Import accepts a copied in-game string and opens the existing shared-log viewer.
+- Preserves selected quests, completion flags, chat drafts and recipient routing.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Copied links require this beta or newer on the receiving client. They use the
+existing in-game transfer system: the owner must stay online with the addon,
+links expire after 15 minutes, and reloading clears the owner's snapshots.
+Direct character-whisper restrictions still apply. Existing Battle.net sharing
+remains available through Share to chat; copied links use character routing.
+
+In-game layout, Ctrl+C/Ctrl+V, forwarding and import need beta verification.
+
 Party Quests Forever 1.1.5
 
 - Highlights the focused quest with a soft gold background in the party tracker,

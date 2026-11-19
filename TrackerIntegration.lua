@@ -4,6 +4,7 @@ local function invoke(fn,...)
     if type(fn)~="function" then return nil end
     local ok,a=pcall(fn,...);if ok then return a end
 end
+local function readNativeCollapse(tracker) return tracker:IsCollapsed() end
 local function nativeColor(role)
     local c=OBJECTIVE_TRACKER_COLOR and OBJECTIVE_TRACKER_COLOR[role]
     if c then return {c.r,c.g,c.b} end
@@ -18,57 +19,159 @@ A.integration={dirty=true,nextTry=0,status="waiting for Blizzard tracker"}
 -- A visual combat collapse leaves the native main header in place. Protected
 -- native modules are hidden by secure snippets, rather than a combat Update().
 local combatApply=[[
-    local collapsed = newstate == 1 and self:GetAttribute("enabled")
+    self:CallMethod("TraceCombatTracker",newstate==1 and "combat enter" or "combat exit")
+    local collapsed = self:GetAttribute("enabled") and (newstate == 1 or self:GetAttribute("rest-collapsed"))
     self:SetAttribute("combat-collapsed", collapsed and true or false)
     self:SetAttribute("manual-open",nil)
     for i=1,self:GetAttribute("count") or 0 do
         local frame=self:GetFrameRef("module"..i)
-        if frame then
+        if frame and frame:IsProtected() then
+            self:SetAttribute("combat-stage","state-module-"..i)
+            self:CallMethod("TraceCombatTracker","state module "..i)
             if collapsed then frame:Hide()
             elseif self:GetAttribute("shown"..i) then frame:Show()
             else frame:Hide() end
         end
     end
-    self:CallMethod("ApplyCombatVisual", collapsed and true or false)
+    local main=self:GetFrameRef("main-control")
+    if main then
+        if self:GetAttribute("enabled") then main:Show()
+        else main:Hide() end
+    end
+    self:SetAttribute("combat-stage","state-visual")
+    self:CallMethod("ApplyCombatVisual",collapsed and true or false)
 ]]
 local combatClick=[[
     if control:GetAttribute("state-combat") == 1 and control:GetAttribute("enabled") then
+        control:CallMethod("TraceCombatTracker",self:GetAttribute("party-launcher") and "party click entered" or "native click entered")
         local collapsed=control:GetAttribute("combat-collapsed")
         if self:GetAttribute("party-launcher") and not collapsed then return end
-        if collapsed then
-            control:CallMethod("QueueTrackerExpand")
-            return false
-        end
-        collapsed=true
+        collapsed=not collapsed
         control:SetAttribute("combat-collapsed",collapsed)
         control:SetAttribute("manual-open",not collapsed)
         for i=1,control:GetAttribute("count") or 0 do
             local frame=control:GetFrameRef("module"..i)
-            if frame then
+            if frame and frame:IsProtected() then
+                control:SetAttribute("combat-stage","click-module-"..i)
+                control:CallMethod("TraceCombatTracker","click module "..i)
                 if collapsed then frame:Hide()
                 elseif control:GetAttribute("available"..i) then frame:Show() end
             end
         end
-        control:CallMethod("ApplyCombatVisual",collapsed)
+        control:SetAttribute("combat-stage","click-visual")
+        control:CallMethod("ApplyCombatVisual",collapsed,self:GetAttribute("party-launcher") and not collapsed)
         return false
     end
 ]]
-function A:PrepareCombatCollapse()
-    if combat() or not self.db then return end
+function A:ApplyOrdinaryCombatModules(collapsed,restore)
+    for module,state in pairs(self.integration.combatModuleStates or {}) do
+        local protected=invoke(module.IsProtected,module)
+        if restore or protected==false then
+            local shown
+            if restore then shown=state.shown and module.hasContents~=false
+            else shown=not collapsed and state.available and module.hasContents~=false end
+            if shown then invoke(module.Show,module) else invoke(module.Hide,module) end
+        end
+    end
+end
+function A:IsNativeTrackerCollapsed(tracker)
     local s=self.integration
+    if tracker and tracker==s.preparedNative then return s.preparedCollapsed==true end
+    return invoke(tracker and tracker.IsCollapsed,tracker)==true
+end
+function A:SetPreparedTrackerCollapsed(collapsed)
+    if combat() then return end
+    local s=self.integration
+    if not s.preparedNative then return end
+    s.preparedCollapsed=not not collapsed;s.preparedOpening=not collapsed
+    self:SetJoinedCollapseVisual(s.preparedCollapsed)
+    self:InvalidateTrackerIntegration()
+end
+function A:TraceCombatTracker(stage)
+    local s=self.integration
+    s.combatHistory=s.combatHistory or {}
+    s.combatHistory[#s.combatHistory+1]=string.format("%.1f %s",GetTime(),stage)
+    while #s.combatHistory>40 do table.remove(s.combatHistory,1) end
+end
+function A:CombatTrackerReport()
+    local s=self.integration;local c=s.combatController
+    local function safe(v)
+        if self.public(v,"string") or self.public(v,"boolean") or self.public(v,"number") then return tostring(v) end
+        return "unknown"
+    end
+    local configured=self.db and self.db.combatAutoHide~=false
+    local out={"Combat tracker: auto-collapse="..safe(configured).."; setup="..(s.combatSetupStatus or "not attempted")
+        .."; stage="..safe(c and invoke(c.GetAttribute,c,"combat-stage")),
+        "Combat setup APIs: RegisterStateDriver="..type(RegisterStateDriver).."; SecureHandlerWrapScript="..type(SecureHandlerWrapScript),
+        "Combat setup state: controller="..tostring(c~=nil).."; driver="..tostring(s.combatDriverReady==true)
+            .."; modules="..safe(c and invoke(c.GetAttribute,c,"count")).."; settings queued="..tostring(self.settingsOpenPending==true)}
+    if s.combatSetupError then out[#out+1]="Combat setup error: "..s.combatSetupError end
+    local function frame(label,object)
+        if not object then return end
+        local ok,protected,explicit=pcall(function() return object:IsProtected() end)
+        out[#out+1]=label..": shown="..safe(invoke(object.IsShown,object)).."; protected="..safe(ok and protected)
+            .."; explicit="..safe(ok and explicit).."; height="..safe(invoke(object.GetHeight,object))
+        local permission=C_RestrictedActions and C_RestrictedActions.CheckAllowProtectedFunctions
+        if type(permission)=="function" then
+            local allowed=invoke(permission,object,true)
+            out[#out]=out[#out].."; addon writes="..safe(allowed)
+        end
+    end
+    frame("Native container",ObjectiveTrackerFrame)
+    frame("Native +/-",ObjectiveTrackerFrame and ObjectiveTrackerFrame.Header and ObjectiveTrackerFrame.Header.MinimizeButton)
+    frame("Combat +/- overlay",s.combatMainButton);frame("Party button",self.partyTrackerButton)
+    out[#out+1]="Prepared native layout: active="..tostring(s.preparedNative~=nil)
+        .."; outside-combat collapsed="..safe(s.preparedCollapsed)
+        .."; native collapsed="..safe(invoke(ObjectiveTrackerFrame and ObjectiveTrackerFrame.IsCollapsed,ObjectiveTrackerFrame))
+    for module,i in pairs(s.combatModules or {}) do
+        frame("Module "..i,module);frame("Module "..i.." contents",module.ContentsFrame)
+    end
+    for _,row in ipairs(s.combatHistory or {}) do out[#out+1]=row end
+    return table.concat(out,"\n")
+end
+function A:PrepareCombatCollapse()
+    local s=self.integration
+    local enabled=self.db and self.db.combatAutoHide~=false
+    if s.combatSetupEnabled~=enabled then s.combatSetupRetryAt=nil;s.combatSetupEnabled=enabled end
+    if s.combatSetupRetryAt and GetTime()<s.combatSetupRetryAt then return end
+    local ok,err=pcall(self.PrepareCombatCollapseUnsafe,self)
+    if not ok then
+        s.combatSetupStatus="setup failed at "..(s.combatSetupPhase or "unknown phase")
+        s.combatSetupError=self.public(err,"string") and err:sub(1,240) or "unavailable error text"
+        s.combatSetupRetryAt=GetTime()+10
+    end
+end
+function A:PrepareCombatCollapseUnsafe()
+    local s=self.integration
+    if not self.db then s.combatSetupStatus="waiting for saved settings";return end
+    if combat() then
+        if not s.combatSetupStatus then s.combatSetupStatus="waiting for combat to end" end
+        return
+    end
+    s.combatSetupError=nil
+    if self.db.combatAutoHide==false and not s.combatController then s.combatSetupStatus="disabled in settings";return end
+    if type(RegisterStateDriver)~="function" then s.combatSetupStatus="unavailable: RegisterStateDriver";return end
+    if type(SecureHandlerWrapScript)~="function" then s.combatSetupStatus="unavailable: SecureHandlerWrapScript";return end
     local native=ObjectiveTrackerFrame
-    if self.db.combatAutoHide==false and not s.combatController then return end
-    if type(RegisterStateDriver)~="function" or type(SecureHandlerWrapScript)~="function" then return end
+    if not native then s.combatSetupStatus="waiting for Blizzard tracker";return end
+    s.combatSetupPhase="controller"
     local c=s.combatController
     if not c then
         c=CreateFrame("Frame",nil,UIParent,"SecureHandlerStateTemplate")
-        s.combatController=c;s.combatModules={};s.combatButtons={};s.combatGuards={}
+        s.combatController=c;s.combatModules={};s.combatButtons={};s.combatGuards={};s.combatModuleStates={}
         c:SetAttribute("count",0)
         c.QueueTrackerExpand=function() A:QueueTrackerExpand() end
-        c.ApplyCombatVisual=function(_,collapsed)
+        c.TraceCombatTracker=function(_,stage) A:TraceCombatTracker(stage) end
+        c.ApplyCombatVisual=function(_,collapsed,showParty)
             s.combatVisualCollapsed=collapsed
+            A:ApplyOrdinaryCombatModules(collapsed,not combat())
+            A:TraceCombatTracker(showParty and "party click" or "native/state visibility")
             if combat() then
                 s.nativeCollapsed=collapsed
+                if showParty then A.db.trackerHidden=false end
+                -- This native header method only swaps +/- texture atlases.
+                -- Native module visibility has already changed in the secure
+                -- snippet; do not call tracker:SetCollapsed/Update here.
                 local header=s.autoCollapseNative and s.autoCollapseNative.Header
                 if header and type(header.SetCollapsed)=="function" then header:SetCollapsed(collapsed) end
                 if collapsed then
@@ -83,45 +186,120 @@ function A:PrepareCombatCollapse()
         c:SetAttribute("_onstate-combat",combatApply)
     end
     c:SetAttribute("enabled",self.db.combatAutoHide~=false)
+    s.combatSetupPhase="layout preparation"
+    -- A native SetCollapsed(true) lets Blizzard keep hiding modules on refresh.
+    -- Keep its real layout expanded before lockdown and collapse only the visuals.
+    -- Our secure button handles the same control in and out of combat.
+    if self.db.combatAutoHide~=false then
+        if s.preparedNative~=native then
+            s.preparedNative=native;s.preparedCollapsed=invoke(native.IsCollapsed,native)==true
+        end
+        if invoke(native.IsCollapsed,native)==true then
+            s.preparedCollapsed=true;s.preparingCollapse=true
+            local ok,err=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
+            s.preparingCollapse=nil
+            if not ok or invoke(native.IsCollapsed,native)==true then error(err or "native tracker did not expand") end
+        end
+    elseif s.preparedNative then
+        local previous,collapsed=s.preparedNative,s.preparedCollapsed
+        local ok,err=self:CallNativeTrackerMethod(previous,"SetCollapsed",not not collapsed)
+        if not ok or invoke(previous.IsCollapsed,previous)~=(not not collapsed) then error(err or "native collapse restoration failed") end
+        s.preparedNative=nil;s.preparedCollapsed=nil
+    end
+    c:SetAttribute("rest-collapsed",s.preparedCollapsed==true)
     local count=c:GetAttribute("count") or 0
+    local seen={}
     local function add(module)
-        if not self.readable(module) then return end
+        if not self.readable(module) or seen[module] then return end
+        seen[module]=true
         local i=s.combatModules[module]
         if not i then
-            count=count+1;i=count;s.combatModules[module]=i
-            -- A secure child makes the target eligible for restricted combat operations,
-            -- including logs without a protected quest-item button of their own.
-            s.combatGuards[module]=CreateFrame("Frame",nil,module,"SecureHandlerBaseTemplate")
+            count=count+1;i=count
+            -- Stored refs may name ordinary frames, but their restricted
+            -- Show/Hide handles are unusable in combat unless IsProtected is true.
             c:SetFrameRef("module"..i,module)
-            SecureHandlerWrapScript(module,"OnShow",c,[[if control:GetAttribute("combat-collapsed") then self:Hide() end]])
-            SecureHandlerWrapScript(module,"OnHide",c,[[
-                if control:GetAttribute("state-combat")==1 and control:GetAttribute("manual-open")
-                    and self:GetAttribute("spq-combat-available") then self:Show() end
-            ]])
+            local explicit=false
+            if type(module.IsProtected)=="function" then
+                local ok,_,value=pcall(module.IsProtected,module)
+                explicit=ok and value==true
+            end
+            if explicit then
+                SecureHandlerWrapScript(module,"OnShow",c,[[
+                    if control:GetAttribute("enabled") and ((control:GetAttribute("state-combat")==1 and control:GetAttribute("combat-collapsed")) or (control:GetAttribute("state-combat")~=1 and control:GetAttribute("rest-collapsed"))) then self:Hide() end
+                ]])
+            elseif type(module.HookScript)=="function" then
+                module:HookScript("OnShow",function(frame)
+                    local collapsed=combat() and c:GetAttribute("combat-collapsed") or (not combat() and s.preparedNative and s.preparedCollapsed)
+                    if collapsed and (not combat() or invoke(frame.IsProtected,frame)==false) then
+                        invoke(frame.Hide,frame)
+                    end
+                end)
+            end
+            s.combatModules[module]=i
+            -- Do not force a native OnHide back to Show. A normal quest refresh
+            -- legitimately hides empty modules and releases/rebuilds their rows.
         end
+        if s.preparedOpening and module.hasContents==true then module:Show() end
         local shown=module:IsShown()
         local available=shown or module.hasContents==true
         c:SetAttribute("shown"..i,shown)
         c:SetAttribute("available"..i,available)
-        module:SetAttribute("spq-combat-available",available)
+        s.combatModuleStates[module]={shown=shown,available=available}
+        if s.preparedCollapsed then
+            module:Hide();c:SetAttribute("shown"..i,false);s.combatModuleStates[module].shown=false
+        end
     end
+    s.combatSetupPhase="modules"
     if native then
-        invoke(native.ForEachModule,native,add)
+        if type(native.ForEachModule)=="function" then native:ForEachModule(add) end
         for _,module in pairs(native.modules or {}) do add(module) end
     end
+    s.preparedOpening=nil
     c:SetAttribute("count",count)
     local function button(frame,party)
         if not frame or s.combatButtons[frame] then return end
         if party then frame:SetAttribute("party-launcher",true)
-        else s.combatGuards[frame]=CreateFrame("Frame",nil,frame,"SecureHandlerBaseTemplate") end
+        end
         SecureHandlerWrapScript(frame,"OnClick",c,combatClick)
         s.combatButtons[frame]=true
     end
-    button(native and native.Header and native.Header.MinimizeButton,false)
+    s.combatSetupPhase="buttons"
+    local minimize=native and native.Header and native.Header.MinimizeButton
+    if minimize then
+        -- Use an addon-owned secure click surface, just like Party Quests.
+        -- While enabled this also keeps out-of-combat collapse visual-only;
+        -- native OnClick replacements cannot remove our handler.
+        local main=s.combatMainButton
+        if not main then
+            main=CreateFrame("Button","SimplyPartyQuestsCombatMinimize",minimize,"SecureHandlerClickTemplate")
+            main:RegisterForClicks("LeftButtonUp")
+            main:SetScript("OnClick",function()
+                if not combat() then A:SetPreparedTrackerCollapsed(not s.preparedCollapsed) end
+            end)
+            main:Hide();s.combatMainButton=main
+        end
+        if s.combatMainTarget~=minimize then
+            main:SetParent(minimize);main:ClearAllPoints();main:SetAllPoints(minimize)
+            main:SetFrameLevel((invoke(minimize.GetFrameLevel,minimize) or 0)+1)
+            main:SetScript("OnEnter",function() if minimize.LockHighlight then minimize:LockHighlight() end end)
+            main:SetScript("OnLeave",function() if minimize.UnlockHighlight then minimize:UnlockHighlight() end end)
+            s.combatMainTarget=minimize
+        end
+        c:SetFrameRef("main-control",main)
+        button(main,false)
+    end
     button(self.partyTrackerButton,true)
+    if s.combatMainButton then s.combatMainButton:SetShown(self.db.combatAutoHide~=false) end
+    if s.preparedNative then
+        s.nativeCollapsed=s.preparedCollapsed
+        native.Header:SetCollapsed(s.preparedCollapsed)
+    end
+    s.combatSetupPhase="state driver"
     if not s.combatDriverReady then
         RegisterStateDriver(c,"combat","[combat] 1; 0");s.combatDriverReady=true
     end
+    s.combatSetupStatus=self.db.combatAutoHide==false and "disabled in settings" or "ready"
+    s.combatSetupError=nil;s.combatSetupRetryAt=nil;s.combatSetupPhase="complete"
 end
 function A:SyncCombatAutoHide()
     local s=self.integration
@@ -131,14 +309,16 @@ function A:SyncCombatAutoHide()
         s.autoHideActive=true
         local collapsed=s.combatController and s.combatController:GetAttribute("combat-collapsed")
         if s.autoCollapseNativeShown then
-            -- Never hide just our pane if native secure collapse was unavailable.
-            if not collapsed then return false end
+            -- No controller means there is no secure native visibility state.
+            if collapsed==nil then return false end
             local header=s.autoCollapseNative and s.autoCollapseNative.Header
-            if header and type(header.SetCollapsed)=="function" then header:SetCollapsed(true) end
-            self:SyncCombatTrackerHeader(false)
-            if self.sidebar then
-                self.sidebar:Hide()
-                if self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+            if header and type(header.SetCollapsed)=="function" then header:SetCollapsed(not not collapsed) end
+            if collapsed then
+                self:SyncCombatTrackerHeader(false)
+                if self.sidebar then
+                    self.sidebar:Hide()
+                    if self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
+                end
             end
         elseif self.sidebar and self.sidebar.scroll and not self.db.trackerHidden and self:ShouldShowPartyView() then
             local f=self.sidebar;f.viewCollapsed=true;f.scroll:Hide();f.hint:Hide()
@@ -153,7 +333,7 @@ function A:SyncCombatAutoHide()
     if s.autoHideActive then
         s.autoHideActive=nil
         local native=s.autoCollapseNative
-        if native and native.Header and type(native.Header.SetCollapsed)=="function" then native.Header:SetCollapsed(invoke(native.IsCollapsed,native)==true) end
+        if native and native.Header and type(native.Header.SetCollapsed)=="function" then native.Header:SetCollapsed(self:IsNativeTrackerCollapsed(native)) end
         if self.window and self.db.displayMode=="window" and self.SetCollapsed then self:SetCollapsed(not not self.db.collapsed) end
         s.restoreNativeLayout=true;self:InvalidateTrackerIntegration()
     end
@@ -167,25 +347,11 @@ function A:RestoreNativeExpandedLayout(tracker)
     local s=self.integration
     if combat() or not s.restoreNativeLayout or not tracker then return end
     s.restoreNativeLayout=nil
-    if invoke(tracker.IsCollapsed,tracker)==true or invoke(tracker.IsShown,tracker)==false then return end
-    -- A main expand must not leave module contents hidden by an earlier collapse.
-    -- Use native module methods, then the same full layout as a native main expand.
-    local seen={}
-    local function restore(module)
-        if not self.readable(module) or seen[module] then return end
-        seen[module]=true
-        if invoke(module.IsCollapsed,module)==true then invoke(module.SetCollapsed,module,false) end
-        local contents=self.readable(module.ContentsFrame) and module.ContentsFrame
-        if contents and type(contents.Show)=="function" then contents:Show() end
-    end
-    if self.db.displayMode=="blizzard" then
-        invoke(tracker.ForEachModule,tracker,restore)
-        for _,module in pairs(tracker.modules or {}) do restore(module) end
-    end
-    if type(tracker.Update)=="function" then
-        local ok,err=pcall(tracker.Update,tracker)
-        if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "native expand layout failed" end
-    end
+    if self:IsNativeTrackerCollapsed(tracker) or invoke(tracker.IsShown,tracker)==false then return end
+    -- Secure/ordinary visibility restoration already ran in the controller.
+    -- Do not rebuild every Blizzard module merely because combat ended or
+    -- our sidebar opened. Blizzard owns layout and its restricted aura reads.
+    self:InvalidateTrackerIntegration()
 end
 local function progress(lines,kinds,name,q,remote,connected,ownKey)
     local expanded=ownKey and (A.db.trackerOwnProgressExpanded or {})[ownKey]
@@ -199,7 +365,7 @@ local function progress(lines,kinds,name,q,remote,connected,ownKey)
     end
     local count=0
     for _,o in ipairs(q.objectives or {}) do
-        local text=o.text or "Objective"
+        local text=A:DisplayText(o.text or "Objective")
         if A:IsGenericObjective(text) then text="Unnamed step" end
         if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." "..(o.done or "?").."/"..o.total end
         if remote and (o.done==nil or o.total==nil) then text=text.." (progress unknown)" end
@@ -267,7 +433,7 @@ function A:BuildTrackerEntries()
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=q.title..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
+                    local title=A:QuestTitleText(q.id,q.title)..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
                     entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
@@ -281,13 +447,38 @@ function A:InvalidateTrackerIntegration()
     local s=self.integration
     s.dirty=true;s.due=s.due or (GetTime()+0.25)
 end
+function A:CombatControlNotice(message)
+    local now=GetTime();local s=self.integration
+    if s.controlNotice~=message or not s.controlNoticeAt or now-s.controlNoticeAt>=5 then
+        s.controlNotice=message;s.controlNoticeAt=now
+        print("Party Quests Forever: "..message)
+    end
+end
+function A:ApplyPendingDisplayMode()
+    local s=self.integration
+    if combat() or not s.pendingDisplayMode then return end
+    local mode=s.pendingDisplayMode;s.pendingDisplayMode=nil
+    self:SetDisplayMode(mode)
+end
 function A:SetDisplayMode(mode)
     if mode~="blizzard" and mode~="window" then return end
+    if combat() then
+        if mode==self.db.displayMode then
+            if self.integration.pendingDisplayMode then self:CombatControlNotice("Pending display change cancelled.") end
+            self.integration.pendingDisplayMode=nil
+        else
+            self.integration.pendingDisplayMode=mode
+            self:CombatControlNotice("Display mode will change after combat.")
+        end
+        if self.SyncSettings then self:SyncSettings() end
+        return
+    end
     self.db.displayMode=mode;self.db.trackerHidden=false
     if mode=="window" then self.db.hidden=false end
     self.integration.nextTry=0;self:InvalidateTrackerIntegration()
     if self.window then self.window:SetShown(mode=="window") end
     self:TrackerIntegrationTick()
+    if self.SyncSettings then self:SyncSettings() end
 end
 function A:RefreshParty()
     self:ReadOwn();self:Request();self:ScanUnit("target");self:RefreshKnown();self:StartSweep()
@@ -323,8 +514,13 @@ function A:ApplyPendingTrackerRestore()
     if not native then return end
     if s.expandAfterCombat then
         self.db.trackerHidden=false;self.db.trackerCollapsed=false
-        if invoke(native.IsCollapsed,native)==true and type(native.SetCollapsed)=="function" then
-            local ok,err=pcall(native.SetCollapsed,native,false)
+        if self:IsNativeTrackerCollapsed(native) and type(native.SetCollapsed)=="function" then
+            local ok,err=pcall(function()
+                if s.preparedNative==native then self:SetPreparedTrackerCollapsed(false) else
+                    local success,reason=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
+                    if not success or invoke(native.IsCollapsed,native)==true then error(reason or "native tracker did not expand") end
+                end
+            end)
             if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "queued tracker expansion failed";return end
         end
     end
@@ -339,9 +535,13 @@ function A:TogglePartyTracker()
     end
     if self.db.displayMode=="blizzard" and not combat() then
         local native=ObjectiveTrackerFrame
-        if native and invoke(native.IsCollapsed,native)==true then
+        if native and self:IsNativeTrackerCollapsed(native) then
             self:SetViewShown(true)
-            if type(native.SetCollapsed)=="function" then native:SetCollapsed(false) end
+            if self.integration.preparedNative==native then self:SetPreparedTrackerCollapsed(false)
+            elseif type(native.SetCollapsed)=="function" then
+                local ok,err=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
+                if not ok then self.integration.lastError=err end
+            end
             self.integration.restoreNativeLayout=true
             self:InvalidateTrackerIntegration();self:TrackerIntegrationTick()
             return
@@ -380,8 +580,7 @@ end
 function A:TrackerEntryClick(row,button)
     if row.kind=="quest" then self.shareProbeSelected=row.id end
     if IsShiftKeyDown and IsShiftKeyDown() then
-        if not combat() then self:RefreshParty() end
-        return
+        self:RefreshParty();return
     end
     if row.kind=="member" then
         self.db.trackerMembersClosed=self.db.trackerMembersClosed or {}
@@ -391,8 +590,11 @@ function A:TrackerEntryClick(row,button)
         self.db.trackerOwnProgressExpanded[row.key]=not self.db.trackerOwnProgressExpanded[row.key]
     elseif row.kind=="group" then self.db.trackerGroupsClosed[row.key]=not self.db.trackerGroupsClosed[row.key]
     elseif row.kind=="quest" then
-        if not combat() and button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
-            QuestMapFrame_OpenToQuestDetails(row.id);return
+        if button=="RightButton" and self.own[row.id] and type(QuestMapFrame_OpenToQuestDetails)=="function" then
+            if combat() then
+                self:CombatControlNotice("Open quest details after combat.")
+            else QuestMapFrame_OpenToQuestDetails(row.id) end
+            return
         end
         self.db.questExpanded[row.key]=not self.db.questExpanded[row.key]
     end
@@ -419,7 +621,11 @@ function A:RenderCombatTrackerSidebar()
     if ok then self.integration.lastError=nil
     else
         self.integration.lastError=self.public(err,"string") and err:sub(1,180) or "combat expansion failed"
-        print("Party Quests Forever: combat expansion failed; layout will retry after combat. /spq report for details.")
+        local now=GetTime()
+        if not self.integration.combatNoticeAt or now-self.integration.combatNoticeAt>=10 then
+            self.integration.combatNoticeAt=now
+            print("Party Quests Forever: combat display unavailable; /spq report includes the failed stage.")
+        end
     end
     return ok
 end
@@ -478,7 +684,12 @@ function A:ResizeCombatTrackerBackground()
     local native=self.integration.nativeBackdrop and bounds.native
     local party=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     local background=f.trackerBackground
-    if self.integration.nativeCollapsed or (not native and not party) then background:Hide();return end
+    local collapsed=self.integration.nativeCollapsed
+    if ObjectiveTrackerFrame and not self.integration.preparedNative then
+        local ok,current=pcall(readNativeCollapse,ObjectiveTrackerFrame)
+        if ok and self.public(current,"boolean") then collapsed=current;self.integration.nativeCollapsed=collapsed end
+    end
+    if collapsed or (not native and not party) then background:Hide();return end
     local left,right,top,bottom=0,f:GetWidth(),0,f:GetHeight()
     if native then
         if party then
@@ -612,7 +823,7 @@ function A:UpdateTrackerQuestFocus()
     end
 end
 function A:RenderTrackerSidebar(entries,memberCount)
-    local f=self.sidebar;local width=f:GetWidth()-8
+    local f=self.sidebar;local width=math.max(1,f:GetWidth()-22)
     f.child:SetWidth(width)
     local used,y=0,0
     local function row(label,role,color,indent,entry,liveQuestKey,liveLine)
@@ -624,7 +835,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
             -- Allocate once with the pooled row; focus changes only toggle art.
             b.focusFill=b:CreateTexture(nil,"BACKGROUND",nil,1)
             b.focusFill:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
-            b.focusFill:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",1,-1)
+            b.focusFill:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",-7,-1)
             b.focusFill:SetColorTexture(1,0.76,0.08,0.18);b.focusFill:Hide()
             b.focusAccent=b:CreateTexture(nil,"BACKGROUND",nil,2)
             b.focusAccent:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
@@ -656,7 +867,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
         b:EnableMouse(entry~=nil);b:Show();y=y+height+2
     end
     if memberCount==0 then row("Join a party to see available quests.","line",nativeColor("Normal"),0)
-    elseif #entries==0 then row("No party quests discovered yet. Try Refresh or Scan in Settings.","line",nativeColor("Normal"),0)
+    elseif #entries==0 then row("No party quests discovered yet. Try Refresh in Settings.","line",nativeColor("Normal"),0)
     else
         local previousSource,previousMember
         for _,e in ipairs(entries) do
@@ -684,7 +895,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
             else
                 row((e.open and "- " or "+ ")..e.title,"line",nativeColor("Header"),20,e,e.key,0)
                 if e.open then
-                    for _,r in ipairs(e.requirements or {}) do row(r.text,"line",nativeColor("Normal"),34) end
+                    for _,r in ipairs(e.requirements or {}) do row(A:DisplayText(r.text),"line",nativeColor("Normal"),34) end
                     for i,line in ipairs(e.lines or {}) do
                         local kind=e.lineKinds and e.lineKinds[i]
                         local player=kind=="player" or kind=="ownPlayer"
@@ -710,7 +921,7 @@ function A:SizeTrackerSidebar()
     local padding=44+(f.headerOffset or 38)
     local overflow=content+padding>limit
     local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
-    f.scroll:SetSize(f:GetWidth()-6,math.max(1,viewport))
+    f.scroll:SetSize(math.max(1,f:GetWidth()-14),math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
     f.hint:SetShown(overflow and not f.viewCollapsed)
     f:SetHeight(f.viewCollapsed and (padding-14) or math.min(limit,content+padding+(overflow and 14 or 0)))
@@ -729,6 +940,44 @@ function A:RestoreJoinedTrackerHeader()
     end
     self.integration.joinedHeader=nil
 end
+-- Native-only headers retain an atlas inset after the party column closes.
+-- Extend just the left artwork edge; preserve native title/control positions
+-- and restore the exact original texture anchors when integration ends.
+function A:FitNativeTrackerHeader(tracker,enabled)
+    local s=self.integration
+    local header=self.readable(tracker) and self.readable(tracker.Header) and tracker.Header
+    local background=header and self.readable(header.Background) and header.Background
+    if enabled and not background then return end
+    local saved=s.nativeHeaderFit
+    if saved and (not enabled or saved.region~=background) then
+        saved.region:ClearAllPoints()
+        if saved.resized then saved.region:SetWidth(saved.width) end
+        for _,point in ipairs(saved.points) do saved.region:SetPoint(unpack(point)) end
+        s.nativeHeaderFit=nil;saved=nil
+    end
+    if not enabled or not background or saved then return end
+    local points,left,right={},false,false
+    for i=1,background:GetNumPoints() do
+        local point={background:GetPoint(i)}
+        if not self.public(point[1],"string") or not self.public(point[4] or 0,"number") then return end
+        left=left or point[1]:find("LEFT",1,true)~=nil
+        right=right or point[1]:find("RIGHT",1,true)~=nil
+        points[#points+1]=point
+    end
+    if #points==0 then return end
+    local width=invoke(background.GetWidth,background)
+    if not (left and right) and (not self.public(width,"number") or width~=width or width<=0 or width==math.huge) then return end
+    saved={region=background,points=points,width=width,resized=not (left and right)}
+    background:ClearAllPoints()
+    if saved.resized then background:SetWidth(width+24) end
+    for _,point in ipairs(points) do
+        local adjusted={unpack(point)}
+        if point[1]:find("LEFT",1,true) then adjusted[4]=(point[4] or 0)-24
+        elseif not right then adjusted[4]=(point[4] or 0)-12 end
+        background:SetPoint(unpack(adjusted))
+    end
+    s.nativeHeaderFit=saved
+end
 function A:SyncCombatTrackerHeader(joined)
     local s=self.integration
     if not joined then
@@ -737,7 +986,10 @@ function A:SyncCombatTrackerHeader(joined)
             s.combatJoinedHeader=s.joinedHeader
             self:RestoreJoinedTrackerHeader()
         end
+        local state=s.combatJoinedHeader
+        if state then self:FitNativeTrackerHeader({Header=state.header},true) end
     elseif not s.joinedHeader and s.combatJoinedHeader then
+        self:FitNativeTrackerHeader(nil,false)
         local state=s.combatJoinedHeader
         for _,item in ipairs(state.items) do
             item.region:ClearAllPoints()
@@ -749,7 +1001,7 @@ function A:SyncCombatTrackerHeader(joined)
     end
 end
 function A:JoinTrackerHeader(tracker,enabled)
-    if invoke(tracker.IsCollapsed,tracker)==true then
+    if self:IsNativeTrackerCollapsed(tracker) then
         self:SyncCombatTrackerHeader(false)
         return
     end
@@ -758,6 +1010,7 @@ function A:JoinTrackerHeader(tracker,enabled)
     local side=self.db.trackerSide=="right" and "right" or "left"
     local saved=self.integration.joinedHeader
     if saved and (not enabled or saved.header~=header or saved.side~=side) then self:RestoreJoinedTrackerHeader();saved=nil end
+    self:FitNativeTrackerHeader(tracker,not enabled)
     if not enabled or not header or saved then return end
     local background=self.readable(header.Background) and header.Background or nil
     local title=self.readable(header.Text) and header.Text or nil
@@ -780,7 +1033,7 @@ function A:JoinTrackerHeader(tracker,enabled)
         state.title=title;state.background=background;state.left=left
     end
     self.integration.joinedHeader=state
-    self:PositionJoinedTrackerTitle(invoke(tracker.IsCollapsed,tracker)==true)
+    self:PositionJoinedTrackerTitle(self:IsNativeTrackerCollapsed(tracker))
     for _,item in ipairs(state.items) do
         item.joinedPoints={}
         for i=1,item.region:GetNumPoints() do item.joinedPoints[#item.joinedPoints+1]={item.region:GetPoint(i)} end
@@ -826,6 +1079,7 @@ end
 -- Only visual regions are suppressed; native quest layout/update code is untouched.
 function A:RestoreTrackerJoinVisuals()
     local s=self.integration
+    self:FitNativeTrackerHeader(nil,false)
     local saved=s.nativeBackdrop;s.nativeBackdrop=nil
     if saved and saved.shown then saved.frame:Show() end
     local buttons=s.moduleButtons;s.moduleButtons=nil
@@ -837,6 +1091,11 @@ function A:RestoreTrackerJoinVisuals()
     if self.sidebar and self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
 end
 function A:SetJoinedCollapseVisual(collapsed)
+    if self.integration.preparingCollapse then return end
+    if not combat() and self.integration.preparedNative then
+        if self.integration.preparedCollapsed and not collapsed then self.integration.preparedOpening=true end
+        self.integration.preparedCollapsed=not not collapsed
+    end
     local wasCollapsed=self.integration.nativeCollapsed
     if wasCollapsed and not collapsed then self.integration.restoreNativeLayout=true end
     self.integration.nativeCollapsed=not not collapsed
@@ -878,6 +1137,10 @@ function A:PrepareTrackerJoinVisuals(tracker)
         local header=self.readable(module.Header) and module.Header
         local button=header and self.readable(header.MinimizeButton) and header.MinimizeButton
         if button and not s.moduleButtons[button] then
+            if invoke(module.IsCollapsed,module)==true then
+                local ok=self:CallNativeTrackerMethod(module,"SetCollapsed",false)
+                if not ok or invoke(module.IsCollapsed,module)==true then return end
+            end
             s.moduleButtons[button]={shown=button:IsShown()}
             if not s.moduleButtonHooks[button] then
                 button:HookScript("OnShow",function(frame)
@@ -886,8 +1149,6 @@ function A:PrepareTrackerJoinVisuals(tracker)
                 end)
                 s.moduleButtonHooks[button]=true
             end
-            -- An independently collapsed module must not stay stuck behind a hidden button.
-            if invoke(module.IsCollapsed,module)==true then invoke(module.SetCollapsed,module,false) end
         end
         if button then button:Hide() end
     end
@@ -943,7 +1204,7 @@ function A:SyncTrackerBackgroundJoin(tracker,nativeVisible)
     background:SetFrameStrata(invoke(tracker.GetFrameStrata,tracker) or "LOW")
     background:SetFrameLevel(math.max(0,tracker:GetFrameLevel()-1))
     if background.art then background.art:SetFrameLevel(background:GetFrameLevel()) end
-    local collapsed=nativeVisible and invoke(tracker.IsCollapsed,tracker)==true
+    local collapsed=nativeVisible and self:IsNativeTrackerCollapsed(tracker)
     self.integration.nativeCollapsed=collapsed
     f.combatBackgroundBounds={native=nativeBounds}
     f.joinedExpandedHeight=bottom-top
@@ -1019,6 +1280,7 @@ function A:TrackerSidebarHeightLimit(tracker)
 end
 function A:TrackerIntegrationTick()
     if not self.db then return end
+    if self.integration.pendingDisplayMode and not combat() then self:ApplyPendingDisplayMode();return end
     if self:SyncCombatAutoHide() then return end
     self:ApplyPendingTrackerRestore()
     self:RestoreNativeExpandedLayout(ObjectiveTrackerFrame)
@@ -1082,7 +1344,7 @@ function A:TrackerIntegrationTick()
     self:SizeTrackerSidebar()
     local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     self:JoinTrackerHeader(tracker,visible and nativeVisible)
-    local allCollapsed=nativeVisible and invoke(tracker.IsCollapsed,tracker)==true
+    local allCollapsed=nativeVisible and self:IsNativeTrackerCollapsed(tracker)
     f:SetShown(visible and not allCollapsed)
     self.window:Hide();s.attached=true
     s.status=nativeVisible and ("sidebar "..side) or "party-only tracker; native tracker empty/hidden"

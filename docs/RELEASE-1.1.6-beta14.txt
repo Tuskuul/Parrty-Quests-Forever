@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.6-beta14
+
+- Offered quests now show Not eligible when the requester fails known acceptance requirements.
+- Hover or click an unavailable quest to see the reason, including required level, prerequisites or a full quest log.
+- Ineligible requests are stopped before contacting the owner. Unverified requirements are identified separately.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

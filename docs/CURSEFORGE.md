@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.5_CurseForge_Release.zip
+- **Release file:** PartyQuestsForever_1.1.6.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -53,7 +53,7 @@ WIM sending/receiving and Battle.net transfers have passed user testing. Not eve
 
 Existing **Simply Party Quests** users retain their settings. Keep the addon folder named **SimplyPartyQuests**; only its displayed name changes. Replace files and `/reload`. A first installation may need a full client restart. Disable the obsolete PoofPartyQuests addon if it is still installed.
 
-Settings includes a diagnostic report; the shared-log viewer also has **Transfer diagnostics**. Review names and quest details before sharing reports. Include addon/client versions and the affected quest. Guarded Blizzard tracker refresh defaults on for new/unset preferences. It checks confirmed count mismatches outside combat and pauses after blank or unverifiable redraws. Explicit off settings remain saved.
+Settings > Show troubleshooting includes a diagnostic report; the shared-log viewer also has **Transfer diagnostics**. Review names and quest details before sharing reports. Include addon/client versions and the affected quest. Guarded Blizzard tracker refresh defaults on for new/unset preferences. It checks confirmed count mismatches outside combat and pauses after blank or unverifiable redraws. Explicit off settings remain saved.
 
 Built for **WoW Forever 1.60.1**. Retail, other Classic clients and raid tracking are not supported.
 
@@ -63,23 +63,18 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.5
+Party Quests Forever 1.1.6
 
-- Highlights the focused quest with a soft gold background in the party tracker,
-  including during combat.
-- Added Collapse tracker during combat in Display settings, enabled by default.
-  Keeps the compact header visible and restores your previous view afterward.
-- Expanding the collapsed tracker during combat shows a warning and queues
-  reopening until combat ends, without switching to the separate window.
-- Fixed blank Blizzard quest contents when reopening or restoring the tracker.
-- Added green [Ready] tags to combined quest headings when you and every listed
-  party member are ready for turn-in. Unknown or mixed progress stays unmarked.
-- Fixed the expanded background overlapping Quest Timers in Blizzard-only and
-  combined tracker views.
+- Added Share to chat, Copy Share link and Import for full or selected quest logs.
+- Added Open shareable: offer quests your party members are not on, then let them browse and request a share. Both players need the addon.
+- Quest offers show known eligibility problems, including level requirements, prerequisites and a full quest log.
+- Share to chat now offers Party, Guild, Say, Yell, joined channels and the current chat or whisper. Fixed copied Battle.net links.
+- Restyled sharing windows with parchment, adjustable brightness and clearer quest difficulty colors. Improved Copy/Import fields and scrolling.
+- Settings opens in a movable window alongside sharing windows, the map and other game panels.
+- Improved party progress updates, completion detection and recovery when quest data is temporarily unavailable.
+- Improved tracker collapse, combat reopening, restored visibility, selected-quest highlighting and window spacing.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
-Discovery, membership validation and guarded native repair remain deferred
-until combat ends.
 
 ## Submission references checked 2026-11-13
 

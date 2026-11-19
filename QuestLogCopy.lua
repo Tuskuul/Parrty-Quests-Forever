@@ -1,0 +1,168 @@
+local _, A = ...
+
+local function tokenOK(s)
+    return A.public(s,"string") and #s<=48 and s:match("^[%x]+%-%x+%-%x+$")~=nil
+end
+local function ownerOK(s)
+    return A.public(s,"string") and #s>0 and #s<=80
+        and not s:find("[%z\1-\31\127|]") and s:find("%S")~=nil
+end
+local function hex(s) return (s:gsub(".",function(c) return string.format("%02x",c:byte()) end)) end
+local function unhex(s)
+    if #s==0 or #s>160 or #s%2~=0 or s:find("[^%x]") then return nil end
+    return (s:gsub("%x%x",function(c) return string.char(tonumber(c,16)) end))
+end
+local function escaped(s) return (s:gsub("|","||")) end
+
+function A:ParseCopiedQuestLogLink(text)
+    if not self.public(text,"string") or #text>255 then return nil end
+    text=text:match("^%s*(.-)%s*$")
+    local kind,token,name=text:match("^%[Party Quests (%a+):([%x%-]+):([%x]+)%]$")
+    if kind~="Log" and kind~="Offer" then return nil end
+    if not tokenOK(token) or not name then return nil end
+    local owner=unhex(name)
+    if not ownerOK(owner) then return nil end
+    return {token=token,owner=owner,offer=kind=="Offer"}
+end
+
+function A:CreateCopiedQuestLogLink(questIDs,offer)
+    if not self:InitQuestLogLinks() or not self.questLinkComms then
+        return nil,"Quest-log communication is unavailable in this client."
+    end
+    local token,snapshot=self:CreateQuestLogSnapshot(questIDs,offer)
+    if not token then return nil,snapshot end
+    if not ownerOK(snapshot.owner) then return nil,"Your character name is unavailable." end
+    -- Carry the original owner, rather than treating whoever pastes/forwards
+    -- the marker as the publisher. Remains within normal WoW chat length.
+    local marker="[Party Quests "..(offer and "Offer:" or "Log:")..token..":"..hex(snapshot.owner).."]"
+    if #marker>255 then return nil,"The link is too long for WoW chat." end
+    snapshot.published=true
+    return marker
+end
+
+function A:RegisterCopiedQuestLogLink(ref)
+    self:PruneQuestLinks()
+    local s=self:QuestLinkState();local previous=s.observed[ref.token]
+    if previous then
+        local owner=previous.publisher or previous.owner
+        local same=owner:lower()==ref.owner:lower()
+        if not same and previous.accountID and self.QuestLogCharacterOwnerMatches then
+            same=self:QuestLogCharacterOwnerMatches(ref.owner,owner,previous.realm)
+        end
+        if not same or (previous.offer==true)~=(ref.offer==true) then return false end
+    end
+    local mine=s.published[ref.token]
+    if mine and (mine.owner:lower()~=ref.owner:lower() or (mine.offer==true)~=(ref.offer==true)) then return false end
+    -- Repeated observation must not replace an existing Battle.net route.
+    if previous and previous.accountID then return true end
+    s.observed[ref.token]={owner=ref.owner,offer=ref.offer==true,localTime=GetTime()}
+    return true
+end
+
+function A:ObserveCopiedQuestLogLinks(message)
+    return (message:gsub("%[Party Quests (%a+):([%x%-]+):([%x]+)%]",function(kind,token,name)
+        local ref=self:ParseCopiedQuestLogLink("[Party Quests "..kind..":"..token..":"..name.."]")
+        if not ref or not self:RegisterCopiedQuestLogLink(ref) then return nil end
+        return "|cffffff00|Haddon:SPQLOG:"..token.."|h["..escaped(ref.owner)..(ref.offer and "'s Quest Offers]|h|r" or "'s Quest Log]|h|r")
+    end))
+end
+
+function A:ImportCopiedQuestLogLink(text)
+    local ref=self:ParseCopiedQuestLogLink(text)
+    if not ref then return nil,"Paste the complete in-game string from Copy Share link." end
+    if not self:InitQuestLogLinks() or not self.questLinkComms then
+        return nil,"Quest-log communication is unavailable in this client."
+    end
+    if not self:RegisterCopiedQuestLogLink(ref) then return nil,"This token belongs to a different cached sender." end
+    return ref.token
+end
+
+function A:ShowQuestLogTransfer(mode,questIDs,offer)
+    local text
+    if mode=="copy" then
+        local err;text,err=self:CreateCopiedQuestLogLink(questIDs,offer)
+        if not text then self.questSharePicker.status:SetText(err);self.questSharePicker.status:Show();return end
+    end
+    if not self.questLogTransfer then
+        local f=CreateFrame("Frame","SimplyPartyQuestsShareTransfer",UIParent,"BasicFrameTemplateWithInset")
+        self.questLogTransfer=f
+        self:StyleQuestDialog(f)
+        if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsShareTransfer" end
+        f:SetSize(540,280);f:SetPoint("CENTER");f:SetFrameStrata("MEDIUM");f:EnableMouse(true)
+        f:SetMovable(true);f:RegisterForDrag("LeftButton");f:SetClampedToScreen(true)
+        f:SetScript("OnDragStart",function() f:StartMoving() end)
+        f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
+        f.title=self.readable(f.TitleText) and f.TitleText or f:CreateFontString(nil,"OVERLAY","GameFontNormal")
+        if not self.readable(f.TitleText) then f.title:SetPoint("TOPLEFT",16,-8) end
+        f.help=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        f.help:SetPoint("TOPLEFT",16,-36);f.help:SetWidth(500);f.help:SetJustifyH("LEFT")
+        f.fieldLabel=f:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
+        f.fieldLabel:SetPoint("TOPLEFT",16,-84)
+        f.inputBackground=CreateFrame("Frame",nil,f,"BackdropTemplate")
+        f.inputBackground:SetPoint("TOPLEFT",16,-104);f.inputBackground:SetPoint("BOTTOMRIGHT",-16,78)
+        f.inputBackground:SetBackdrop({bgFile="Interface\\ChatFrame\\ChatFrameBackground",
+            edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,
+            insets={left=4,right=4,top=4,bottom=4}})
+        f.inputBackground:SetBackdropColor(0.97,0.90,0.72,1)
+        f.inputBackground:SetBackdropBorderColor(0.39,0.27,0.12,1)
+        f.scroll=CreateFrame("ScrollFrame",nil,f.inputBackground,"UIPanelScrollFrameTemplate")
+        f.scroll:SetPoint("TOPLEFT",12,-10);f.scroll:SetPoint("BOTTOMRIGHT",-30,10)
+        f.edit=CreateFrame("EditBox",nil,f.scroll)
+        f.edit:SetMultiLine(true);f.edit:SetAutoFocus(false);f.edit:SetFontObject(ChatFontNormal or GameFontHighlightSmall)
+        f.edit:SetWidth(466);f.edit:SetHeight(80);f.edit:SetMaxLetters(512)
+        f.edit:SetTextInsets(4,4,4,4);self:StyleQuestDialogText(f.edit,"input")
+        f.scroll:SetScrollChild(f.edit)
+        f.placeholder=f.inputBackground:CreateFontString(nil,"OVERLAY","GameFontDisableSmall")
+        f.placeholder:SetPoint("TOPLEFT",16,-14);f.placeholder:SetText("Paste your share link here...")
+        local function focusInput()
+            f.edit:SetFocus()
+            if f.mode=="copy" then f.edit:HighlightText() end
+        end
+        f.inputBackground:EnableMouse(true);f.inputBackground:SetScript("OnMouseDown",focusInput)
+        f.scroll:SetScript("OnMouseDown",focusInput)
+        f.edit:SetScript("OnEscapePressed",function() f:Hide() end)
+        f.edit:SetScript("OnTextChanged",function(box)
+            if f.mode=="copy" and box:GetText()~=f.copyText then box:SetText(f.copyText);return end
+            f.placeholder:SetShown(f.mode=="import" and box:GetText()=="")
+        end)
+        f.status=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        f.status:SetPoint("BOTTOMLEFT",16,50);f.status:SetWidth(500);f.status:SetJustifyH("LEFT")
+        self:StyleQuestDialogText(f.help,"body");self:StyleQuestDialogText(f.fieldLabel,"heading")
+        self:StyleQuestDialogText(f.placeholder,"inputMuted");self:StyleQuestDialogText(f.status,"body")
+        f.submit=CreateFrame("Button",nil,f,"UIPanelButtonTemplate")
+        f.submit:SetSize(120,24);f.submit:SetPoint("BOTTOMLEFT",16,16);f.submit:SetText("Import")
+        f.submit:SetScript("OnClick",function()
+            local token,err=A:ImportCopiedQuestLogLink(f.edit:GetText())
+            if not token then f.status:SetText(err);return end
+            f.returnToPicker=nil;f:Hide()
+            A:FinishQuestLogSharePicker()
+            A:OpenQuestLogLink(token)
+        end)
+        f.close=CreateFrame("Button",nil,f,"UIPanelButtonTemplate")
+        f.close:SetSize(100,24);f.close:SetPoint("BOTTOMRIGHT",-16,16)
+        f.close:SetScript("OnClick",function() f:Hide() end)
+        f:SetScript("OnHide",function()
+            f.edit:ClearFocus();f.mode=nil;f.copyText=nil;f.edit:SetText("")
+            local picker=A.questSharePicker
+            if picker and picker.transferActive then
+                picker.transferActive=nil
+                if f.returnToPicker then picker:Show();picker:Raise() end
+            end
+            f.returnToPicker=nil
+        end)
+    end
+    local f=self.questLogTransfer
+    f.mode=mode;f.copyText=text;f.title:SetText(mode=="copy" and "Copy Share link" or "Import shared quests")
+    f.fieldLabel:SetText(mode=="copy" and "Share link - Ctrl+C to copy" or "Share link - Ctrl+V to paste")
+    f.help:SetText(mode=="copy" and "Press Ctrl+C to copy the selected link, then paste it into WoW chat or a Battle.net whisper. Recipients need this beta or newer. The owner must stay online; links last 15 minutes."
+        or "Paste a complete in-game string from Copy Share link with Ctrl+V, then click Import. The owner's addon supplies the snapshot; the owner must be online and the link still available.")
+    f.status:SetText(mode=="copy" and (offer and "Quest offers can only be requested by current party members." or "Copying does not change or send your current chat draft.") or "")
+    f.submit:SetShown(mode=="import");f.close:SetText(mode=="copy" and "Done" or "Cancel")
+    f.edit:SetText(text or "");f.scroll:SetVerticalScroll(0)
+    local picker=self.questSharePicker
+    if picker then
+        picker.transferActive=true;f.returnToPicker=true;picker:Hide()
+    end
+    f:Show();f:Raise();f.edit:SetFocus()
+    if mode=="copy" then f.edit:HighlightText() end
+end

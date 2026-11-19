@@ -1,0 +1,12 @@
+Party Quests Forever 1.1.6
+
+- Added Share to chat, Copy Share link and Import for full or selected quest logs.
+- Added Open shareable: offer quests your party members are not on, then let them browse and request a share. Both players need the addon.
+- Quest offers show known eligibility problems, including level requirements, prerequisites and a full quest log.
+- Share to chat now offers Party, Guild, Say, Yell, joined channels and the current chat or whisper. Fixed copied Battle.net links.
+- Restyled sharing windows with parchment, adjustable brightness and clearer quest difficulty colors. Improved Copy/Import fields and scrolling.
+- Settings opens in a movable window alongside sharing windows, the map and other game panels.
+- Improved party progress updates, completion detection and recovery when quest data is temporarily unavailable.
+- Improved tracker collapse, combat reopening, restored visibility, selected-quest highlighting and window spacing.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

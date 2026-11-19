@@ -1,0 +1,8 @@
+Party Quests Forever 1.1.6-beta7
+
+- Updated the main +/- button's combat click handling to use a dedicated secure
+  control, matching the working Party Quests reopening path.
+- Leaves the original Blizzard button in control outside combat and when combat
+  auto-collapse is disabled.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.

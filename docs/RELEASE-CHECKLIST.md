@@ -1,12 +1,7 @@
-# Party Quests Forever 1.1.5 release record
+# Party Quests Forever 1.1.6 release record
 
-- Promoted from the exact 1.1.5-beta6 source after user approval.
-- User confirmed the timer fix, repeated combat checks and approved promotion.
-- Runtime changes are limited to the version string in diagnostics; tracker code
-  is unchanged from the tested beta6 build.
-- Version metadata, README files, diagnostics and submission copy use 1.1.5.
-- Release notes cover all changes since stable 1.1.4.
-- All 22 root Lua files parse; all 15 regression suites pass.
-- Install folder remains SimplyPartyQuests; saved settings and attribution remain.
-- CurseForge publication is a separate manual upload; this record does not claim
-  the package has been submitted or published.
+Promoted from beta20 (e3044d406c05cd6407d06c6eb4f2bc72896ab7e6) with runtime changes limited to the diagnostic version. Stable notes summarize changes since 1.1.5. Optional Questie compatibility remains on the 1.1.7 development line.
+
+User approved stable promotion after reporting counters working properly. The latest live report was alpha6 (shared tracker fixes), client 1.60.1 build 70959, Questie 12.11.0 maps-only, party of four: three combat exits, no recorded blocked actions, no cleanup/processing errors and visible native counters matching local quest data. This does not prove every addon combination or restricted path is taint-free. Earlier no-Questie combat testing was also reported working.
+
+Validation: full source syntax/Lua regression suites and automatic-tag tests. TOC, diagnostics, README, manual package changelog and release notes agree. Main auto-tagging invokes CurseForge's existing packaging webhook; site approval is separate.

@@ -19,11 +19,11 @@ local function age(t)
     return n<60 and (n.."s ago") or (math.floor(n/60).."m ago")
 end
 local function objective(o, remote)
-    local text=o.text or ""
+    local text=A:DisplayText(o.text or "")
     if A:IsGenericObjective(text) then
         text="Unnamed quest step (see requirements)"
     end
-    if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." ("..(o.done or 0).."/"..o.total..")" end
+    if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." ("..(o.done or "?").."/"..o.total..")" end
     local color=o.total and o.done and o.total>0 and o.done>=o.total and "|cff82ce9a" or "|cffb8c1ce"
     local suffix=""
     if remote then
@@ -181,7 +181,7 @@ function A:Render()
             questRows(combined,"all",8,function(q)
                 local key="all:"..q.id
                 local open=questExpansion[key]
-                local hq=textRow((open and "[-] " or "[+] ")..q.title.." |cff96a0af["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title).." |cff96a0af["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements
@@ -191,7 +191,7 @@ function A:Render()
                     end
                     if requirements then
                         textRow("Quest requirements",11,{0.66,0.72,0.8},22)
-                        for _,r in ipairs(requirements) do textRow(r.text,12,nil,22) end
+                        for _,r in ipairs(requirements) do textRow(self:DisplayText(r.text),12,nil,22) end
                     end
                     local function progress(name,quest,remote,m)
                         local c=m and RAID_CLASS_COLORS and RAID_CLASS_COLORS[m.class]
@@ -238,7 +238,7 @@ function A:Render()
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..q.title..(self:IsQuestReady(q) and " |cff00ff00[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title)..(self:IsQuestReady(q) and " |cff00ff00[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()
@@ -248,7 +248,7 @@ function A:Render()
                     if questOpen then
                         if q.requirements and #q.requirements>0 then
                             textRow("Quest requirements",11,{0.66,0.72,0.8},32)
-                            for _,r in ipairs(q.requirements) do textRow(r.text,12,{0.73,0.78,0.84},32) end
+                            for _,r in ipairs(q.requirements) do textRow(self:DisplayText(r.text),12,{0.73,0.78,0.84},32) end
                         elseif #q.objectives==0 then
                             textRow("Requirements not available yet.",11,{0.55,0.6,0.68},32)
                         end
@@ -312,7 +312,7 @@ function A:InitUI()
     self.collapse=button(bar,"-",26,function() self:SetCollapsed(not self.db.collapsed) end);self.collapse:SetPoint("RIGHT",-8,0)
     self.settingsButton=button(bar,"Settings",74,function() self:OpenSettings() end);self.settingsButton:SetPoint("RIGHT",self.collapse,"LEFT",-6,0)
     local body=CreateFrame("Frame",nil,w);self.body=body;body:SetPoint("TOPLEFT",0,-34);body:SetPoint("BOTTOMRIGHT")
-    local refresh=button(body,"Refresh",76,function() if not self.demo then self:ReadOwn();self:Request();self:ScanUnit("target");self:RefreshKnown();self:StartSweep() end end);refresh:SetPoint("TOPLEFT",12,-5)
+    local refresh=button(body,"Refresh",76,function() if not self.demo then self:RefreshParty() end end);refresh:SetPoint("TOPLEFT",12,-5)
     self.combineButton=button(body,"",240,function() self:SetCombineShared(not self.db.combineShared) end);self.combineButton:SetPoint("LEFT",refresh,"RIGHT",10,0)
     self.zoneButton=button(body,"",160,function() self:SetGroupByZone(not self.db.groupByZone) end);self.zoneButton:SetPoint("TOPLEFT",12,-32)
     self.trackerButton=button(body,"Dock beside tracker",164,function() self:SetDisplayMode("blizzard") end);self.trackerButton:SetPoint("LEFT",self.zoneButton,"RIGHT",8,0)
@@ -370,7 +370,7 @@ SlashCmdList.SIMPLYPARTYQUESTS=function(msg)
         for _,m in pairs(A.members) do if not m.syncedAt then m.quests={} end end;A:Render()
     elseif msg=="lock" then A.db.locked=not A.db.locked;print("Party Quests Forever: dragging "..(A.db.locked and "locked." or "unlocked."))
     elseif msg=="reset" then A:ResetWindowLayout(true)
-    elseif msg=="refresh" then A:ReadOwn();A:Request();A:ScanUnit("target");A:RefreshKnown();A:StartSweep()
+    elseif msg=="refresh" then A:RefreshParty()
     elseif msg=="scan" then A:StartSweep()
     elseif msg=="status" then print("Party Quests Forever: "..(A.sweepStatus or "Idle").."; "..A:SweepSummary())
         local s=A.liveStats
@@ -379,6 +379,7 @@ SlashCmdList.SIMPLYPARTYQUESTS=function(msg)
         A:SetDetailedDiagnostics(true,true)
         print("Party Quests Forever: diagnostic capture on. Use /spq report to copy it.")
     elseif msg=="diag off" then A:SetDetailedDiagnostics(false);print("Party Quests Forever: diagnostic capture off.")
+    elseif msg=="inspect" then A:StartShareApiProbe()
     elseif msg=="report" then A:ShowDiagnosticReport()
     elseif msg=="show" then A:SetViewShown(true)
     elseif msg=="hide" then A:SetViewShown(false)

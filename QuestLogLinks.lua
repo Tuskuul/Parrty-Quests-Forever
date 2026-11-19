@@ -28,8 +28,9 @@ function A:PruneQuestLinks()
     trim(s.published,6);trim(s.observed,80);trim(s.received,20)
     for who,at in pairs(s.lastRequest) do if now-at>60 then s.lastRequest[who]=nil end end
 end
-function A:CreateQuestLogSnapshot(questIDs)
+function A:CreateQuestLogSnapshot(questIDs,offer)
     self:ReadOwn();self:PruneQuestLinks()
+    if self.ownReadError then return nil,"Your quest log is temporarily unavailable. Try sharing again shortly." end
     if questIDs then
         local selected=0
         for id in pairs(questIDs) do
@@ -37,32 +38,43 @@ function A:CreateQuestLogSnapshot(questIDs)
         end
         if selected==0 then return nil,"None of the selected quests are still in your log. Choose your quests again." end
     end
+    if offer then
+        local allowed={}
+        for _,q in ipairs(self:GetShareableQuestOffers()) do allowed[q.id]=true end
+        if not questIDs or not next(questIDs) then return nil,"Choose at least one shareable quest." end
+        for id,selected in pairs(questIDs) do
+            if selected and not allowed[id] then return nil,"The party logs or shareable quests changed. Reopen Open shareable." end
+        end
+    end
     local s=self:QuestLinkState();s.serial=s.serial+1
     local name=ownName();if not self.public(name,"string") or name=="" then return nil,"Your character name is unavailable." end
     local hash=0;for i=1,#name do hash=(hash*33+name:byte(i))%4294967296 end
     local token=string.format("%x-%x-%x",math.floor(epoch()),hash,s.serial)
     local payload=self:Serialize(questIDs)
+    if offer then
+        -- Offers carry selected titles only, without objective or completion data.
+        local titles={"G\t1"}
+        for line in payload:gmatch("[^\n]+") do
+            local id,title=line:match("^Q\t(%d+)\t([^\t]*)\t[01N]$")
+            if id then titles[#titles+1]="Q\t"..id.."\t"..title.."\t0" end
+        end
+        payload=table.concat(titles,"\n")
+    end
     -- Preserve native completion flags for event/escort objectives without counts.
-    if C_QuestLog and C_QuestLog.GetQuestObjectives then
-        for id,q in pairs(self.own) do
-            if not questIDs or questIDs[id] then
-                local ok,objectives=pcall(C_QuestLog.GetQuestObjectives,id)
-                if ok and self.readable(objectives) then
-                    local index=0
-                    for _,o in ipairs(objectives) do
-                        if self.readable(o) and self.public(o.text,"string") then
-                            index=index+1
-                            if q.objectives[index] and q.objectives[index].text==o.text and self.public(o.finished,"boolean") then
-                                payload=payload.."\nF\t"..id.."\t"..index.."\t"..(o.finished and "1" or "0")
-                            end
-                        end
-                    end
+    for id,q in pairs(self.own) do
+        if not offer and (not questIDs or questIDs[id]) then
+            for index,o in ipairs(q.objectives) do
+                if self.public(o.finished,"boolean") then
+                    payload=payload.."\nF\t"..id.."\t"..index.."\t"..(o.finished and "1" or "0")
                 end
             end
         end
     end
     if #payload>MAX_BYTES then return nil,"The quest snapshot exceeds the sharing limit." end
-    local snapshot={payload=payload,owner=name,created=epoch(),localTime=GetTime(),published=false}
+    local snapshot={payload=payload,owner=name,created=epoch(),localTime=GetTime(),published=false,offer=offer==true}
+    if offer then
+        snapshot.offeredIDs={};for id,selected in pairs(questIDs) do if selected then snapshot.offeredIDs[id]=true end end
+    end
     s.published[token]=snapshot;self:QuestLinkTrace("snapshot-created",token.." bytes="..#payload);self:PruneQuestLinks()
     return token,snapshot
 end
@@ -88,7 +100,8 @@ function A:CaptureQuestLogChatDraft(box)
     end
     return draft
 end
-function A:InsertQuestLogChatLink(marker,draft)
+function A:InsertQuestLogChatLink(marker,draft,destination)
+    if destination and destination.kind~="CURRENT" then return self:InsertQuestLogDestination(marker,destination) end
     local util=ChatFrameUtil or {}
     local active=util.GetActiveWindow or ChatEdit_GetActiveWindow
     local last=util.GetLastActiveWindow or ChatEdit_GetLastActiveWindow
@@ -97,6 +110,12 @@ function A:InsertQuestLogChatLink(marker,draft)
     local box=(draft and draft.box) or (self.FocusedQuestLogCustomChatBox and self:FocusedQuestLogCustomChatBox()) or (active and active()) or (last and last()) or (choose and choose())
     draft=draft or self:CaptureQuestLogChatDraft(box)
     if box and type(box.Insert)=="function" then
+        if draft and type(box.GetText)=="function" then
+            local current=box:GetText()
+            if self.public(current,"string") and current~="" and current~=draft.text then
+                return false,"Your chat draft changed. Reopen Share to use the current draft."
+            end
+        end
         if draft and draft.window and (box.parentWindow~=draft.window or draft.window.theUser~=draft.recipient or draft.window.type~=draft.windowType) then
             return false -- A recycled WIM window must not redirect a captured draft.
         end
@@ -117,16 +136,28 @@ function A:InsertQuestLogChatLink(marker,draft)
     if type(ChatFrame_OpenChat)=="function" then ChatFrame_OpenChat(marker);return true end
     return false
 end
-function A:DraftQuestLogLink(draft,questIDs)
+function A:DraftQuestLogLink(draft,questIDs,offer,destination)
+    if destination and destination.kind~="CURRENT" then
+        local box,reason=self:QuestLogDestinationBox(destination)
+        if not box then print("Party Quests: "..reason);return false end
+    end
     draft=draft or self:CaptureQuestLogChatDraft()
     if not self:InitQuestLogLinks() then print("Party Quests: chat linking is unavailable in this client.");return false end
     if not self.questLinkComms then print("Party Quests: addon communication is unavailable.");return false end
+    if offer then
+        local marker,err=self:CreateCopiedQuestLogLink(questIDs,true)
+        if not marker then print("Party Quests: "..err);return false end
+        local inserted,reason=self:InsertQuestLogChatLink(marker,draft,destination)
+        if not inserted then print("Party Quests: "..(reason or "The chat entry box is unavailable.")) end
+        return inserted
+    end
     local token,err=self:CreateQuestLogSnapshot(questIDs)
     if not token then print("Party Quests: "..err);return false end
     -- A plain marker survives normal chat transport. Receiving copies turn it
     -- into Blizzard's local-only addon hyperlink without sending custom markup.
-    if not self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft) then
-        print("Party Quests: the chat entry box is unavailable.")
+    local inserted,reason=self:InsertQuestLogChatLink("[Party Quests Log:"..token.."]",draft,destination)
+    if not inserted then
+        print("Party Quests: "..(reason or "The chat entry box is unavailable."))
         return false
     end
     return true
@@ -134,6 +165,7 @@ end
 function A:ObserveQuestLogLink(message,sender,event,senderGUID)
     if not self.public(message,"string") or not self.public(sender,"string") or sender=="" then return message end
     local s=self:QuestLinkState();self:PruneQuestLinks()
+    if self.ObserveCopiedQuestLogLinks then message=self:ObserveCopiedQuestLogLinks(message) end
     return (message:gsub("%[Party Quests Log:([%x%-]+)%]",function(token)
         if not tokenOK(token) then return nil end
         local mine=s.published[token]
@@ -152,9 +184,12 @@ function A:ObserveQuestLogLink(message,sender,event,senderGUID)
 end
 function A:ValidateQuestLinkPayload(payload)
     if not self.public(payload,"string") or #payload>MAX_BYTES then return nil end
-    local lines,flags={},{}
+    local lines,flags,offer={},{},false
     for line in payload:gmatch("[^\n]+") do
-        if line:sub(1,2)=="F\t" then
+        if line=="G\t1" then
+            if offer then return nil end
+            offer=true
+        elseif line:sub(1,2)=="F\t" then
             local id,index,value=line:match("^F\t(%d+)\t(%d+)\t([01])$")
             if not id then return nil end
             id,index=tonumber(id),tonumber(index)
@@ -179,18 +214,21 @@ function A:ValidateQuestLinkPayload(payload)
             end
         end
     end
-    return quests
+    return quests,offer
 end
 function A:OpenQuestLogLink(token)
     if not tokenOK(token) then return end
     self:PruneQuestLinks();local s=self:QuestLinkState()
     local ref=s.observed[token]
     if not ref then self:ShowSharedQuestLog(token,nil,"This link is unavailable. Ask the player to post a fresh quest-log link.");return end
+    if ref.offer and not s.published[token] and not self:QuestOfferMember(ref.owner) then
+        self:ShowSharedQuestLog(token,nil,"Quest offers are available only while the owner is in your party.");return
+    end
     if ref.unavailable then self:ShowSharedQuestLog(token,nil,ref.unavailable);return end
     local mine=s.published[token]
     if mine and mine.published and key(mine.owner)==key(ref.owner) then
         local quests=self:ValidateQuestLinkPayload(mine.payload)
-        self:ShowSharedQuestLog(token,{owner=mine.owner,created=mine.created,quests=quests});return
+        self:ShowSharedQuestLog(token,{owner=mine.owner,created=mine.created,quests=quests,offer=mine.offer});return
     end
     local cached=s.received[token]
     if cached and key(cached.owner)==key(ref.owner) then self:ShowSharedQuestLog(token,cached);return end
@@ -206,6 +244,7 @@ function A:OpenQuestLogLink(token)
 end
 function A:ReceiveQuestLogLink(message,sender,channel)
     if channel~="WHISPER" or not self.public(message,"string") or #message>255 or not self.public(sender,"string") then return end
+    if self.ReceiveQuestOfferPacket and self:ReceiveQuestOfferPacket(message,sender) then return end
     local s=self:QuestLinkState();self:PruneQuestLinks()
     local token=message:match("^R|(.+)$")
     if token then
@@ -219,6 +258,9 @@ function A:ReceiveQuestLogLink(message,sender,channel)
         if not snapshot or not snapshot.published then
             self:QuestLinkTrace("request-unavailable",token.." state="..(snapshot and "not-published" or "missing-or-expired"))
             self:SendQuestLogPacket("E|"..token.."|expired",sender);return
+        end
+        if snapshot.offer and not self:QuestOfferMember(sender) then
+            self:SendQuestLogPacket("E|"..token.."|party",sender);return
         end
         local total=math.max(1,math.ceil(#snapshot.payload/CHUNK))
         if #s.outgoing+total>400 then self:SendQuestLogPacket("E|"..token.."|busy",sender);return end
@@ -251,13 +293,13 @@ function A:ReceiveQuestLogLink(message,sender,channel)
     self:QuestLinkTrace("part-received",token.." packet="..index.."/"..total)
     p.total,p.created=total,created;p.parts[index]=part
     for i=1,total do if p.parts[i]==nil then return end end
-    local quests=self:ValidateQuestLinkPayload(table.concat(p.parts))
+    local quests,offer=self:ValidateQuestLinkPayload(table.concat(p.parts))
     s.pending[token]=nil
-    if not quests then
+    if not quests or offer~=(s.observed[token] and s.observed[token].offer==true) then
         if self.sharedQuestLogToken==token then self:ShowSharedQuestLog(token,nil,"This quest-log snapshot is invalid or too large.") end
         return
     end
-    local snapshot={owner=p.owner,displayOwner=p.displayOwner,created=created,quests=quests,localTime=GetTime()}
+    local snapshot={owner=p.owner,displayOwner=p.displayOwner,created=created,quests=quests,offer=offer,localTime=GetTime()}
     self:QuestLinkTrace("snapshot-complete",token.." sender="..p.owner)
     s.received[token]=snapshot;self:PruneQuestLinks()
     if self.sharedQuestLogToken==token then self:ShowSharedQuestLog(token,snapshot) end
@@ -265,9 +307,20 @@ end
 function A:QuestLinkTransferTick()
     local s=self:QuestLinkState();local now=GetTime()
     if #s.outgoing>0 and now>=(s.nextSend or 0) then
-        local packet=table.remove(s.outgoing,1);local snapshot=s.published[packet.token]
-        if snapshot and now-snapshot.localTime<=TTL then self:SendQuestLogPacket(packet.message,packet.target) end
-        s.nextSend=now+0.25
+        local packet=s.outgoing[1];local snapshot=s.published[packet.token]
+        if not snapshot or now-snapshot.localTime>TTL then table.remove(s.outgoing,1)
+        elseif self:SendQuestLogPacket(packet.message,packet.target) then table.remove(s.outgoing,1)
+        else
+            packet.retries=(packet.retries or 0)+1
+            if packet.retries>=6 then
+                local kept={}
+                for _,other in ipairs(s.outgoing) do
+                    if other.token~=packet.token or other.target~=packet.target then kept[#kept+1]=other end
+                end
+                s.outgoing=kept;self:QuestLinkTrace("reply-send-failed",packet.token.." route="..packet.target)
+            end
+        end
+        s.nextSend=now+(packet.retries and 0.5 or 0.25)
     end
     for token,p in pairs(s.pending) do
         if now-p.started>120 then
@@ -289,34 +342,53 @@ function A:ShowSharedQuestLog(token,snapshot,message)
     if not self.sharedQuestLogWindow then
         local f=CreateFrame("Frame","SimplyPartyQuestsSharedLog",UIParent,"BasicFrameTemplateWithInset")
         self.sharedQuestLogWindow=f
+        self:StyleQuestDialog(f)
         if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSharedLog" end
-        f:SetSize(550,560);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG")
+        f:SetSize(550,560);f:SetPoint("CENTER");f:SetFrameStrata("MEDIUM")
         f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
         f:SetScript("OnDragStart",function() f:StartMoving() end);f:SetScript("OnDragStop",function() f:StopMovingOrSizing() end)
         f.title=self.readable(f.TitleText) and f.TitleText or f:CreateFontString(nil,"OVERLAY","GameFontNormal")
         if not self.readable(f.TitleText) then f.title:SetPoint("TOPLEFT",16,-8) end
         f.subtitle=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        self:StyleQuestDialogText(f.subtitle,"body")
         f.subtitle:SetPoint("TOPLEFT",16,-33);f.subtitle:SetWidth(510);f.subtitle:SetJustifyH("LEFT")
         f.scroll=CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
-        f.scroll:SetPoint("TOPLEFT",16,-72);f.scroll:SetPoint("BOTTOMRIGHT",-32,16)
+        f.scroll:SetPoint("TOPLEFT",16,-72);f.scroll:SetPoint("BOTTOMRIGHT",-32,52)
+        f.scroll:SetClipsChildren(true)
         f.child=CreateFrame("Frame",nil,f.scroll);f.child:SetSize(494,1);f.scroll:SetScrollChild(f.child)
         f.transferReport=CreateFrame("Button",nil,f,"UIPanelButtonTemplate")
         f.transferReport:SetSize(170,22);f.transferReport:SetPoint("BOTTOMLEFT",16,14)
         f.transferReport:SetText("Transfer diagnostics")
         f.transferReport:SetScript("OnClick",function() A:ShowDiagnosticReport() end)
+        f.ownerNotice=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        self:StyleQuestDialogText(f.ownerNotice,"muted")
+        f.ownerNotice:SetPoint("BOTTOMRIGHT",-16,19);f.ownerNotice:SetWidth(280);f.ownerNotice:SetJustifyH("RIGHT")
+        f.ownerNotice:SetText("The owner must remain online.")
         f.rows={}
     end
     local f=self.sharedQuestLogWindow
+    f.questSnapshot=snapshot
     if self.sharedQuestLogToken~=token then f.expanded={};f.scroll:SetVerticalScroll(0) end
     self.sharedQuestLogToken=token;f.expanded=f.expanded or {}
     f.title:SetText(snapshot and (safe(snapshot.displayOwner or snapshot.owner).."'s Quest Log") or "Shared Quest Log")
+    f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",16,snapshot and snapshot.offer and -94 or -72)
+    f.scroll:SetPoint("BOTTOMRIGHT",-32,52)
     local y,used=0,0
-    local function row(label,heading,id,complete)
+    local function row(label,heading,id,complete,ineligible,reason)
         used=used+1;local b=f.rows[used]
         if not b then
             b=CreateFrame("Button",nil,f.child);b.label=b:CreateFontString(nil,"ARTWORK")
             b.label:SetJustifyH("LEFT");b.label:SetJustifyV("TOP");b.label:SetPoint("TOPLEFT",6,-4);b.label:SetWidth(476)
-            b.art=b:CreateTexture(nil,"BACKGROUND");b.art:SetAllPoints(b);b.art:SetAtlas("UI-QuestTracker-Secondary-Objective-Header")
+            b.art=b:CreateTexture(nil,"BACKGROUND");b.art:SetAllPoints(b);b.art:SetColorTexture(0.35,0.20,0.06,0.08)
+            b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetTexture("Interface\\GossipFrame\\AvailableQuestIcon");b.icon:SetSize(18,18)
+            b.icon:SetPoint("TOPLEFT",4,-5)
+            b.reason=b:CreateFontString(nil,"ARTWORK","GameFontHighlightSmall")
+            b.reason:SetJustifyH("LEFT");b.reason:SetJustifyV("TOP");b.reason:SetWidth(450)
+            b.reason:SetPoint("TOPLEFT",b.label,"BOTTOMLEFT",0,-4)
+            A:StyleQuestDialogText(b.reason,"error")
+            b.divider=b:CreateTexture(nil,"BACKGROUND");b.divider:SetColorTexture(0.38,0.24,0.08,0.35)
+            b.divider:SetPoint("BOTTOMLEFT",4,0);b.divider:SetPoint("BOTTOMRIGHT",-4,0);b.divider:SetHeight(1)
+            b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight","ADD")
             b:SetScript("OnClick",function()
                 if b.questID then f.expanded[b.questID]=f.expanded[b.questID]==false;A:ShowSharedQuestLog(token,snapshot) end
             end)
@@ -324,13 +396,30 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         end
         -- Refresh closures and row identity as pooled rows move between snapshots.
         b.questID=id;b:SetScript("OnClick",function()
-            if b.questID then f.expanded[b.questID]=f.expanded[b.questID]==false;A:ShowSharedQuestLog(token,snapshot) end
+            if b.questID then
+                if snapshot and snapshot.offer then A:RequestOfferedQuest(token,b.questID,snapshot)
+                else f.expanded[b.questID]=f.expanded[b.questID]==false;A:ShowSharedQuestLog(token,snapshot) end
+            end
         end)
-        b.label:SetFontObject(heading and (ObjectiveTrackerLineFont or GameFontNormal) or (ObjectiveTrackerLineFont or GameFontHighlightSmall))
-        if complete then b.label:SetTextColor(0.1,1,0.1)
-        elseif heading then b.label:SetTextColor(1,0.82,0) else b.label:SetTextColor(0.8,0.8,0.8) end
-        b.label:SetText(label);b.art:SetShown(heading);b:EnableMouse(id~=nil)
-        local h=math.max(heading and 26 or 18,b.label:GetStringHeight()+8)
+        local offerRow=snapshot and snapshot.offer and heading
+        b.icon:SetShown(offerRow==true);b.icon:SetDesaturated(ineligible==true)
+        b.label:ClearAllPoints();b.label:SetPoint("TOPLEFT",offerRow and 30 or 6,-4)
+        b.label:SetWidth(offerRow and 450 or 476)
+        b.divider:SetShown(offerRow==true)
+        b:SetScript("OnEnter",reason and function(button)
+            if GameTooltip then
+                GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Quest requirements")
+                GameTooltip:AddLine(A:DisplayText(reason),1,1,1,true);GameTooltip:Show()
+            end
+        end or nil)
+        b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
+        A:StyleQuestDialogText(b.label,ineligible and "muted" or (complete and "ready" or (heading and "heading" or "body")),heading)
+        b.label:SetText(label);b.art:SetShown(heading and not offerRow);b:EnableMouse(id~=nil)
+        local reasonHeight=0
+        if offerRow and ineligible and reason then
+            b.reason:SetText(safe(reason));b.reason:Show();reasonHeight=b.reason:GetStringHeight()+4
+        else b.reason:SetText("");b.reason:Hide() end
+        local h=math.max(heading and 26 or 18,b.label:GetStringHeight()+reasonHeight+8)
         b:ClearAllPoints();b:SetPoint("TOPLEFT",0,-y);b:SetSize(490,h);b:Show();y=y+h+3
     end
     if snapshot and snapshot.quests then
@@ -338,24 +427,38 @@ function A:ShowSharedQuestLog(token,snapshot,message)
         for _,q in pairs(snapshot.quests) do quests[#quests+1]=q;if q.ready then ready=ready+1 end end
         table.sort(quests,function(a,b) if a.title==b.title then return a.id<b.id end;return a.title<b.title end)
         local stamp=date and snapshot.created>0 and date("%Y-%m-%d %H:%M",snapshot.created) or "time unavailable"
-        f.subtitle:SetText(#quests.." quests | "..ready.." ready for turn-in\nSnapshot: "..stamp.." (not a live view)")
+        if snapshot.offer then
+            f.title:SetText(safe(snapshot.displayOwner or snapshot.owner).."'s Quest Offers")
+            f.subtitle:SetText(#quests.." offered quests. Click a quest to request its normal share prompt.\n"..(self:QuestOfferStatus(token) or "Both players need this beta. Normal quest acceptance rules apply."))
+        else f.subtitle:SetText(#quests.." quests | "..ready.." ready for turn-in\nSnapshot: "..stamp.." (not a live view)") end
         if #quests==0 then row("No quests in this snapshot.",false) end
+        local completionReader
+        if snapshot.offer and self.QuestCompletionReader then
+            local ok,reader=pcall(self.QuestCompletionReader,self)
+            if ok then completionReader=reader end
+        end
         for _,q in ipairs(quests) do
             local expanded=f.expanded[q.id]~=false
-            row((expanded and "- " or "+ ")..safe(q.title)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
-            if expanded then
-                if #q.objectives==0 then row(q.ready and "Ready for turn-in." or "Objective progress unavailable.",false,nil,q.ready) end
-                for _,o in ipairs(q.objectives) do
-                    local label=safe(o.text)
-                    if o.done and o.total and not label:find("%d+%s*/%s*%d+") then label=label.." ("..o.done.."/"..o.total..")" end
-                    if o.finished and not (o.done and o.total and o.total>0) then label=label.." [Complete]" end
-                    row("   "..label,false,nil,o.finished or (o.done and o.total and o.total>0 and o.done>=o.total))
+            if snapshot.offer then
+                local eligible,reason=self:CheckQuestOfferEligibility(q.id,completionReader)
+                local suffix=self.own[q.id] and " [Already in your log]" or (eligible==false and " [Not eligible]" or (eligible==nil and " [Check requirements]" or " [Request share]"))
+                row(self:QuestTitleText(q.id,q.title,true)..suffix,true,q.id,false,eligible==false,reason)
+            else
+                row((expanded and "- " or "+ ")..self:QuestTitleText(q.id,q.title,true)..(q.ready and " [Ready for turn-in]" or ""),true,q.id,q.ready)
+                if expanded then
+                    if #q.objectives==0 then row(q.ready and "Ready for turn-in." or "Objective progress unavailable.",false,nil,q.ready) end
+                    for _,o in ipairs(q.objectives) do
+                        local label=safe(o.text)
+                        if o.done and o.total and not label:find("%d+%s*/%s*%d+") then label=label.." ("..o.done.."/"..o.total..")" end
+                        if o.finished and not (o.done and o.total and o.total>0) then label=label.." [Complete]" end
+                        row("   "..label,false,nil,o.finished or (o.done and o.total and o.total>0 and o.done>=o.total))
+                    end
                 end
             end
         end
     else f.subtitle:SetText("Shared quest-log snapshot");row(message or "Snapshot unavailable.",false) end
     for i=used+1,#f.rows do f.rows[i].questID=nil;f.rows[i]:Hide() end
-    f.child:SetHeight(math.max(1,y));f:Show()
+    f.child:SetHeight(math.max(1,y));f:Show();f:Raise()
 end
 function A:InstallQuestLogShareButton()
     local map=WorldMapFrame
