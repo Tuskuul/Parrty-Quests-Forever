@@ -24,14 +24,15 @@ local combatApply=[[
     local collapsed = self:GetAttribute("enabled") and (newstate == 1 or self:GetAttribute("rest-collapsed"))
     self:SetAttribute("combat-collapsed", collapsed and true or false)
     self:SetAttribute("manual-open",nil)
-    for i=1,self:GetAttribute("count") or 0 do
-        local frame=self:GetFrameRef("module"..i)
-        if frame and frame:IsProtected() then
-            self:SetAttribute("combat-stage","state-module-"..i)
-            self:CallMethod("TraceCombatTracker","state module "..i)
-            if collapsed then frame:Hide()
-            elseif self:GetAttribute("shown"..i) then frame:Show()
-            else frame:Hide() end
+    self:SetAttribute("applying-visibility",true)
+    if newstate == 1 then
+        for i=1,self:GetAttribute("count") or 0 do
+            local frame=self:GetFrameRef("module"..i)
+            if frame and frame:IsProtected() then
+                self:SetAttribute("combat-stage","state-module-"..i)
+                self:CallMethod("TraceCombatTracker","state module "..i)
+                frame:Hide()
+            end
         end
     end
     local main=self:GetFrameRef("main-control")
@@ -40,7 +41,8 @@ local combatApply=[[
         else main:Hide() end
     end
     self:SetAttribute("combat-stage","state-visual")
-    self:CallMethod("ApplyCombatVisual",collapsed and true or false)
+    self:CallMethod("ApplyCombatVisual",collapsed and true or false,false,newstate ~= 1)
+    self:SetAttribute("applying-visibility",nil)
 ]]
 local combatClick=[[
     if control:GetAttribute("state-combat") == 1 and control:GetAttribute("enabled") then
@@ -50,6 +52,7 @@ local combatClick=[[
         collapsed=not collapsed
         control:SetAttribute("combat-collapsed",collapsed)
         control:SetAttribute("manual-open",not collapsed)
+        control:SetAttribute("applying-visibility",true)
         for i=1,control:GetAttribute("count") or 0 do
             local frame=control:GetFrameRef("module"..i)
             if frame and frame:IsProtected() then
@@ -61,17 +64,37 @@ local combatClick=[[
         end
         control:SetAttribute("combat-stage","click-visual")
         control:CallMethod("ApplyCombatVisual",collapsed,self:GetAttribute("party-launcher") and not collapsed)
+        control:SetAttribute("applying-visibility",nil)
         return false
     end
 ]]
+function A:SetCombatModuleShown(module,shown)
+    local s=self.integration
+    s.applyingModuleVisibility=true
+    if shown then invoke(module.Show,module) else invoke(module.Hide,module) end
+    s.applyingModuleVisibility=nil
+end
+function A:RestoreCombatModules()
+    local s=self.integration
+    if combat() or not s.combatRestorePending then return end
+    -- The secure exit has completed. Use current contents and native visibility
+    -- intent, never a snapshot recaptured while the auto-hidden frames are down.
+    self:ApplyOrdinaryCombatModules(s.preparedCollapsed==true,true)
+    s.combatRestorePending=nil;s.combatCycleActive=nil
+    self:InvalidateTrackerIntegration(true)
+    self:TraceCombatTracker("restore complete")
+end
 function A:ApplyOrdinaryCombatModules(collapsed,restore)
     for module,state in pairs(self.integration.combatModuleStates or {}) do
         local protected=invoke(module.IsProtected,module)
         if restore or protected==false then
             local shown
-            if restore then shown=state.shown and module.hasContents~=false
+            if restore then
+                local contents=module.hasContents
+                if self.public(contents,"boolean") then shown=not collapsed and contents and not state.nativeHidden
+                else shown=not collapsed and state.shown and not state.nativeHidden end
             else shown=not collapsed and state.available and module.hasContents~=false end
-            if shown then invoke(module.Show,module) else invoke(module.Hide,module) end
+            self:SetCombatModuleShown(module,shown)
         end
     end
 end
@@ -106,7 +129,8 @@ function A:CombatTrackerReport()
         .."; stage="..safe(c and invoke(c.GetAttribute,c,"combat-stage")),
         "Combat setup APIs: RegisterStateDriver="..type(RegisterStateDriver).."; SecureHandlerWrapScript="..type(SecureHandlerWrapScript),
         "Combat setup state: controller="..tostring(c~=nil).."; driver="..tostring(s.combatDriverReady==true)
-            .."; modules="..safe(c and invoke(c.GetAttribute,c,"count")).."; settings queued="..tostring(self.settingsOpenPending==true)}
+            .."; modules="..safe(c and invoke(c.GetAttribute,c,"count")).."; settings queued="..tostring(self.settingsOpenPending==true)
+            .."; restore pending="..tostring(s.combatRestorePending==true)}
     if s.combatSetupError then out[#out+1]="Combat setup error: "..s.combatSetupError end
     local function frame(label,object)
         if not object then return end
@@ -151,6 +175,7 @@ function A:PrepareCombatCollapseUnsafe()
     if not self:NativeCombatControlsAllowed() then return end
     local s=self.integration
     if not self.db then s.combatSetupStatus="waiting for saved settings";return end
+    if s.combatCycleActive then return end
     if combat() then
         if not s.combatSetupStatus then s.combatSetupStatus="waiting for combat to end" end
         return
@@ -169,10 +194,21 @@ function A:PrepareCombatCollapseUnsafe()
         c:SetAttribute("count",0)
         c.QueueTrackerExpand=function() A:QueueTrackerExpand() end
         c.TraceCombatTracker=function(_,stage) A:TraceCombatTracker(stage) end
-        c.ApplyCombatVisual=function(_,collapsed,showParty)
+        c.ApplyCombatVisual=function(_,collapsed,showParty,exiting)
             if not A:NativeCombatControlsAllowed() then return end
             s.combatVisualCollapsed=collapsed
-            A:ApplyOrdinaryCombatModules(collapsed,not combat())
+            if exiting then
+                if s.combatCycleActive then s.combatRestorePending=true;A:RestoreCombatModules() end
+            elseif combat() then
+                s.combatCycleActive=true
+                if not collapsed then
+                    -- An explicit reopen supersedes earlier native hides.
+                    for module,state in pairs(s.combatModuleStates) do
+                        if state.available and module.hasContents~=false then state.nativeHidden=nil end
+                    end
+                end
+                A:ApplyOrdinaryCombatModules(collapsed,false)
+            end
             A:TraceCombatTracker(showParty and "party click" or "native/state visibility")
             if combat() then
                 s.nativeCollapsed=collapsed
@@ -233,28 +269,45 @@ function A:PrepareCombatCollapseUnsafe()
             end
             if explicit then
                 SecureHandlerWrapScript(module,"OnShow",c,[[
-                    if control:GetAttribute("enabled") and ((control:GetAttribute("state-combat")==1 and control:GetAttribute("combat-collapsed")) or (control:GetAttribute("state-combat")~=1 and control:GetAttribute("rest-collapsed"))) then self:Hide() end
+                    if control:GetAttribute("enabled") and ((control:GetAttribute("state-combat")==1 and control:GetAttribute("combat-collapsed")) or (control:GetAttribute("state-combat")~=1 and control:GetAttribute("rest-collapsed"))) then
+                        local applying=control:GetAttribute("applying-visibility")
+                        control:SetAttribute("applying-visibility",true)
+                        self:Hide()
+                        control:SetAttribute("applying-visibility",applying)
+                    end
                 ]])
             elseif type(module.HookScript)=="function" then
                 module:HookScript("OnShow",function(frame)
                     local collapsed=combat() and c:GetAttribute("combat-collapsed") or (not combat() and s.preparedNative and s.preparedCollapsed)
                     if A:NativeCombatControlsAllowed() and collapsed and (not combat() or invoke(frame.IsProtected,frame)==false) then
-                        invoke(frame.Hide,frame)
+                        A:SetCombatModuleShown(frame,false)
                     end
                 end)
+            end
+            if type(module.HookScript)=="function" then
+                local function visibility(frame,shown)
+                    if s.applyingModuleVisibility or c:GetAttribute("applying-visibility") then return end
+                    local state=s.combatModuleStates[frame]
+                    if state and s.combatCycleActive then
+                        state.nativeHidden=not shown
+                        if shown then state.available=true end
+                    end
+                end
+                module:HookScript("OnHide",function(frame) visibility(frame,false) end)
+                module:HookScript("OnShow",function(frame) visibility(frame,true) end)
             end
             s.combatModules[module]=i
             -- Do not force a native OnHide back to Show. A normal quest refresh
             -- legitimately hides empty modules and releases/rebuilds their rows.
         end
-        if s.preparedOpening and module.hasContents==true then module:Show() end
+        if s.preparedOpening and module.hasContents==true then self:SetCombatModuleShown(module,true) end
         local shown=module:IsShown()
         local available=shown or module.hasContents==true
         c:SetAttribute("shown"..i,shown)
         c:SetAttribute("available"..i,available)
         s.combatModuleStates[module]={shown=shown,available=available}
         if s.preparedCollapsed then
-            module:Hide();c:SetAttribute("shown"..i,false);s.combatModuleStates[module].shown=false
+            self:SetCombatModuleShown(module,false);c:SetAttribute("shown"..i,false);s.combatModuleStates[module].shown=false
         end
     end
     s.combatSetupPhase="modules"
@@ -344,6 +397,10 @@ function A:SyncCombatAutoHide()
         end
         return collapsed or not s.autoCollapseNativeShown
     end
+    -- PLAYER_REGEN_ENABLED and the secure state driver may arrive in either
+    -- order. Never sample the combat-hidden modules until both have exited.
+    if s.combatCycleActive and s.combatController and s.combatController:GetAttribute("state-combat")==1 then return true end
+    self:RestoreCombatModules()
     if s.autoHideActive then
         s.autoHideActive=nil
         local native=s.autoCollapseNative
@@ -447,9 +504,9 @@ function A:BuildTrackerEntries()
     end
     return entries,#members
 end
-function A:InvalidateTrackerIntegration()
+function A:InvalidateTrackerIntegration(immediate)
     local s=self.integration
-    s.dirty=true;s.due=s.due or (GetTime()+0.25)
+    s.dirty=true;s.due=immediate and GetTime() or (s.due or (GetTime()+0.25))
 end
 function A:CombatControlNotice(message)
     local now=GetTime();local s=self.integration

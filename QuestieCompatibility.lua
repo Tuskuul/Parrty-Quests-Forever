@@ -65,6 +65,7 @@ function A:ReleaseNativeCombatControlUnsafe()
     -- Sidebar collapse is independent of secure-controller ownership. Preserve
     -- it when Questie maps-only cleanup runs on each integration tick.
     s.expandAfterCombat=nil;s.blockedRestore=nil
+    s.combatRestorePending=nil;s.combatCycleActive=nil
     s.combatSetupStatus="paused while Questie is loaded"
 end
 function A:QuestieCompatibilityTick()

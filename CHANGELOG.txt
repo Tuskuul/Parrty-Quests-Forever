@@ -1,3 +1,11 @@
+Party Quests Forever 1.1.7-beta6
+
+- Fixed intermittent missing Blizzard objectives after combat with automatic collapse enabled.
+- Restore waits for combat lockdown and the secure combat state to finish, then uses current module contents and respects native visibility changes.
+- Removed the extra party-pane redraw delay after combat restoration.
+
+For WoW Forever 1.60.1 (interface 16001). Questie remains optional. Existing settings are preserved.
+
 Party Quests Forever 1.1.7-beta5
 
 - Removed the redundant Share Quest Log button from the map. Sharing remains available from the tracker, Questie menu, separate window and Settings.
