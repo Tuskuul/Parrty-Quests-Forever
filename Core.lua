@@ -670,8 +670,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     if A.PollTick then A:PollTick() end
     if A.TriggerTick then A:TriggerTick() end
     if A.NativeTrackerTick then A:NativeTrackerTick() end
-    if A.TrackerIntegrationTick then A:TrackerIntegrationTick() end
-    if A.UpdateQuestLogSharePlacement then A:UpdateQuestLogSharePlacement() end
+    if A.TrackerIntegrationTick then A:TrackerIntegrationTick(true) end
     if A.LiveTick then A:LiveTick() end
     if A.ownDue and now>=A.ownDue then
         A.ownDue=nil; A:ReadOwn()

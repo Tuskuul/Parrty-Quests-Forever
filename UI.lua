@@ -116,10 +116,14 @@ end
 function A:SetGroupByZone(value)
     self.db.groupByZone=not not value;self:Render()
 end
-function A:Render()
+function A:Render(force)
     if self.InvalidateTrackerIntegration then self:InvalidateTrackerIntegration() end
     if self.SyncSettings then self:SyncSettings() end
     if not self.window then return end
+    if not force and not self.demo and (self:EffectiveDisplayMode()=="blizzard" or self.db.hidden or not self.window:IsShown()) then
+        self.standaloneDirty=true;return
+    end
+    self.standaloneDirty=nil
     for _,r in ipairs(rows) do r:Hide() end
     for _,c in ipairs(cards) do c:Hide() end
     local n, cn, y=0,0,0
@@ -171,8 +175,6 @@ function A:Render()
     local questExpansion=self.demo and self.demoQuestExpanded or self.db.questExpanded
     self.demoSectionCollapsed=self.demoSectionCollapsed or {}
     local sectionCollapsed=self.demo and self.demoSectionCollapsed or self.db.sectionCollapsed
-    if self.combineButton then self.combineButton:SetText((self.db.combineShared and "[x] " or "[ ] ").."Combine shared quests") end
-    if self.zoneButton then self.zoneButton:SetText((self.db.groupByZone and "[x] " or "[ ] ").."Group by zone") end
     local combined,combinedIDs={},{}
     if self.db.combineShared then
         cn=cn+1
@@ -330,14 +332,10 @@ function A:InitUI()
     bar:EnableMouse(true);bar:RegisterForDrag("LeftButton")
     bar:SetScript("OnDragStart",function() if not self.db.locked then w:StartMoving() end end)
     bar:SetScript("OnDragStop",function() w:StopMovingOrSizing();self.db.position={x=w:GetLeft(),y=w:GetTop()} end)
-    local title=label(bar,14);title:SetPoint("LEFT",12,0);title:SetText("Party Quests - Alpha");title:SetTextColor(1,0.82,0)
+    local title=label(bar,14);title:SetPoint("LEFT",12,0);title:SetText("Party Quests");title:SetTextColor(1,0.82,0)
     self.collapse=button(bar,"-",26,function() self:SetViewCollapsed(self.body:IsShown()) end);self.collapse:SetPoint("RIGHT",-32,0)
     self.settingsButton=button(bar,"Settings",74,function() self:OpenSettings() end);self.settingsButton:SetPoint("RIGHT",self.collapse,"LEFT",-6,0)
     local body=CreateFrame("Frame",nil,w);self.body=body;body:SetPoint("TOPLEFT",0,-34);body:SetPoint("BOTTOMRIGHT")
-    local refresh=button(body,"Refresh",76,function() if not self.demo then self:RefreshParty() end end);refresh:SetPoint("TOPLEFT",12,-5)
-    self.combineButton=button(body,"",240,function() self:SetCombineShared(not self.db.combineShared) end);self.combineButton:SetPoint("LEFT",refresh,"RIGHT",10,0)
-    self.zoneButton=button(body,"",160,function() self:SetGroupByZone(not self.db.groupByZone) end);self.zoneButton:SetPoint("TOPLEFT",12,-32)
-    self.trackerButton=button(body,"Dock beside tracker",164,function() self:SetDisplayMode("blizzard") end);self.trackerButton:SetPoint("LEFT",self.zoneButton,"RIGHT",8,0)
     self.windowShareButton=button(body,"Share quest log",140,function()
         local draft=self.questLogShareDraft;self.questLogShareDraft=nil
         self:OpenQuestLogShare(draft)
@@ -345,9 +343,11 @@ function A:InitUI()
     self.windowShareButton:SetScript("OnMouseDown",function()
         if self.CaptureQuestLogChatDraft then self.questLogShareDraft=self:CaptureQuestLogChatDraft() end
     end)
-    self.windowShareButton:SetPoint("TOPLEFT",12,-60)
+    self.windowShareButton:SetPoint("TOPLEFT",12,-5)
+    self.windowRefreshButton=button(body,"Refresh",76,function() if not self.demo then self:RefreshParty() end end)
+    self.windowRefreshButton:SetPoint("LEFT",self.windowShareButton,"RIGHT",10,0)
     local scroll=CreateFrame("ScrollFrame",nil,body,"UIPanelScrollFrameTemplate");self.scroll=scroll
-    scroll:SetPoint("TOPLEFT",12,-91);scroll:SetPoint("BOTTOMRIGHT",-32,29)
+    scroll:SetPoint("TOPLEFT",12,-36);scroll:SetPoint("BOTTOMRIGHT",-32,29)
     local child=CreateFrame("Frame",nil,scroll);child:SetSize(414,1);scroll:SetScrollChild(child);self.child=child
     self.footer=label(body,10);self.footer:SetPoint("BOTTOMLEFT",12,10);self:StyleQuestDialogText(self.footer,"muted")
     local grip=CreateFrame("Button",nil,w);self.resizeGrip=grip

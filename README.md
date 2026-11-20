@@ -9,19 +9,19 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.7-beta4** brings the Questie compatibility preview to the normal beta branch, including all stable **1.1.6** features and fixes.
+**1.1.7-beta5** brings the Questie compatibility preview to the normal beta branch, including all stable **1.1.6** features and fixes.
 
 Choose **Beside the active quest tracker** to dock beside Questie when its tracker is enabled, or beside Blizzard when Questie's tracker is disabled. The party pane follows Questie's position, size and scale using read-only screen geometry. Choose left/right and width under Tracker layout; if your chosen side has too little room, the other side is used without changing your preference. Separate-window mode remains available, and is the fallback when Questie's tracker is hidden, unavailable or neither side has room. Your requested display mode is preserved.
 
 The docked pane has a compact heading and independent collapse/scrolling. Its **... menu** (also available by right-clicking the heading) contains Share, Refresh and Settings. It follows Questie's rendered backdrop color, opacity and border, including hover fades and zero opacity, plus overall tracker transparency. The header font follows Questie; the Blizzard header bars are hidden in Questie mode. A two-unit gap joins the columns more closely, and solo mode starts as a compact heading. Its + button opens the empty-party view, and − closes it again. Solo expansion is kept separate from your saved grouped collapse preference. Combat auto-collapse affects only our pane, and you can reopen it during combat; Questie's tracker keeps its own controls. Native tracker refresh pauses while Questie owns the tracker; native Blizzard combat controls remain paused whenever Questie is loaded.
 
-The map's **Share Quest Log** button moves left around other visible title-bar buttons. Crowded title bars can use the tracker Share button instead. Placement changes wait until combat ends.
+Sharing is available from the active tracker, the Questie **... menu**, the separate window and Settings. The map has no Party Quests button. The separate window keeps only Share and Refresh in its action row; grouping and docking choices are in Settings.
 
 QuestieDB is optional and supplies fallback quest names and zones; native information takes priority. Private Questie progress and network protocols are unused. Questie settings are never changed.
 
 This beta uses the normal `SimplyPartyQuestsDB` settings, just like 1.1.6. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Beta release notes](docs/RELEASE-1.1.7-beta4.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Beta release notes](docs/RELEASE-1.1.7-beta5.txt)
 
 ## Quest offers
 
@@ -75,7 +75,7 @@ Ready tags and turn-in text are bright green. Guarded Blizzard tracker refresh d
 
 Share now offers **Full log** or **Select quests**. Choose one or more quests, then use **Share to chat** or **Copy Share link** to share those entries and their objective progress. Cancel or Escape restores the original chat draft.
 
-Click **Share** in the Party Quests tracker header, or **Share Quest Log** in the main Map & Quest Log title bar, left of fullscreen. It inserts a snapshot link into your current chat draft for you to send. Compatible recipients click to inspect the active quests and objective completion. This is a timestamped snapshot, not lifetime completion history or a live view.
+Click **Share** in the tracker, **Share quests** in the Questie **... menu**, **Share quest log** in the separate window, or use Settings → Tools. It inserts a snapshot link into your current chat draft for you to send. Compatible recipients click to inspect the active quests and objective completion. This is a timestamped snapshot, not lifetime completion history or a live view.
 
 Character chat, WIM and Battle.net whispers are supported. The owner must remain online with the addon for first fetch. Battle.net requires a compatible WoW session and uses its own data route for cross-faction/realm sharing. Not every UI/client/server combination has been tested.
 
@@ -95,4 +95,4 @@ Created by Wolfie. Project code is GPLv3. Static fallback data derives from Ques
 
 ## Audit record
 
-See [the beta10 audit](docs/AUDIT-1.1.6-beta10.md) for reviewed components, corrections, test coverage and remaining live-client checks.
+See [the beta5 cleanup record](docs/CODE-CLEANUP-1.1.7-beta5.md) for removed UI/code, retained compatibility paths and package-size measurements. The [earlier beta10 audit](docs/AUDIT-1.1.6-beta10.md) remains available as history.

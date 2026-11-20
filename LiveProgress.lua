@@ -392,7 +392,7 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.1.7-beta4", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.1.7-beta5", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),

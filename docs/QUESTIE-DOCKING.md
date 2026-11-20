@@ -21,3 +21,7 @@ Dock gap is two UI units. The party title aligns with the top Questie header and
 ## Beta4 solo expansion
 
 Compact solo mode is a default, not an unconditional collapse rule. The +/heading buttons can expand it to the normal width and existing empty-party message. A separate session-only solo expansion preference avoids overwriting the grouped collapse preference. Combat uses temporary solo state and restores the prior outside-combat solo view. Returning to or leaving a group clears this transient choice.
+
+## Beta5 cleanup
+
+The map shortcut and its geometry/collision scanner are removed completely; retained sharing entry points are the tracker, Questie menu, separate window and Settings. Dock styling is applied on entry and font/scale/collapse visuals update when their values change. Rendered backdrop opacity still follows the live Questie values. A hidden standalone window marks its content dirty and renders fresh rows before it is shown, rather than building duplicate quest rows on every docked update.

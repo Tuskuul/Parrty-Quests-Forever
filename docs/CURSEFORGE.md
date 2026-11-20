@@ -9,12 +9,13 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.7-beta4.zip
+- **Release file:** PartyQuestsForever_1.1.7-beta5.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
-- **Optional integration:** WIM. Do not mark it as a required dependency.
-- **Project ID / issue URL:** Unassigned; add only after the project exists.
+- **Optional integrations:** WIM, Questie and QuestieDB. Do not mark them as required dependencies.
+- **Project ID:** 1803646
+- **Issue URL:** https://github.com/Tuskuul/Parrty-Quests-Forever/issues
 
 ## Public description
 
@@ -32,7 +33,7 @@ See available party quests beside Blizzard's objective tracker or in a separate 
 - Group quests by zone and display Forever character surnames.
 - Choose a left/right tracker sidebar or a separate resizable window.
 - Double-click a foreign quest to check known eligibility and request a manual share by whisper.
-- Click **Share** in the party tracker header or **Share Quest Log** in the main Map & Quest Log title bar to draft a clickable snapshot link.
+- Use **Share** in the tracker, the Questie **... menu**, the separate window or Settings to draft a clickable snapshot link.
 - View shared logs in a Blizzard-styled window with collapsible quests, objective completion and turn-in status.
 - Share through character whispers, WIM and Battle.net whispers. Battle.net uses a separate data route for cross-faction/realm sharing.
 - Configure the addon through its AddOns settings page and draggable minimap button.
@@ -63,11 +64,13 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.7-beta4
+Party Quests Forever 1.1.7-beta5
 
-- Fixed the Party Quests + button being unable to open the Questie-side pane while solo.
-- Solo view still starts compact, but can now expand to show the empty-party message and collapse normally.
-- Solo clicks no longer change the saved grouped collapse preference. Combat restores the prior solo view after temporary reopening.
+- Removed the redundant Share Quest Log button from the map. Sharing remains available from the tracker, Questie menu, separate window and Settings.
+- Simplified the separate-window toolbar to Share and Refresh. Grouping and docking choices remain in Settings, leaving more space for quests.
+- Removed the old Alpha window label and hid Blizzard-only repair settings while Questie owns the tracker.
+- Reduced repeated background checks, unchanged styling updates and hidden-window redraws.
+- Reduced the addon download by excluding promotional artwork used only by the GitHub pages. The in-game icon, quest data and license files remain included.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
 

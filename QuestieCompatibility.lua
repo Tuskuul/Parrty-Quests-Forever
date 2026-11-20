@@ -64,7 +64,7 @@ function A:ReleaseNativeCombatControlUnsafe()
     s.autoCollapseNativeShown=nil;s.combatVisualCollapsed=nil
     -- Sidebar collapse is independent of secure-controller ownership. Preserve
     -- it when Questie maps-only cleanup runs on each integration tick.
-    s.expandAfterCombat=nil;s.blockedRestore=nil;s.restoreNativeLayout=nil
+    s.expandAfterCombat=nil;s.blockedRestore=nil
     s.combatSetupStatus="paused while Questie is loaded"
 end
 function A:QuestieCompatibilityTick()
@@ -137,6 +137,5 @@ function A:QuestieCompatibilityReport()
         .."\nQuestie dock: ready="..tostring(s.dockReady==true).."; active="..tostring(s.dockActive==true)
         .."; side="..(s.dockRect and s.dockRect.side or "none")
         .."; backdrop alpha="..tostring(s.dockBackdropAlpha or "unknown").."; overall alpha="..tostring(s.dockOverallAlpha or "unknown")
-        .."; map share button="..(self.questLogSharePlacement or "not placed")
         .."\nQuestie private progress/protocol: unused; native/SPQ progress remains authoritative"
 end

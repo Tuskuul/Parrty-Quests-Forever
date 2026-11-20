@@ -33,13 +33,13 @@ local function widget(kind,foreign)
  function w:GetTop() return self.top end
  function w:GetBottom() return self.top and self.top-self.height end
  function w:ClearAllPoints() write(self);self.point=nil end
- function w:SetPoint(...) write(self);self.point={...} end
+ function w:SetPoint(...) write(self);self.point={...};self.anchorWrites=(self.anchorWrites or 0)+1 end
  function w:SetVerticalScroll(x) write(self);self.scroll=x end
  function w:GetVerticalScroll() return self.scroll or 0 end
  function w:CreateTexture() write(self);return widget('Texture') end
  function w:CreateFontString() write(self);return widget('FontString') end
  function w:GetFont() return table.unpack(self.font or {'NativeFont',13,''}) end
- function w:SetFont(...) write(self);self.font={...} end
+ function w:SetFont(...) write(self);self.font={...};self.fontWrites=(self.fontWrites or 0)+1 end
  function w:SetText(t) write(self);self.text=t end
  function w:GetFrameLevel() return 1 end
  return setmetatable(w,{__index=function(_,name)
@@ -77,6 +77,13 @@ assert(f.point[2]==UIParent and f.point[3]=='BOTTOMLEFT' and f.point[4]==428 and
 assert(f.heightLimit==496 and f.height<=496 and f.maxScroll>0 and renders==1)
 assert(not A:NativeTrackerWritesAllowed() and not A:NativeCombatControlsAllowed())
 assert(f.title.font[1]=='QuestieFont' and f.title.font[2]==14,'header font did not follow Questie')
+local fontWrites,scrollAnchors=f.title.fontWrites,f.scroll.anchorWrites
+for i=1,3 do A:TrackerIntegrationTick() end
+assert(f.title.fontWrites==fontWrites and f.scroll.anchorWrites==scrollAnchors,'unchanged Questie style was rebuilt on every tick')
+Questie_HeaderFrame.trackedQuests.label.font[2]=15
+A:TrackerIntegrationTick();assert(f.title.font[2]==15 and f.title.fontWrites==fontWrites+1,'cached dock font ignored a live change')
+Questie_HeaderFrame.trackedQuests.label.font[2]=14;A:TrackerIntegrationTick()
+
 assert(not f.headerArt:IsShown() and not f.share:IsShown() and not f.refresh:IsShown() and f.settings.caption.text=='...','Questie dock retained the heavy toolbar')
 local p=Questie.db.profile
 p.trackerBackdropEnabled=false;p.trackerBorderEnabled=false

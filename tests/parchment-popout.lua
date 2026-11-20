@@ -16,6 +16,7 @@ local function widget(parent)
  SetPoint=function(self,...) self.points[#self.points+1]={...} end,
  ClearAllPoints=function(self) self.points={} end,
  GetFrameLevel=function() return 1 end,
+ SetChecked=function(self,v) self.checked=v end,GetChecked=function(self) return self.checked end,
  SetShown=function(self,v) self.shown=v end,IsShown=function(self) return self.shown end,
  Hide=function(self) self.shown=false end,Show=function(self) self.shown=true end,
  GetVerticalScroll=function(self) return self.scroll end,
@@ -51,6 +52,30 @@ assert(A.window.template=='BasicFrameTemplateWithInset' and A.window.questPaper.
 assert(not A.window.Inset.shown and not A.window.TitleText.shown)
 assert(A.windowShareButton and A.windowShareButton.scripts.OnClick)
 A.windowShareButton.scripts.OnClick();assert(A.shareOpened)
+local refreshed=0;function A:RefreshParty() refreshed=refreshed+1 end
+A.windowRefreshButton.scripts.OnClick();assert(refreshed==1)
+for _,w in ipairs(widgets) do assert(w.text~='Party Quests - Alpha','stale alpha title survived cleanup') end
+assert(not A.combineButton and not A.zoneButton and not A.trackerButton)
+assert(A.scroll.points[1][3]==-36,'obsolete toolbar space was not reclaimed')
+-- Docked/hidden updates defer popout rendering until it is actually opened.
+local build=A.BuildPartyViewData;local builds=0
+function A:BuildPartyViewData() builds=builds+1;return build(self) end
+A.db.displayMode='blizzard';A:Render();assert(builds==0 and A.standaloneDirty)
+A.db.displayMode='window';A:ShowStandaloneWindow(true);assert(builds==1 and not A.standaloneDirty)
+A:SetViewShown(false);A:Render();assert(builds==1 and A.standaloneDirty)
+A:SetViewShown(true);assert(builds==2 and not A.standaloneDirty and A.window.shown)
+A.BuildPartyViewData=build
+A:InitSettings();A.settingsPanel:Show();A.settingsAdvancedOpen=true;A.db.nativeTrackerRepair=true;A.db.displayMode='blizzard'
+local writes=true
+function A:NativeTrackerWritesAllowed() return writes end
+A:SyncSettings();assert(A.settingsControls.repair.shown)
+writes=false;A:SyncSettings();assert(not A.settingsControls.repair.shown and A.db.nativeTrackerRepair)
+writes=true;A:SyncSettings();assert(A.settingsControls.repair.shown and A.db.nativeTrackerRepair)
+local before=A.db.combineShared
+A.settingsControls.combine.checked=not before;A.settingsControls.combine.scripts.OnClick();assert(A.db.combineShared==not before)
+A.settingsControls.combine.checked=before;A.settingsControls.combine.scripts.OnClick();assert(A.db.combineShared==before)
+A.db.displayMode='window'
+
 A:Demo()
 assert(A.child.height>1 and A.body.shown and A.resizeGrip.shown)
 local hasDarkObjective,hasHeading=false,false

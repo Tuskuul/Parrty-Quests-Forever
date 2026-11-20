@@ -151,6 +151,13 @@ function A:StyleQuestieDock()
             else A:SetViewCollapsed(not A.sidebar.viewCollapsed) end
         end)
         f.settings:SetScript("OnClick",function() A:OpenQuestieDockMenu() end)
+        f.headerArt:Hide();f.share:Hide();f.refresh:Hide()
+        f.settings:SetText("...");f.settings:SetSize(20,20)
+        f.collapse:ClearAllPoints();f.collapse:SetPoint("LEFT",f.title,"RIGHT",5,0)
+        f.settings:ClearAllPoints();f.settings:SetPoint("LEFT",f.collapse,"RIGHT",3,0)
+        f.questieHeaderClick:Show()
+        f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-26)
+        f.questiePlain=true
     end
     local h=Questie_HeaderFrame
     local label=h and self.readable(h.trackedQuests) and h.trackedQuests.label
@@ -158,22 +165,19 @@ function A:StyleQuestieDock()
         local ok,font,size,flags=pcall(label.GetFont,label)
         if ok and self.public(font,"string") and number(size) and size>0 and size<60 then
             local ratio=q.dockRect and q.dockRect.scale or 1
-            f.title:SetFont(font,math.max(8,math.min(32,size*ratio)),self.public(flags,"string") and flags or "")
+            size=math.max(8,math.min(32,size*ratio));flags=self.public(flags,"string") and flags or ""
+            local signature=font..":"..size..":"..flags
+            if q.dockFont~=signature then f.title:SetFont(font,size,flags);q.dockFont=signature end
         end
-    else f.title:SetFontObject(GameFontNormalSmall or GameFontNormal) end
-    f.headerArt:Hide();f.share:Hide();f.refresh:Hide()
-    f.settings:SetText("...");f.settings:SetSize(20,20)
-    f.collapse:ClearAllPoints();f.collapse:SetPoint("LEFT",f.title,"RIGHT",5,0)
-    f.settings:ClearAllPoints();f.settings:SetPoint("LEFT",f.collapse,"RIGHT",3,0)
-    f.questieHeaderClick:Show()
-    f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-26)
-    f.questiePlain=true
+    elseif q.dockFont~="default" then
+        f.title:SetFontObject(GameFontNormalSmall or GameFontNormal);q.dockFont="default"
+    end
 end
 function A:RestoreQuestieDockStyle()
     local f,q=self.sidebar,self.questieCompatibility
     local saved=q.dockStyle
     if not f or not saved then return end
-    q.dockStyle=nil;q.dockAppearance=nil
+    q.dockStyle=nil;q.dockAppearance=nil;q.dockFont=nil;q.dockCollapseState=nil
     f.questiePlain=nil;f:SetAlpha(1);f.headerOffset=nil
     if saved.font and saved.size then f.title:SetFont(saved.font,saved.size,saved.flags) end
     f.headerArt:Show();f.share:Show();f.refresh:Show()
@@ -240,8 +244,11 @@ function A:QuestieDockTick()
     self:StyleQuestieDock()
     if rect.solo and not q.dockInCombat then collapsed=q.dockSoloExpanded~=true end
     f.viewCollapsed=collapsed;f.scroll:SetShown(not collapsed);f.collapse:Show()
-    local atlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
-    f.collapse.normal:SetAtlas(atlas);f.collapse.pushed:SetAtlas(atlas.."-pressed")
+    if q.dockCollapseState~=collapsed then
+        q.dockCollapseState=collapsed
+        local atlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
+        f.collapse.normal:SetAtlas(atlas);f.collapse.pushed:SetAtlas(atlas.."-pressed")
+    end
     local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     f:SetShown(visible)
     if self.window then self.window:Hide() end

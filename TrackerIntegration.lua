@@ -349,24 +349,13 @@ function A:SyncCombatAutoHide()
         local native=s.autoCollapseNative
         if native and native.Header and type(native.Header.SetCollapsed)=="function" then native.Header:SetCollapsed(self:IsNativeTrackerCollapsed(native)) end
         if self.window and self:EffectiveDisplayMode()=="window" and self.SetCollapsed then self:SetCollapsed(not not self.db.collapsed) end
-        s.restoreNativeLayout=true;self:InvalidateTrackerIntegration()
+        self:InvalidateTrackerIntegration()
     end
     s.autoHideArmed=self.db.combatAutoHide~=false
     s.autoCollapseNative=ObjectiveTrackerFrame
     s.autoCollapseNativeShown=s.autoCollapseNative and invoke(s.autoCollapseNative.IsShown,s.autoCollapseNative)==true
     self:PrepareCombatCollapse()
     return false
-end
-function A:RestoreNativeExpandedLayout(tracker)
-    if not self:NativeTrackerWritesAllowed() then return end
-    local s=self.integration
-    if combat() or not s.restoreNativeLayout or not tracker then return end
-    s.restoreNativeLayout=nil
-    if self:IsNativeTrackerCollapsed(tracker) or invoke(tracker.IsShown,tracker)==false then return end
-    -- Secure/ordinary visibility restoration already ran in the controller.
-    -- Do not rebuild every Blizzard module merely because combat ended or
-    -- our sidebar opened. Blizzard owns layout and its restricted aura reads.
-    self:InvalidateTrackerIntegration()
 end
 local function progress(lines,kinds,name,q,remote,connected,ownKey)
     local expanded=ownKey and (A.db.trackerOwnProgressExpanded or {})[ownKey]
@@ -475,6 +464,13 @@ function A:ApplyPendingDisplayMode()
     local mode=s.pendingDisplayMode;s.pendingDisplayMode=nil
     self:SetDisplayMode(mode)
 end
+function A:ShowStandaloneWindow(shown)
+    local window=self.window
+    if not window then return end
+    -- The hidden popout can defer full quest-row construction until needed.
+    if shown and self.standaloneDirty and self.Render then self:Render(true) end
+    window:SetShown(shown)
+end
 function A:SetDisplayMode(mode)
     if mode~="blizzard" and mode~="window" then return end
     if combat() then
@@ -491,7 +487,7 @@ function A:SetDisplayMode(mode)
     self.db.displayMode=mode;self.db.trackerHidden=false
     if mode=="window" then self.db.hidden=false end
     self.integration.nextTry=0;self:InvalidateTrackerIntegration()
-    if self.window then self.window:SetShown(mode=="window") end
+    if self.window then self:ShowStandaloneWindow(mode=="window") end
     self:TrackerIntegrationTick()
     if self.SyncSettings then self:SyncSettings() end
 end
@@ -540,7 +536,7 @@ function A:ApplyPendingTrackerRestore()
             if not ok then s.lastError=self.public(err,"string") and err:sub(1,180) or "queued tracker expansion failed";return end
         end
     end
-    s.expandAfterCombat=nil;s.blockedRestore=nil;s.restoreNativeLayout=true
+    s.expandAfterCombat=nil;s.blockedRestore=nil
     self:InvalidateTrackerIntegration()
 end
 function A:TogglePartyTracker()
@@ -561,7 +557,6 @@ function A:TogglePartyTracker()
                 local ok,err=self:CallNativeTrackerMethod(native,"SetCollapsed",false)
                 if not ok then self.integration.lastError=err end
             end
-            self.integration.restoreNativeLayout=true
             self:InvalidateTrackerIntegration();self:TrackerIntegrationTick()
             return
         end
@@ -1120,8 +1115,6 @@ function A:SetJoinedCollapseVisual(collapsed)
         if self.integration.preparedCollapsed and not collapsed then self.integration.preparedOpening=true end
         self.integration.preparedCollapsed=not not collapsed
     end
-    local wasCollapsed=self.integration.nativeCollapsed
-    if wasCollapsed and not collapsed then self.integration.restoreNativeLayout=true end
     self.integration.nativeCollapsed=not not collapsed
     local joined=not collapsed and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     self:SyncCombatTrackerHeader(joined and self.integration.nativeVisible)
@@ -1303,9 +1296,11 @@ function A:TrackerSidebarHeightLimit(tracker)
     if not valid(height) then height=420 end
     return height
 end
-function A:TrackerIntegrationTick()
+function A:TrackerIntegrationTick(compatibilityReady)
     if not self.db then return end
-    if self.QuestieCompatibilityTick then self:QuestieCompatibilityTick() end
+    -- The main update pass already refreshed compatibility before polling.
+    -- Direct UI/event calls still need a fresh ownership/geometry check.
+    if not compatibilityReady and self.QuestieCompatibilityTick then self:QuestieCompatibilityTick() end
     if not self:NativeTrackerWritesAllowed() then
         local s=self.integration
         if not combat() and s.pendingDisplayMode then self:ApplyPendingDisplayMode();return end
@@ -1315,7 +1310,7 @@ function A:TrackerIntegrationTick()
         if self.sidebar then self.sidebar:Hide() end
         if self.partyTrackerButton and not combat() then self.partyTrackerButton:Hide() end
         if self.QuestieWindowCombatTick then self:QuestieWindowCombatTick() end
-        if self.window then self.window:SetShown(not self.db.hidden and self:ShouldShowPartyView()) end
+        if self.window then self:ShowStandaloneWindow(not self.db.hidden and self:ShouldShowPartyView()) end
         s.attached=false;s.status="Questie compatibility popout"
         return
     end
@@ -1323,7 +1318,6 @@ function A:TrackerIntegrationTick()
     if self.integration.pendingDisplayMode and not combat() then self:ApplyPendingDisplayMode();return end
     if self:SyncCombatAutoHide() then return end
     self:ApplyPendingTrackerRestore()
-    self:RestoreNativeExpandedLayout(ObjectiveTrackerFrame)
     self:UpdateTrackerQuestFocus()
     if combat() then
         self:UpdateTrackerSidebarCombat()
@@ -1340,7 +1334,7 @@ function A:TrackerIntegrationTick()
         self:RestoreTrackerJoinVisuals()
         if self.sidebar then self.sidebar:Hide() end
         s.attached=false;s.status="pop-out window"
-        if self.window then self.window:SetShown(not self.db.hidden and self:ShouldShowPartyView()) end
+        if self.window then self:ShowStandaloneWindow(not self.db.hidden and self:ShouldShowPartyView()) end
         return
     end
     local tracker=ObjectiveTrackerFrame
@@ -1349,7 +1343,7 @@ function A:TrackerIntegrationTick()
         self:RestoreTrackerJoinVisuals()
         if self.sidebar then self.sidebar:Hide() end
         s.attached=false;s.status="Blizzard tracker unavailable; using pop-out"
-        if self.window then self.window:SetShown(not self.db.hidden and not self.db.trackerHidden and self:ShouldShowPartyView()) end
+        if self.window then self:ShowStandaloneWindow(not self.db.hidden and not self.db.trackerHidden and self:ShouldShowPartyView()) end
         return
     end
     self:InitTrackerSidebar()
@@ -1397,7 +1391,7 @@ function A:TrackerIntegrationTick()
         else
             s.lastError=self.public(err,"string") and err:sub(1,180) or "unreadable error"
             s.status="sidebar layout failed; using pop-out";self.db.displayMode="window"
-            f:Hide();self:RestoreJoinedTrackerHeader();self:RestoreTrackerJoinVisuals();self.db.hidden=false;self.window:Show();s.attached=false
+            f:Hide();self:RestoreJoinedTrackerHeader();self:RestoreTrackerJoinVisuals();self.db.hidden=false;self:ShowStandaloneWindow(true);s.attached=false
         end
     end
     self:SyncTrackerBackgroundJoin(tracker,nativeVisible)
@@ -1409,7 +1403,6 @@ events:SetScript("OnEvent",function(_,event)
     if event=="SUPER_TRACKING_CHANGED" then A:UpdateTrackerQuestFocus()
     else
         A:SyncCombatAutoHide()
-        if event=="PLAYER_REGEN_ENABLED" then A.integration.restoreNativeLayout=true end
         A:InvalidateTrackerIntegration()
     end
 end)

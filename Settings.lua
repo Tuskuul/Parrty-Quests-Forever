@@ -8,7 +8,7 @@ function A:SetViewShown(shown)
     if self:EffectiveDisplayMode()=="blizzard" then
         self.db.trackerHidden=not shown;self:InvalidateTrackerIntegration()
         if self.RefreshCombatTrackerPane then self:RefreshCombatTrackerPane() end
-    else self.db.hidden=not shown;self.window:SetShown(shown and self:ShouldShowPartyView()) end
+    else self.db.hidden=not shown;self:ShowStandaloneWindow(shown and self:ShouldShowPartyView()) end
     if self.SyncCombatAutoHide then self:SyncCombatAutoHide() end
     self:SyncSettings()
 end
@@ -63,7 +63,7 @@ function A:ResetWindowLayout(show)
     self.window:SetSize(460,540);self:ResizeLayout(460,540)
     self.window:ClearAllPoints();self.window:SetPoint("CENTER")
     self:SetCollapsed(false)
-    self.window:SetShown(self:EffectiveDisplayMode()=="window" and not self.db.hidden)
+    self:ShowStandaloneWindow(self:EffectiveDisplayMode()=="window" and not self.db.hidden)
     self:SyncSettings()
 end
 function A:SyncSettings()
@@ -173,7 +173,7 @@ function A:InitSettings()
     condition=advanced
     check("diagnostics","Record detailed diagnostics","Includes character names and quest information. Review the report before sharing.",function() return A.db.diag end,function(v) A:SetDetailedDiagnostics(v) end)
     actions("report","Open diagnostic report",function() A:ShowDiagnosticReport() end,"restartCapture","Start fresh capture",function() A:SetDetailedDiagnostics(true,true) end)
-    condition=function() return advanced() and sidebar() end
+    condition=function() return advanced() and sidebar() and A:NativeTrackerWritesAllowed() end
     check("repair","Refresh stale Blizzard counts","Checks confirmed mismatches outside combat. Paused while Questie owns the tracker; your preference is preserved.",function() return A.db.nativeTrackerRepair end,function(v) A:SetNativeRepair(v) end)
     text("Capture a diagnostic report before refreshing a stuck tracker.")
     local function layout()
