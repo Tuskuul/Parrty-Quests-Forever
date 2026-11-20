@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.7-beta8.zip
+- **Release file:** PartyQuestsForever_1.1.7-beta9.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -64,11 +64,10 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.7-beta8
+Party Quests Forever 1.1.7-beta9
 
-- Fixed the collapsed Questie dock background clipping through the title and controls.
-- Fixed the compact solo launcher staying hidden after a reload until the minimap button was clicked.
-- The launcher attaches when Questie's geometry is ready and preserves an explicit Hide choice.
+- Preserved automatic display only while in a party. Solo display still requires opening it manually.
+- Retained the collapsed Questie header sizing and scaled controls from beta8.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
 

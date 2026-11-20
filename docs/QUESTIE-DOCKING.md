@@ -32,4 +32,4 @@ The dock now joins the visible fill edges using Questie's public backdrop insets
 
 ## Beta8 compact header and startup
 
-Collapsed height includes the measured title inset, scaled control height and backdrop bottom padding. The compact solo dock is a launcher and does not depend on the transient soloOverride created by minimap clicks. It appears when valid Questie geometry becomes available, while trackerHidden still preserves explicit user hiding. Grouped and standalone visibility retain their existing predicates. Leaving the dock restores native control dimensions.
+Collapsed height includes the measured title inset, scaled control height and backdrop bottom padding. Beta9 retains party-only automatic display: a solo dock requires an explicit opening, represented by the session-only soloOverride. trackerHidden preserves explicit hiding. Grouped and standalone visibility retain their existing predicates. Leaving the dock restores native control dimensions.

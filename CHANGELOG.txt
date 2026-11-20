@@ -1,3 +1,10 @@
+Party Quests Forever 1.1.7-beta9
+
+- Preserved automatic display only while in a party. Solo display still requires opening it manually.
+- Retained the collapsed Questie header sizing and scaled controls from beta8.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
 Party Quests Forever 1.1.7-beta8
 
 - Fixed the collapsed Questie dock background clipping through the title and controls.

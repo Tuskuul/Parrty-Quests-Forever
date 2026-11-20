@@ -289,9 +289,7 @@ function A:QuestieDockTick()
         local atlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
         f.collapse.normal:SetAtlas(atlas);f.collapse.pushed:SetAtlas(atlas.."-pressed")
     end
-    -- The compact solo header is also the dock's launcher. It must survive a
-    -- reload without the session-only soloOverride set by a minimap click.
-    local visible=not self.db.trackerHidden and not self.demo and (rect.solo or self:ShouldShowPartyView())
+    local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
     f:SetShown(visible)
     if self.window then self.window:Hide() end
     if visible and s.dirty and (not s.due or GetTime()>=s.due) then
