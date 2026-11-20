@@ -29,3 +29,7 @@ The map shortcut and its geometry/collision scanner are removed completely; reta
 ## Beta7 alignment refinement
 
 The dock now joins the visible fill edges using Questie's public backdrop insets, converted to UIParent coordinates. It aligns to the base frame top and reads the rendered title position independently rather than shifting the entire pane by a fixed header offset. Backdrop insets and border size follow effective scale; title/content offsets and compact height track the rendered header font. Missing backdrop metadata falls back to Questie's standard four-unit insets. No Questie frame, script or saved setting is modified.
+
+## Beta8 compact header and startup
+
+Collapsed height includes the measured title inset, scaled control height and backdrop bottom padding. The compact solo dock is a launcher and does not depend on the transient soloOverride created by minimap clicks. It appears when valid Questie geometry becomes available, while trackerHidden still preserves explicit user hiding. Grouped and standalone visibility retain their existing predicates. Leaving the dock restores native control dimensions.

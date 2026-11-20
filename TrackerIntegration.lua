@@ -999,7 +999,8 @@ function A:SizeTrackerSidebar()
     f.scroll:SetSize(math.max(1,f:GetWidth()-14),math.max(1,viewport))
     f.maxScroll=math.max(0,content-viewport)
     f.hint:SetShown(overflow and not f.viewCollapsed)
-    f:SetHeight(f.viewCollapsed and (padding-14) or math.min(limit,content+padding+(overflow and 14 or 0)))
+    local collapsedHeight=f.questiePlain==true and f.questieCollapsedHeight or (padding-14)
+    f:SetHeight(f.viewCollapsed and collapsedHeight or math.min(limit,content+padding+(overflow and 14 or 0)))
     local offset=f.scroll:GetVerticalScroll() or 0
     if offset>f.maxScroll then f.scroll:SetVerticalScroll(f.maxScroll) end
 end

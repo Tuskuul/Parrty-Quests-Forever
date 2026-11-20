@@ -59,6 +59,7 @@ for _,name in ipairs({'Core.lua','QuestieCompatibility.lua','TrackerIntegration.
 end
 A.db={displayMode='blizzard',sidebarWidth=420,trackerSide='left',combatAutoHide=true,trackerCollapsed=false}
 A.window=widget();A.members={member={}}
+local actualShouldShowPartyView=A.ShouldShowPartyView
 function A:ShouldShowPartyView() return true end
 function A:SyncSettings() end
 function A:UpdateMinimapButton() end
@@ -198,3 +199,44 @@ assert(f:GetWidth()==420 and not f.viewCollapsed,'joining a party retained the c
 assert(nativeAccess==0 and foreignWrites==0,'docking wrote to Questie or accessed Blizzard frames')
 assert(Questie.db.profile.trackerEnabled and Questie.db.char.isTrackerExpanded)
 print('PASS: Questie independent docking, left/right/edge/scale/resize geometry, scroll cap, combat follow/collapse/reopen, hide/show, minimized/missing/hidden targets and standalone fallback without native/Questie writes; rendered/fallback/zero/faded backdrop opacity, overall alpha, compact menu and solo header')
+
+-- Delayed Questie startup with the real party-only visibility predicate.
+-- No minimap click or soloOverride should be needed for the compact launcher.
+A:LeaveQuestieDock()
+A.ShouldShowPartyView=actualShouldShowPartyView
+A.members={};A.soloOverride=nil;A.db.trackerHidden=false;A.db.trackerCollapsed=false
+Questie_BaseFrame.shown=false;A:TrackerIntegrationTick()
+assert(not f:IsShown() and not A.window:IsShown(),'not-ready solo startup showed a fallback window')
+Questie_BaseFrame.shown=true
+local savedLeft=Questie_BaseFrame.left;Questie_BaseFrame.left=nil;A:TrackerIntegrationTick()
+assert(not A:QuestieDockActive(),'startup attached before valid geometry existed')
+Questie_BaseFrame.left=savedLeft;A:TrackerIntegrationTick()
+assert(A:QuestieDockActive() and f:IsShown() and f.viewCollapsed and not f.scroll:IsShown(),'solo dock did not attach automatically after delayed startup')
+assert(A.soloOverride==nil and not A.db.trackerHidden,'startup needed or changed a user visibility toggle')
+local function headerFits()
+ local r=A.questieCompatibility.dockRect
+ local _,fontSize=f.title:GetFont()
+ local top=-f.title.point[5]
+ assert(top+fontSize<=f:GetHeight()-r.padding.bottom+0.001,'collapsed fill clips the title')
+ assert(top+fontSize/2+f.settings:GetHeight()/2<=f:GetHeight()-r.padding.bottom+0.001,'collapsed fill clips header controls')
+ assert(f:GetHeight()==f.questieCollapsedHeight and not f.hint:IsShown(),'collapsed sizing left overflow hint or stale height')
+end
+headerFits()
+for i=1,5 do A:TrackerIntegrationTick();assert(f:IsShown() and f.viewCollapsed) end
+Questie_HeaderFrame.trackedQuests.label.font[2]=24;A:TrackerIntegrationTick();headerFits()
+Questie_BaseFrame.scale=0.8;Questie_HeaderFrame.scale=0.8;A:TrackerIntegrationTick();headerFits()
+A.db.trackerSide='right';A:TrackerIntegrationTick();headerFits()
+A:SetViewShown(false)
+for i=1,3 do A:TrackerIntegrationTick() end
+assert(not f:IsShown() and A.db.trackerHidden,'automatic solo launcher ignored explicit Hide')
+A:LeaveQuestieDock();A.soloOverride=nil
+A:TrackerIntegrationTick()
+assert(not f:IsShown() and A.db.trackerHidden,'reattachment discarded saved Hide preference')
+A:SetViewShown(true);A:TrackerIntegrationTick();assert(f:IsShown())
+f.collapse.scripts.OnClick();A:TrackerIntegrationTick()
+assert(not f.viewCollapsed and f.scroll:IsShown(),'startup fix broke solo expansion')
+f.collapse.scripts.OnClick();A:TrackerIntegrationTick();headerFits()
+A.db.displayMode='window';A:TrackerIntegrationTick()
+assert(f.collapse:GetWidth()==16 and f.settings:GetHeight()==22,'leaving scaled Questie style retained scaled controls')
+assert(nativeAccess==0 and foreignWrites==0,'startup dock touched foreign frames')
+print('PASS: delayed solo reload attachment without minimap clicks, saved Hide, collapsed title/control bounds, live font/scale, both sides, expansion and restored native control sizes')

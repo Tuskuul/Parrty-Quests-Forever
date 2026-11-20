@@ -170,8 +170,6 @@ function A:StyleQuestieDock()
         f.settings:SetScript("OnClick",function() A:OpenQuestieDockMenu() end)
         f.headerArt:Hide();f.share:Hide();f.refresh:Hide()
         f.settings:SetText("...");f.settings:SetSize(20,20)
-        f.collapse:ClearAllPoints();f.collapse:SetPoint("LEFT",f.title,"RIGHT",5,0)
-        f.settings:ClearAllPoints();f.settings:SetPoint("LEFT",f.collapse,"RIGHT",3,0)
         f.questieHeaderClick:Show()
         f.questiePlain=true
     end
@@ -193,10 +191,16 @@ function A:StyleQuestieDock()
     size=number(size) and size or 14
     local inset=rect and rect.titleInset or 10
     local ratio=rect and rect.scale or 1
-    local layout=table.concat({inset,size,ratio},":")
+    local bottom=rect and rect.padding.bottom or 4
+    local layout=table.concat({inset,size,ratio,bottom},":")
     if q.dockHeaderLayout~=layout then
         q.dockHeaderLayout=layout
         f.title:ClearAllPoints();f.title:SetPoint("TOPLEFT",f,"TOPLEFT",7*ratio,-inset)
+        f.collapse:SetSize(16*ratio,16*ratio)
+        f.collapse:ClearAllPoints();f.collapse:SetPoint("LEFT",f.title,"RIGHT",5*ratio,0)
+        f.settings:SetSize(20*ratio,20*ratio)
+        f.settings:ClearAllPoints();f.settings:SetPoint("LEFT",f.collapse,"RIGHT",3*ratio,0)
+        f.questieCollapsedHeight=inset+math.max(size,20*ratio)+bottom
         f.questieContentInset=inset+size+6*ratio
         f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7*ratio,-f.questieContentInset)
     end
@@ -206,9 +210,10 @@ function A:RestoreQuestieDockStyle()
     local saved=q.dockStyle
     if not f or not saved then return end
     q.dockStyle=nil;q.dockAppearance=nil;q.dockFont=nil;q.dockCollapseState=nil;q.dockHeaderLayout=nil;q.dockBackdropLayout=nil
-    f.questiePlain=nil;f.questieContentInset=nil;f:SetAlpha(1);f.headerOffset=nil
+    f.questiePlain=nil;f.questieContentInset=nil;f.questieCollapsedHeight=nil;f:SetAlpha(1);f.headerOffset=nil
     if saved.font and saved.size then f.title:SetFont(saved.font,saved.size,saved.flags) end
     f.headerArt:Show();f.share:Show();f.refresh:Show()
+    f.collapse:SetSize(16,16)
     f.settings:SetText("Settings");f.settings:SetSize(56,22);f.settings:SetScript("OnClick",saved.settingsClick);f.settings:SetScript("OnMouseDown",saved.settingsDown)
     if f.questieHeaderClick then f.questieHeaderClick:Hide() end
     if self.questieDockMenu then self.questieDockMenu:Hide() end
@@ -284,7 +289,9 @@ function A:QuestieDockTick()
         local atlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
         f.collapse.normal:SetAtlas(atlas);f.collapse.pushed:SetAtlas(atlas.."-pressed")
     end
-    local visible=not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    -- The compact solo header is also the dock's launcher. It must survive a
+    -- reload without the session-only soloOverride set by a minimap click.
+    local visible=not self.db.trackerHidden and not self.demo and (rect.solo or self:ShouldShowPartyView())
     f:SetShown(visible)
     if self.window then self.window:Hide() end
     if visible and s.dirty and (not s.due or GetTime()>=s.due) then
