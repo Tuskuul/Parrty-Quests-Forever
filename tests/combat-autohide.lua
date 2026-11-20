@@ -2,16 +2,27 @@ securecallfunction=function(fn,...) return fn(...) end
 unpack=unpack or table.unpack
 local locked=false
 local restricted=false
+local snippet
 GetTime=function() return 100 end
 InCombatLockdown=function() return locked end
 local function frame(shown)
  local f={shown=shown~=false,attrs={},refs={},scripts={},wrapped={}}
  function f:IsProtected() return not not self.protected,not not self.explicit end
- function f:HookScript(k,fn) self.scripts[k]=fn end
+ function f:HookScript(k,fn)
+  local old=self.scripts[k]
+  self.scripts[k]=old and function(...) old(...);fn(...) end or fn
+ end
+ local function event(name)
+  local w=f.wrapped[name]
+  if w then snippet(w.body,f,nil,w.controller) end
+  if f.scripts[name] then
+   local before=restricted;restricted=false;f.scripts[name](f);restricted=before
+  end
+ end
  function f:IsShown() return self.shown end
  function f:SetShown(v) if v then self:Show() else self:Hide() end end
- function f:Show() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,debug.traceback('protected frame shown from addon Lua'));self.shown=true end
- function f:Hide() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,'protected frame hidden from addon Lua');self.shown=false end
+ function f:Show() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,debug.traceback('protected frame shown from addon Lua'));local changed=not self.shown;self.shown=true;if changed then event('OnShow') end end
+ function f:Hide() assert(not restricted or self.protected,'invalid unprotected frame handle');assert(not locked or not self.protected or restricted,'protected frame hidden from addon Lua');local changed=self.shown;self.shown=false;if changed then event('OnHide') end end
  function f:SetAttribute(k,v) self.attrs[k]=v end
  function f:GetAttribute(k) return self.attrs[k] end
  function f:SetFrameRef(k,v) self.refs[k]=v end
@@ -35,7 +46,7 @@ CreateFrame=function(_,_,parent,template)
  f.protected=template and template:find('SecureHandler',1,true)~=nil;f.explicit=f.protected
  return f
 end
-local function snippet(body,self,newstate,control)
+snippet=function(body,self,newstate,control)
  local before=restricted;restricted=true
  local result=assert(load('return function(self,newstate,control) '..body..' end'))()(self,newstate,control)
  restricted=before;return result
@@ -123,7 +134,7 @@ A:TogglePartyTracker()
 assert(A.integration.expandAfterCombat and not module.shown,'unsecured expansion did not use fallback queue')
 locked=false;state(0);A:SyncCombatAutoHide()
 assert(main.shown,'prepared collapse control was lost outside combat')
-assert(native.shown and module.shown and not native.Header.closed and A.integration.restoreNativeLayout)
+assert(native.shown and module.shown and not native.Header.closed )
 A.db.trackerHidden=true;A:SetPreparedTrackerCollapsed(true)
 A:ApplyPendingTrackerRestore()
 assert(not A.integration.expandAfterCombat and not native.closed and not A.db.trackerHidden,'queued post-combat docked expansion failed')

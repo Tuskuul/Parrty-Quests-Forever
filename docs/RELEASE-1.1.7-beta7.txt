@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.7-beta7
+
+- Tightened docking beside Questie by aligning the visible background edges instead of leaving a padded gap.
+- Aligned the party background top with Questie and followed the rendered header position.
+- Matched backdrop padding and border size across tracker scales, with content spacing that follows the header font.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.

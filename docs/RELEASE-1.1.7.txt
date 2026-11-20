@@ -1,0 +1,10 @@
+Party Quests Forever 1.1.7
+
+- Added automatic docking beside Questie's tracker, with left/right placement, matching header fonts, backdrop colors, opacity and scale.
+- Refined expanded and collapsed docking, including a compact solo view when opened manually. Automatic display remains party-only.
+- Improved combat collapse and restoration, including intermittent missing Blizzard objectives after combat with automatic collapse enabled.
+- Simplified the separate-window toolbar and removed the redundant map sharing shortcut. Sharing remains accessible from the tracker, Questie menu, separate window and Settings.
+- Reduced repeated background checks and hidden-window redraws.
+- Reduced download size by excluding promotional artwork from installed packages. Quest data, the in-game icon and license files remain included.
+
+Built for WoW Forever 1.60.1 (interface 16001). Questie is optional. Existing settings are preserved; install only one version in the SimplyPartyQuests folder.

@@ -392,11 +392,12 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.1.6", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.1.7", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),
         self.CombatTrackerReport and self:CombatTrackerReport() or "Combat tracker: unavailable",
+        self.QuestieCompatibilityReport and self:QuestieCompatibilityReport() or "Questie compatibility: unavailable",
         "Local log: "..(self.ownReadError or "available").."; party transport: "..(self.partySendError or "available"),
         "Polling: "..(self.demo and "demo" or (memberCount==0 and "no tracked party" or (inCombat and "active (combat; discovery/layout deferred)" or "active")))
             .."; members="..memberCount.."; instance="..tostring(inInstance).."; raid="..tostring(IsInRaid()),

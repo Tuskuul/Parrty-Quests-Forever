@@ -460,60 +460,6 @@ function A:ShowSharedQuestLog(token,snapshot,message)
     for i=used+1,#f.rows do f.rows[i].questID=nil;f.rows[i]:Hide() end
     f.child:SetHeight(math.max(1,y));f:Show();f:Raise()
 end
-function A:InstallQuestLogShareButton()
-    local map=WorldMapFrame
-    if not self.readable(map) then return end
-    local border=map.BorderFrame
-    if not self.readable(border) or not self.readable(border.MaximizeMinimizeFrame) then return end
-    local arrow=border.MaximizeMinimizeFrame
-    local b=self.questLogShareButton
-    if not b then
-        -- Use explicit classic button art: template-only buttons can retain a
-        -- hit area while their themed regions fail to render on Forever's map.
-        b=CreateFrame("Button","SimplyPartyQuestsShareLogButton",border)
-        self.questLogShareButton=b
-        b:SetSize(132,22)
-        local function art(file,layer)
-            local t=b:CreateTexture(nil,layer)
-            t:SetTexture("Interface\\Buttons\\"..file);t:SetAllPoints(b)
-            t:SetTexCoord(0,0.625,0,0.6875);t:SetVertexColor(1,1,1,1)
-            return t
-        end
-        b.shareNormal=art("UI-Panel-Button-Up","BACKGROUND")
-        b.sharePushed=art("UI-Panel-Button-Down","BACKGROUND")
-        b.shareHighlight=art("UI-Panel-Button-Highlight","HIGHLIGHT")
-        b.shareHighlight:SetBlendMode("ADD")
-        b:SetNormalTexture(b.shareNormal);b:SetPushedTexture(b.sharePushed)
-        b:SetHighlightTexture(b.shareHighlight)
-        b.shareLabel=b:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
-        b.shareLabel:SetPoint("CENTER",b,"CENTER",0,0)
-        b.shareLabel:SetTextColor(1,0.82,0,1);b.shareLabel:SetText("Share Quest Log")
-        b:SetFontString(b.shareLabel);b:SetText("Share Quest Log")
-        b:SetPushedTextOffset(1,-1)
-        b:SetScript("OnMouseDown",function()
-            if not A.questLogShareDraft then A.questLogShareDraft=A:CaptureQuestLogChatDraft() end
-        end)
-        b:SetScript("OnClick",function()
-            local draft=A.questLogShareDraft;A.questLogShareDraft=nil
-            A:OpenQuestLogShare(draft);A.questLogShareDraft=nil
-        end)
-        b:SetScript("OnEnter",function(button)
-            A.questLogShareHover=true;A.questLogShareDraft=A:CaptureQuestLogChatDraft()
-            GameTooltip:SetOwner(button,"ANCHOR_BOTTOM")
-            GameTooltip:SetText("Share Quest Log")
-            GameTooltip:AddLine("Draft a chat link to your current quests and objective progress. Players with Party Quests can click to view it.",1,1,1,true)
-            GameTooltip:Show()
-        end)
-        b:SetScript("OnLeave",function()
-            A.questLogShareHover=false;A.questLogShareDraft=nil;GameTooltip:Hide()
-        end)
-    end
-    b:SetParent(border);b:SetFrameStrata(arrow:GetFrameStrata())
-    b:SetFrameLevel(math.max(border:GetFrameLevel(),arrow:GetFrameLevel())+10)
-    b:SetAlpha(1)
-    b:ClearAllPoints();b:SetPoint("RIGHT",arrow,"LEFT",-5,0)
-    b:Show()
-end
 function A:InitQuestLogLinks()
     if self.InstallQuestLogChatCompatibility then self:InstallQuestLogChatCompatibility() end
     if self.InstallBattleNetQuestLogLinks then self:InstallBattleNetQuestLogLinks() end
@@ -544,5 +490,5 @@ f:SetScript("OnEvent",function(_,event,...)
     if event=="CHAT_MSG_ADDON" then
         local prefix,message,channel,sender=...
         if prefix==PREFIX then A:ReceiveQuestLogLink(message,sender,channel) end
-    elseif A.db then A:InitQuestLogLinks();A:InstallQuestLogShareButton() end
+    elseif A.db then A:InitQuestLogLinks() end
 end)

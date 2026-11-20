@@ -1,3 +1,90 @@
+Party Quests Forever 1.1.7
+
+- Added automatic docking beside Questie's tracker, with left/right placement, matching header fonts, backdrop colors, opacity and scale.
+- Refined expanded and collapsed docking, including a compact solo view when opened manually. Automatic display remains party-only.
+- Improved combat collapse and restoration, including intermittent missing Blizzard objectives after combat with automatic collapse enabled.
+- Simplified the separate-window toolbar and removed the redundant map sharing shortcut. Sharing remains accessible from the tracker, Questie menu, separate window and Settings.
+- Reduced repeated background checks and hidden-window redraws.
+- Reduced download size by excluding promotional artwork from installed packages. Quest data, the in-game icon and license files remain included.
+
+Built for WoW Forever 1.60.1 (interface 16001). Questie is optional. Existing settings are preserved; install only one version in the SimplyPartyQuests folder.
+
+Party Quests Forever 1.1.7-beta9
+
+- Preserved automatic display only while in a party. Solo display still requires opening it manually.
+- Retained the collapsed Questie header sizing and scaled controls from beta8.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta8
+
+- Fixed the collapsed Questie dock background clipping through the title and controls.
+- Fixed the compact solo launcher staying hidden after a reload until the minimap button was clicked.
+- The launcher attaches when Questie's geometry is ready and preserves an explicit Hide choice.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta7
+
+- Tightened docking beside Questie by aligning the visible background edges instead of leaving a padded gap.
+- Aligned the party background top with Questie and followed the rendered header position.
+- Matched backdrop padding and border size across tracker scales, with content spacing that follows the header font.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta6
+
+- Fixed intermittent missing Blizzard objectives after combat with automatic collapse enabled.
+- Restore waits for combat lockdown and the secure combat state to finish, then uses current module contents and respects native visibility changes.
+- Removed the extra party-pane redraw delay after combat restoration.
+
+For WoW Forever 1.60.1 (interface 16001). Questie remains optional. Existing settings are preserved.
+
+Party Quests Forever 1.1.7-beta5
+
+- Removed the redundant Share Quest Log button from the map. Sharing remains available from the tracker, Questie menu, separate window and Settings.
+- Simplified the separate-window toolbar to Share and Refresh. Grouping and docking choices remain in Settings, leaving more space for quests.
+- Removed the old Alpha window label and hid Blizzard-only repair settings while Questie owns the tracker.
+- Reduced repeated background checks, unchanged styling updates and hidden-window redraws.
+- Reduced the addon download by excluding promotional artwork used only by the GitHub pages. The in-game icon, quest data and license files remain included.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta4
+
+- Fixed the Party Quests + button being unable to open the Questie-side pane while solo.
+- Solo view still starts compact, but can now expand to show the empty-party message and collapse normally.
+- Solo clicks no longer change the saved grouped collapse preference. Combat restores the prior solo view after temporary reopening.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta3
+
+- The party pane now follows Questie's backdrop color, opacity, border and live background fades, including a fully transparent background.
+- Tightened docking alignment and spacing, matched the Questie header font, and removed the heavy header bars in Questie mode.
+- Replaced the Questie-side toolbar with compact controls. Open the ... menu or right-click the Party Quests heading for Share, Refresh and Settings.
+- Solo mode now uses a compact heading instead of a wide empty panel. Joining a party restores the full party column.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta2
+
+- Party Quests can now dock beside Questie's tracker, following its position, size and scale. Choose the left or right side in Tracker layout.
+- The party pane keeps its own collapse, combat reopening, scrolling and visibility controls. Separate-window mode remains available.
+- Share Quest Log on the map now shifts around other title-bar buttons instead of overlapping them.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
+
+Party Quests Forever 1.1.7-beta1
+
+- Added optional Questie compatibility. Party Quests uses a separate parchment window when Questie's tracker is enabled or initializing.
+- With Questie's tracker disabled, the Blizzard sidebar remains available. Your preferred display mode is preserved.
+- Native tracker refresh pauses while Questie owns the tracker. Native combat collapse controls pause whenever Questie is loaded.
+- Added optional QuestieDB fallback quest names and zones, with native information taking priority.
+- Fixed an empty background appearing in combat with Questie while the Blizzard tracker was collapsed.
+
+For WoW Forever 1.60.1 (interface 16001). Includes all 1.1.6 changes and uses your normal saved settings. Questie remains optional.
+
 Party Quests Forever 1.1.6
 
 - Added Share to chat, Copy Share link and Import for full or selected quest logs.
@@ -11,28 +98,37 @@ Party Quests Forever 1.1.6
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
 
-Party Quests Forever 1.1.6-beta20
+Party Quests Forever 1.1.7-alpha6
 
+- Fixed an empty tracker background appearing in combat while the Blizzard tracker was collapsed with Questie enabled.
 - Returning from combat no longer forces a full Blizzard objective-tracker rebuild.
 - Native tracker expansion and refresh requests now use guarded client calls; unavailable or replaced methods are skipped safely.
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+For WoW Forever 1.60.1 (interface 16001). Includes the Questie compatibility preview. Existing settings are preserved.
 
-Party Quests Forever 1.1.6-beta19
+Party Quests Forever 1.1.7-alpha5
 
 - Improved red, orange, yellow, green and gray quest-title contrast on parchment, with brighter status labels and subtle text shadows on dark paper.
 - Settings opens in a movable window alongside quest and sharing windows. Added a settings button to sharing windows.
 - Party Quests windows no longer use the dialog layer, allowing the map and other game panels to open normally alongside them.
 - Parchment brightness still updates open windows immediately without changing selections or Copy/Import text.
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+For WoW Forever 1.60.1 (interface 16001). Includes the Questie compatibility preview. Existing settings are preserved.
 
-Party Quests Forever 1.1.6-beta18
+Party Quests Forever 1.1.7-alpha4
 
 - Quest windows now default to warmer, darker parchment with ivory text for clearer quest difficulty colors.
 - Added Settings > Quest windows > Parchment brightness, with live updates and a reset button. Text contrast adjusts automatically; Copy/Import fields retain dark text.
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+For WoW Forever 1.60.1 (interface 16001). Includes the existing Questie compatibility preview. Existing settings are preserved.
+
+Party Quests Forever 1.1.7-alpha3
+
+- Integrates beta17 quest difficulty colors throughout party/sidebar, parchment popout, shared quest logs, quest-selection lists and share confirmations.
+- Colors use Blizzard rules relative to the viewer, with existing safe fallbacks and automatic refresh after leveling or loading quest data. Selection and expansion state are retained.
+- Keeps alpha Questie ownership guards, parchment-readable Ready/count markers and working-settings preservation.
+
+For WoW Forever 1.60.1 (interface 16001). Questie integration remains alpha and needs live testing.
 
 Party Quests Forever 1.1.6-beta17
 
@@ -40,6 +136,25 @@ Party Quests Forever 1.1.6-beta17
 - Colors reflect your character's difficulty. Ready markers and eligibility messages retain their distinct colors.
 
 For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+
+Party Quests Forever 1.1.7-alpha2
+
+- Preserve the working settings table in the shared per-addon saved-variable file while alpha uses its own settings. Supersedes alpha1 before live testing.
+
+Party Quests Forever 1.1.7-alpha1
+
+ALPHA: Questie coexistence and Blizzard parchment popout.
+
+- Uses an independent SimplyPartyQuestsAlphaDB settings table. Stable/beta settings are not read or overwritten. Install one build at a time in the SimplyPartyQuests folder; keep a copy of your working folder to switch back.
+- Detects Questie's tracker setting without changing it. Tracker enabled, initializing or unknown: use the party popout. Tracker disabled: allow the existing Blizzard sidebar. Saved display preferences are preserved. Native reattachment waits until combat ends.
+- Pauses native tracker redraw repair while Questie owns the tracker, including manual requests, without changing the saved repair preference.
+- Pauses Party Quests native combat-collapse controls whenever Questie is loaded. The party popout can collapse and reopen independently. Maps-only Questie leaves native combat behavior to the client/Questie.
+- Adds optional QuestieDB fallback quest names and zone labels through its public, contract-checked API. Native quest titles take precedence. Completion, acceptance requirements and remote progress are not inferred from QuestieDB.
+- Uses Questie's supported update callback when available to wake our existing local-log reader. No private progress imports, network impersonation, map pins or Questie settings writes.
+- Restyles the party popout with the same parchment treatment as share dialogs, dark readable text, gold title, standard Blizzard frame/buttons/scrollbar, section panels, and a Share quest log button. Adds persistent close behavior and clamps scrolling after list contraction.
+- Adds compatibility status to settings and /spq report, plus isolated alpha tagging checks.
+
+Based on beta16 and its follow-up regression fixture correction. Lua syntax and mocked regressions pass. This alpha still requires in-game Questie/Forever visual, combat and mixed-party validation; it is not a verified full-compatibility release.
 
 Party Quests Forever 1.1.6-beta16
 

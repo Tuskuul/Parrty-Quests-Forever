@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.7-beta4
+
+- Fixed the Party Quests + button being unable to open the Questie-side pane while solo.
+- Solo view still starts compact, but can now expand to show the empty-party message and collapse normally.
+- Solo clicks no longer change the saved grouped collapse preference. Combat restores the prior solo view after temporary reopening.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.

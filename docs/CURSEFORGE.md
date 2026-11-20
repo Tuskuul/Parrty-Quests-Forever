@@ -9,12 +9,13 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.6.zip
+- **Release file:** PartyQuestsForever_1.1.7.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
-- **Optional integration:** WIM. Do not mark it as a required dependency.
-- **Project ID / issue URL:** Unassigned; add only after the project exists.
+- **Optional integrations:** WIM, Questie and QuestieDB. Do not mark them as required dependencies.
+- **Project ID:** 1803646
+- **Issue URL:** https://github.com/Tuskuul/Parrty-Quests-Forever/issues
 
 ## Public description
 
@@ -32,7 +33,7 @@ See available party quests beside Blizzard's objective tracker or in a separate 
 - Group quests by zone and display Forever character surnames.
 - Choose a left/right tracker sidebar or a separate resizable window.
 - Double-click a foreign quest to check known eligibility and request a manual share by whisper.
-- Click **Share** in the party tracker header or **Share Quest Log** in the main Map & Quest Log title bar to draft a clickable snapshot link.
+- Use **Share** in the tracker, the Questie **... menu**, the separate window or Settings to draft a clickable snapshot link.
 - View shared logs in a Blizzard-styled window with collapsible quests, objective completion and turn-in status.
 - Share through character whispers, WIM and Battle.net whispers. Battle.net uses a separate data route for cross-faction/realm sharing.
 - Configure the addon through its AddOns settings page and draggable minimap button.
@@ -63,18 +64,16 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.6
+Party Quests Forever 1.1.7
 
-- Added Share to chat, Copy Share link and Import for full or selected quest logs.
-- Added Open shareable: offer quests your party members are not on, then let them browse and request a share. Both players need the addon.
-- Quest offers show known eligibility problems, including level requirements, prerequisites and a full quest log.
-- Share to chat now offers Party, Guild, Say, Yell, joined channels and the current chat or whisper. Fixed copied Battle.net links.
-- Restyled sharing windows with parchment, adjustable brightness and clearer quest difficulty colors. Improved Copy/Import fields and scrolling.
-- Settings opens in a movable window alongside sharing windows, the map and other game panels.
-- Improved party progress updates, completion detection and recovery when quest data is temporarily unavailable.
-- Improved tracker collapse, combat reopening, restored visibility, selected-quest highlighting and window spacing.
+- Added automatic docking beside Questie's tracker, with left/right placement, matching header fonts, backdrop colors, opacity and scale.
+- Refined expanded and collapsed docking, including a compact solo view when opened manually. Automatic display remains party-only.
+- Improved combat collapse and restoration, including intermittent missing Blizzard objectives after combat with automatic collapse enabled.
+- Simplified the separate-window toolbar and removed the redundant map sharing shortcut. Sharing remains accessible from the tracker, Questie menu, separate window and Settings.
+- Reduced repeated background checks and hidden-window redraws.
+- Reduced download size by excluding promotional artwork from installed packages. Quest data, the in-game icon and license files remain included.
 
-For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
+Built for WoW Forever 1.60.1 (interface 16001). Questie is optional. Existing settings are preserved; install only one version in the SimplyPartyQuests folder.
 
 ## Submission references checked 2026-11-13
 
@@ -82,4 +81,4 @@ For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
 - https://support.curseforge.com/support/solutions/articles/9000199552-overview-of-the-project-submission-page
 - https://support.curseforge.com/support/solutions/articles/9000196615-known-issues
 
-This package has not been submitted or published to CurseForge.
+The version tag triggers the configured CurseForge packaging webhook. CurseForge processing and approval are separate from GitHub checks.

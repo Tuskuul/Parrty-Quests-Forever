@@ -41,7 +41,7 @@ local module={IsCollapsed=function() return true end,
  SetCollapsed=function() error('module collapse rewritten during reconciliation') end,
  ContentsFrame={Show=function() error('native contents forced visible') end}}
 target.modules={module}
-A.integration.restoreNativeLayout=true
-A:RestoreNativeExpandedLayout(target)
-assert(not A.integration.restoreNativeLayout and calls==2)
+A.integration.blockedRestore=true
+A:ApplyPendingTrackerRestore()
+assert(not A.integration.blockedRestore and calls==2)
 print('PASS: native execution boundary, replaced-method/combat/missing-API rejection, and no full native/module rebuild during reconciliation (mocked; live taint validation required)')

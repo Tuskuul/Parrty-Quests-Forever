@@ -18,6 +18,7 @@ local function safe(value)
     return "-"
 end
 function A:QueueNativeTracker(reason,manual)
+    if not self:NativeTrackerWritesAllowed() then return end
     if not self.db or self.demo or (not manual and not self.db.nativeTrackerRepair) then return end
     local s=self.nativeTracker
     if s.suspended then return end
@@ -97,6 +98,11 @@ function A:VerifyNativeTrackerRefresh(module)
 end
 function A:NativeTrackerTick()
     local s=self.nativeTracker
+    if not self:NativeTrackerWritesAllowed() then
+        s.due=nil;s.reason=nil;s.verify=nil
+        s.result="paused while Questie owns the tracker"
+        return
+    end
     if self.demo or (InCombatLockdown and InCombatLockdown()) then return end
     local tracker=object(QuestObjectiveTracker)
     if s.verify then

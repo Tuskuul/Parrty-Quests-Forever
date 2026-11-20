@@ -1,7 +1,9 @@
-# Party Quests Forever 1.1.6 release record
+# Party Quests Forever 1.1.7 release record
 
-Promoted from beta20 (e3044d406c05cd6407d06c6eb4f2bc72896ab7e6) with runtime changes limited to the diagnostic version. Stable notes summarize changes since 1.1.5. Optional Questie compatibility remains on the 1.1.7 development line.
+Promotes tested beta9 (f0804a1998badc863b82d9fe2a875b2e8c3b811e) to the stable main branch, authorized by the user. Runtime behavior is identical to beta9; only version metadata, diagnostic version text and release documentation change.
 
-User approved stable promotion after reporting counters working properly. The latest live report was alpha6 (shared tracker fixes), client 1.60.1 build 70959, Questie 12.11.0 maps-only, party of four: three combat exits, no recorded blocked actions, no cleanup/processing errors and visible native counters matching local quest data. This does not prove every addon combination or restricted path is taint-free. Earlier no-Questie combat testing was also reported working.
+Validation: 28 root Lua files parse; 28 Lua regression suites and eight automatic-tag tests pass. Package checks validate 32 runtime/attribution paths. All runtime Lua except the diagnostic version string are byte-identical to beta9. Five static datasets and all sharing modules remain unchanged. The existing main-branch workflow requires a stable X.Y.Z version and publishes the matching tag only after checks pass.
 
-Validation: full source syntax/Lua regression suites and automatic-tag tests. TOC, diagnostics, README, manual package changelog and release notes agree. Main auto-tagging invokes CurseForge's existing packaging webhook; site approval is separate.
+User live observations on beta9: expanded, collapsed, solo/manual and populated party docking looked correct; party-pane combat collapse/restoration worked; no Lua errors had appeared; quest updates appeared to work. These are reported observations, not comprehensive coverage of every client state or addon combination. Automated tests retain native/Questie ownership guards, combat ordering, party-only visibility and sharing coverage.
+
+Distribution: main uses 1.1.7; beta retains 1.1.7-beta9 for reproducibility. The stable version tag triggers the existing CurseForge packaging webhook. CurseForge processing/approval must be verified separately from GitHub CI and tag creation.

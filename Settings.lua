@@ -5,10 +5,10 @@ local function font(parent,text,template)
 end
 function A:SetViewShown(shown)
     self.soloOverride=shown and next(self.members)==nil or nil
-    if self.db.displayMode=="blizzard" then
+    if self:EffectiveDisplayMode()=="blizzard" then
         self.db.trackerHidden=not shown;self:InvalidateTrackerIntegration()
         if self.RefreshCombatTrackerPane then self:RefreshCombatTrackerPane() end
-    else self.db.hidden=not shown;self.window:SetShown(shown and self:ShouldShowPartyView()) end
+    else self.db.hidden=not shown;self:ShowStandaloneWindow(shown and self:ShouldShowPartyView()) end
     if self.SyncCombatAutoHide then self:SyncCombatAutoHide() end
     self:SyncSettings()
 end
@@ -18,7 +18,17 @@ function A:SetCombatAutoHide(value)
     self:InvalidateTrackerIntegration();self:SyncSettings()
 end
 function A:SetViewCollapsed(value)
-    if self.db.displayMode=="blizzard" then
+    if self.QuestieDockActive and self:QuestieDockActive() then
+        local q=self.questieCompatibility
+        local solo=self:QuestieDockIsSolo()
+        if InCombatLockdown and InCombatLockdown() then
+            q.dockCombatCollapsed=not not value
+            if solo then q.dockSoloCombatExpanded=not value end
+        elseif solo then q.dockSoloExpanded=not value
+        else self.db.trackerCollapsed=not not value end
+        self:RefreshQuestieDockTarget();self:QuestieDockTick();return
+    end
+    if self:EffectiveDisplayMode()=="blizzard" then
         local tracker=ObjectiveTrackerFrame
         if tracker and tracker:IsShown() and tracker.Header and tracker.Header:IsShown() then
             if InCombatLockdown and InCombatLockdown() then return end
@@ -53,7 +63,7 @@ function A:ResetWindowLayout(show)
     self.window:SetSize(460,540);self:ResizeLayout(460,540)
     self.window:ClearAllPoints();self.window:SetPoint("CENTER")
     self:SetCollapsed(false)
-    self.window:SetShown(self.db.displayMode=="window" and not self.db.hidden)
+    self:ShowStandaloneWindow(self:EffectiveDisplayMode()=="window" and not self.db.hidden)
     self:SyncSettings()
 end
 function A:SyncSettings()
@@ -65,7 +75,8 @@ function A:SyncSettings()
     local pending=A.integration and A.integration.pendingDisplayMode
     local suffix=pending and ("   |   "..(pending=="blizzard" and "Tracker" or "Window").." queued after combat")
         or ((InCombatLockdown and InCombatLockdown()) and "   |   Layout changes apply after combat" or "")
-    self.settingsStatus:SetText("View: "..(self.db.displayMode=="blizzard" and "Tracker sidebar" or "Pop-out window").."   |   Party members: "..count..suffix)
+    self.settingsStatus:SetText("View: "..(self:EffectiveDisplayMode()=="blizzard" and "Tracker sidebar" or "Pop-out window").."   |   Party members: "..count..suffix)
+    if self.settingsQuestieStatus then self.settingsQuestieStatus:SetText(self.QuestieSummary and self:QuestieSummary() or "Questie: not loaded") end
     if self.settingsPaperSlider then
         self.settingsPaperSync=true;self.settingsPaperSlider:SetValue(self:QuestPaperBrightness());self.settingsPaperSync=nil
         self.settingsPaperLabel:SetText("Parchment brightness: "..self:QuestPaperBrightness().."%")
@@ -117,20 +128,21 @@ function A:InitSettings()
         add(aKey,aLabel,aFn);if bKey then add(bKey,bLabel,bFn) end
         items[#items+1]=row
     end
-    local function sidebar() return A.db.displayMode=="blizzard" end
-    local function window() return A.db.displayMode=="window" end
+    local function sidebar() return A:EffectiveDisplayMode()=="blizzard" end
+    local function window() return A:EffectiveDisplayMode()=="window" end
     local function advanced() return A.settingsAdvancedOpen end
     section("Display")
-    check("blizzard","Beside Blizzard's objective tracker","Uses the tracker's fonts, colors and Edit Mode appearance.",sidebar,function() A:SetDisplayMode("blizzard") end,true)
+    check("blizzard","Beside the active quest tracker","Docks beside Blizzard or Questie; choose a separate window for independent placement.",sidebar,function() A:SetDisplayMode("blizzard") end,true)
     check("window","Separate window","Move and resize the party quest window independently.",window,function() A:SetDisplayMode("window") end,true)
     check("minimap","Show minimap button","Click to toggle party quests; right-click for settings; Shift-click to refresh.",function() return not A.db.hideMinimapButton end,function(v) A.db.hideMinimapButton=not v;A:UpdateMinimapButton() end)
-    check("combatAutoHide","Collapse during combat","Restores the previous view after combat. Use Party Quests to reopen the sidebar in combat. Setting changes during combat apply afterward.",function() return A.db.combatAutoHide~=false end,function(v) A:SetCombatAutoHide(v) end)
+    check("combatAutoHide","Collapse during combat","Restores the previous view after combat. With Questie loaded, only the Party Quests pane collapses; Questie's tracker keeps its own controls. Changes during combat apply afterward.",function() return A.db.combatAutoHide~=false end,function(v) A:SetCombatAutoHide(v) end)
+    self.settingsQuestieStatus=text("")
     section("Tracker layout",sidebar)
     check("sidebarLeft","Party quests on the left","",function() return A.db.trackerSide~="right" end,function() A:SetTrackerSide("left") end,true)
     check("sidebarRight","Party quests on the right","",function() return A.db.trackerSide=="right" end,function() A:SetTrackerSide("right") end,true)
     self.settingsWidthLabel=text("")
     actions("narrower","Narrower",function() A:SetSidebarWidth((A.db.sidebarWidth or 420)-40) end,"wider","Wider",function() A:SetSidebarWidth((A.db.sidebarWidth or 420)+40) end)
-    text("Height follows Blizzard's Objective Tracker setting in Edit Mode. Longer lists scroll.")
+    text("Height follows the active tracker: Questie's visible height, or Blizzard's Edit Mode setting. Longer lists scroll.")
     section("Window layout",window)
     check("locked","Lock position and size","",function() return A.db.locked end,function(v) A.db.locked=v end)
     actions("resetWindow","Reset position and size",function() A:ResetWindowLayout(false) end)
@@ -161,8 +173,8 @@ function A:InitSettings()
     condition=advanced
     check("diagnostics","Record detailed diagnostics","Includes character names and quest information. Review the report before sharing.",function() return A.db.diag end,function(v) A:SetDetailedDiagnostics(v) end)
     actions("report","Open diagnostic report",function() A:ShowDiagnosticReport() end,"restartCapture","Start fresh capture",function() A:SetDetailedDiagnostics(true,true) end)
-    condition=function() return advanced() and sidebar() end
-    check("repair","Refresh stale Blizzard counts","Checks confirmed mismatches outside combat and pauses if a redraw fails verification.",function() return A.db.nativeTrackerRepair end,function(v) A:SetNativeRepair(v) end)
+    condition=function() return advanced() and sidebar() and A:NativeTrackerWritesAllowed() end
+    check("repair","Refresh stale Blizzard counts","Checks confirmed mismatches outside combat. Paused while Questie owns the tracker; your preference is preserved.",function() return A.db.nativeTrackerRepair end,function(v) A:SetNativeRepair(v) end)
     text("Capture a diagnostic report before refreshing a stuck tracker.")
     local function layout()
         local width=math.max(310,(panel:GetWidth() or 620)-60)

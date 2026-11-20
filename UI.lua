@@ -1,8 +1,9 @@
 local _, A = ...
 local rows, cards = {}, {}
-local function backdrop(frame,r,g,b)
+local function backdrop(frame)
+    -- Warm translucent section panels over the same parchment as share dialogs.
     frame:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    frame:SetBackdropColor(r,g,b,0.96);frame:SetBackdropBorderColor(0.22,0.27,0.33,1)
+    frame:SetBackdropColor(0.46,0.32,0.15,0.12);frame:SetBackdropBorderColor(0.40,0.27,0.11,0.30)
 end
 local function label(parent,size)
     local f=parent:CreateFontString(nil,"OVERLAY","GameFontNormal")
@@ -24,11 +25,11 @@ local function objective(o, remote)
         text="Unnamed quest step (see requirements)"
     end
     if o.total and o.total>0 and not text:find("%d+%s*/%s*%d+") then text=text.." ("..(o.done or "?").."/"..o.total..")" end
-    local color=o.total and o.done and o.total>0 and o.done>=o.total and "|cff82ce9a" or "|cffb8c1ce"
+    local color=o.total and o.done and o.total>0 and o.done>=o.total and A:QuestDialogColorCode("ready") or A:QuestDialogColorCode("body")
     local suffix=""
     if remote then
-        if o.done==nil or o.total==nil then suffix=" |cff748294[progress unknown]|r"
-        elseif o.observedAt then suffix=" |cff748294["..age(o.observedAt).."]|r" end
+        if o.done==nil or o.total==nil then suffix=(" "..A:QuestDialogColorCode("muted").."[progress unknown]|r")
+        elseif o.observedAt then suffix=" "..A:QuestDialogColorCode("muted").."["..age(o.observedAt).."]|r" end
     end
     return color..text.."|r"..suffix
 end
@@ -85,7 +86,8 @@ end
 function A:QuestZone(id)
     local own=(self.demo and self.demoOwn or self.own)[id]
     if own and own.zoneName then return "header:"..own.zoneName,own.zoneName end
-    local area=(self.questZones or {})[id]
+    local area=self.QuestieField and self:QuestieField(id,"zoneOrSort")
+    if not self.validInteger(area,-10000000,10000000) then area=(self.questZones or {})[id] end
     if not area or area==0 then return "unknown","Unknown zone" end
     local name
     if area>0 and GetAreaInfo then
@@ -114,10 +116,14 @@ end
 function A:SetGroupByZone(value)
     self.db.groupByZone=not not value;self:Render()
 end
-function A:Render()
+function A:Render(force)
     if self.InvalidateTrackerIntegration then self:InvalidateTrackerIntegration() end
     if self.SyncSettings then self:SyncSettings() end
     if not self.window then return end
+    if not force and not self.demo and (self:EffectiveDisplayMode()=="blizzard" or self.db.hidden or not self.window:IsShown()) then
+        self.standaloneDirty=true;return
+    end
+    self.standaloneDirty=nil
     for _,r in ipairs(rows) do r:Hide() end
     for _,c in ipairs(cards) do c:Hide() end
     local n, cn, y=0,0,0
@@ -134,7 +140,13 @@ function A:Render()
         row:ClearAllPoints();row:SetPoint("TOPLEFT",A.child,"TOPLEFT",indent or 0,-y)
         row:SetWidth(contentWidth-2-(indent or 0));row.text:SetWidth(contentWidth-18-(indent or 0))
         row.text:SetFont(STANDARD_TEXT_FONT,size or 12,"");row.text:SetText(text)
-        row.text:SetTextColor(unpack(color or {0.85,0.88,0.93}))
+        -- Dark ink on parchment, including class-colored names. Font height
+        -- stays explicit so resizing and reused rows preserve their hierarchy.
+        local ink=color or {0.48,0.34,0.20}
+        if A:QuestPaperBrightness()<80 then
+            row.text:SetTextColor(0.50+ink[1]*0.48,0.50+ink[2]*0.48,0.50+ink[3]*0.48)
+        else row.text:SetTextColor(ink[1]*0.48,ink[2]*0.48,ink[3]*0.48) end
+        A:ApplyQuestTextContrast(row.text,"body")
         local height=math.max(20,row.text:GetStringHeight()+7)
         row:SetHeight(height);row:Show();y=y+height
         return row
@@ -163,8 +175,6 @@ function A:Render()
     local questExpansion=self.demo and self.demoQuestExpanded or self.db.questExpanded
     self.demoSectionCollapsed=self.demoSectionCollapsed or {}
     local sectionCollapsed=self.demo and self.demoSectionCollapsed or self.db.sectionCollapsed
-    if self.combineButton then self.combineButton:SetText((self.db.combineShared and "[x] " or "[ ] ").."Combine shared quests") end
-    if self.zoneButton then self.zoneButton:SetText((self.db.groupByZone and "[x] " or "[ ] ").."Group by zone") end
     local combined,combinedIDs={},{}
     if self.db.combineShared then
         cn=cn+1
@@ -181,7 +191,7 @@ function A:Render()
             questRows(combined,"all",8,function(q)
                 local key="all:"..q.id
                 local open=questExpansion[key]
-                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title).." |cff96a0af["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true).." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements
@@ -212,11 +222,11 @@ function A:Render()
         local shared,other,count=data.shared,data.other,data.count
         local expanded=self.db.expanded[m.guid]
         local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[m.class]
-        local header=textRow((expanded and "[-] " or "[+] ")..m.name.."  |cff96a0af("..count..")|r",14,c and {c.r,c.g,c.b} or nil)
+        local header=textRow((expanded and "[-] " or "[+] ")..m.name.."  "..A:QuestDialogColorCode("muted").."("..count..")|r",14,c and {c.r,c.g,c.b} or nil)
         header:EnableMouse(true);header:SetScript("OnClick",function() self.db.expanded[m.guid]=not self.db.expanded[m.guid];self:Render() end)
         if expanded then
             local status
-            if m.syncedAt then status="Full log synced "..age(m.syncedAt)..(GetTime()-m.syncedAt>120 and " |cffffc36a- awaiting update|r" or "")
+            if m.syncedAt then status="Full log synced "..age(m.syncedAt)..(GetTime()-m.syncedAt>120 and " |cff79500a- awaiting update|r" or "")
             else status="Discovered quests" end
             if m.connected==false then status=status.." - offline" end
             textRow(status,11,{0.65,0.71,0.8},14)
@@ -238,7 +248,7 @@ function A:Render()
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title)..(self:IsQuestReady(q) and " |cff00ff00[Ready]|r" or ""),13,{0.98,0.82,0.42},26)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(self:IsQuestReady(q) and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""),13,{0.98,0.82,0.42},26)
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()
@@ -276,7 +286,16 @@ function A:Render()
         y=y+6
     end
     self.child:SetHeight(math.max(1,y))
-    self.footer:SetText(self.demo and "PREVIEW - sample quests" or self.sweepStatus or "Native discovery + optional full-log sync")
+    if self.scroll then
+        local height=self.scroll:GetHeight()
+        if self.public(height,"number") and height>0 then
+            local maxScroll=math.max(0,y-height)
+            if self.scroll:GetVerticalScroll()>maxScroll then self.scroll:SetVerticalScroll(maxScroll) end
+        end
+    end
+    self.footer:SetText(self.demo and "PREVIEW - sample quests" or
+        ((self.QuestieOwnsTracker and self:QuestieOwnsTracker()) and "Questie enabled - party quests in a separate window") or
+        self.sweepStatus or "Native discovery + optional full-log sync")
 end
 function A:SaveWindowSize()
     if self.db.collapsed then return end
@@ -291,7 +310,7 @@ function A:ResizeLayout(width,height)
     self.layoutDirty=true
 end
 function A:InitUI()
-    local w=CreateFrame("Frame","SimplyPartyQuestsFrame",UIParent,"BackdropTemplate")
+    local w=CreateFrame("Frame","SimplyPartyQuestsFrame",UIParent,"BasicFrameTemplateWithInset")
     self.window=w
     local size=self.db.size or {}
     local width=type(size.width)=="number" and math.max(380,math.min(1200,size.width)) or 460
@@ -300,26 +319,37 @@ function A:InitUI()
     w:SetSize(width,height);w:SetResizable(true)
     if w.SetResizeBounds then w:SetResizeBounds(380,280,1200,1200)
     else w:SetMinResize(380,280);w:SetMaxResize(1200,1200) end
-    backdrop(w,0.035,0.045,0.065)
+    self:StyleQuestDialog(w)
+    if self.readable(w.TitleText) then w.TitleText:Hide() end
+    if self.readable(w.CloseButton) then
+        w.CloseButton:SetScript("OnClick",function() self:SetViewShown(false) end)
+    end
     w:SetClampedToScreen(true);w:SetMovable(true);w:EnableMouse(true);w:SetFrameStrata("MEDIUM")
     local pos=self.db.position
     if pos then w:SetPoint("TOPLEFT",UIParent,"BOTTOMLEFT",pos.x,pos.y) else w:SetPoint("CENTER",UIParent,"CENTER",310,0) end
     local bar=CreateFrame("Frame",nil,w);bar:SetPoint("TOPLEFT");bar:SetPoint("TOPRIGHT");bar:SetHeight(34)
+    if self.readable(w.CloseButton) then w.CloseButton:SetFrameLevel(bar:GetFrameLevel()+2) end
     bar:EnableMouse(true);bar:RegisterForDrag("LeftButton")
     bar:SetScript("OnDragStart",function() if not self.db.locked then w:StartMoving() end end)
     bar:SetScript("OnDragStop",function() w:StopMovingOrSizing();self.db.position={x=w:GetLeft(),y=w:GetTop()} end)
-    local title=label(bar,14);title:SetPoint("LEFT",12,0);title:SetText("Party Quests Forever");title:SetTextColor(0.7,0.89,0.95)
-    self.collapse=button(bar,"-",26,function() self:SetCollapsed(not self.db.collapsed) end);self.collapse:SetPoint("RIGHT",-8,0)
+    local title=label(bar,14);title:SetPoint("LEFT",12,0);title:SetText("Party Quests");title:SetTextColor(1,0.82,0)
+    self.collapse=button(bar,"-",26,function() self:SetViewCollapsed(self.body:IsShown()) end);self.collapse:SetPoint("RIGHT",-32,0)
     self.settingsButton=button(bar,"Settings",74,function() self:OpenSettings() end);self.settingsButton:SetPoint("RIGHT",self.collapse,"LEFT",-6,0)
     local body=CreateFrame("Frame",nil,w);self.body=body;body:SetPoint("TOPLEFT",0,-34);body:SetPoint("BOTTOMRIGHT")
-    local refresh=button(body,"Refresh",76,function() if not self.demo then self:RefreshParty() end end);refresh:SetPoint("TOPLEFT",12,-5)
-    self.combineButton=button(body,"",240,function() self:SetCombineShared(not self.db.combineShared) end);self.combineButton:SetPoint("LEFT",refresh,"RIGHT",10,0)
-    self.zoneButton=button(body,"",160,function() self:SetGroupByZone(not self.db.groupByZone) end);self.zoneButton:SetPoint("TOPLEFT",12,-32)
-    self.trackerButton=button(body,"Dock beside tracker",164,function() self:SetDisplayMode("blizzard") end);self.trackerButton:SetPoint("LEFT",self.zoneButton,"RIGHT",8,0)
+    self.windowShareButton=button(body,"Share quest log",140,function()
+        local draft=self.questLogShareDraft;self.questLogShareDraft=nil
+        self:OpenQuestLogShare(draft)
+    end)
+    self.windowShareButton:SetScript("OnMouseDown",function()
+        if self.CaptureQuestLogChatDraft then self.questLogShareDraft=self:CaptureQuestLogChatDraft() end
+    end)
+    self.windowShareButton:SetPoint("TOPLEFT",12,-5)
+    self.windowRefreshButton=button(body,"Refresh",76,function() if not self.demo then self:RefreshParty() end end)
+    self.windowRefreshButton:SetPoint("LEFT",self.windowShareButton,"RIGHT",10,0)
     local scroll=CreateFrame("ScrollFrame",nil,body,"UIPanelScrollFrameTemplate");self.scroll=scroll
-    scroll:SetPoint("TOPLEFT",12,-62);scroll:SetPoint("BOTTOMRIGHT",-32,29)
+    scroll:SetPoint("TOPLEFT",12,-36);scroll:SetPoint("BOTTOMRIGHT",-32,29)
     local child=CreateFrame("Frame",nil,scroll);child:SetSize(414,1);scroll:SetScrollChild(child);self.child=child
-    self.footer=label(body,10);self.footer:SetPoint("BOTTOMLEFT",12,10);self.footer:SetTextColor(0.57,0.65,0.73)
+    self.footer=label(body,10);self.footer:SetPoint("BOTTOMLEFT",12,10);self:StyleQuestDialogText(self.footer,"muted")
     local grip=CreateFrame("Button",nil,w);self.resizeGrip=grip
     grip:SetSize(20,20);grip:SetPoint("BOTTOMRIGHT",-1,1)
     grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
@@ -336,7 +366,7 @@ function A:InitUI()
     grip:SetScript("OnMouseUp",stopSizing);grip:SetScript("OnHide",stopSizing)
     w:SetScript("OnSizeChanged",function(_,newWidth,newHeight) self:ResizeLayout(newWidth,newHeight) end)
     self:ResizeLayout(width,height)
-    self:SetCollapsed(self.db.collapsed);w:SetShown(self.db.displayMode~="blizzard" and not self.db.hidden);self:Render()
+    self:SetCollapsed(self.db.collapsed);w:SetShown(self:EffectiveDisplayMode()~="blizzard" and not self.db.hidden);self:Render()
 end
 function A:Demo()
     self.demo=not self.demo
@@ -362,7 +392,9 @@ SlashCmdList.SIMPLYPARTYQUESTS=function(msg)
     elseif msg=="combine" or msg=="combine on" or msg=="combine off" then A:SetCombineShared(msg=="combine on" or (msg=="combine" and not A.db.combineShared))
     elseif msg=="zone" or msg=="zone on" or msg=="zone off" then A:SetGroupByZone(msg=="zone on" or (msg=="zone" and not A.db.groupByZone))
     elseif msg=="blizzard" or msg=="blizzard refresh" then
-        A:QueueNativeTracker("manual",true);print("Party Quests Forever: native tracker redraw queued; waits until out of combat.")
+        if A:NativeTrackerWritesAllowed() then
+            A:QueueNativeTracker("manual",true);print("Party Quests Forever: native tracker redraw queued; waits until out of combat.")
+        else print("Party Quests Forever: native tracker repair is paused while Questie owns the tracker.") end
     elseif msg=="blizzard on" or msg=="blizzard off" then
         A:SetNativeRepair(msg=="blizzard on")
         print("Party Quests Forever: delayed native tracker redraw "..(A.db.nativeTrackerRepair and "on." or "off."))
@@ -384,7 +416,7 @@ SlashCmdList.SIMPLYPARTYQUESTS=function(msg)
     elseif msg=="show" then A:SetViewShown(true)
     elseif msg=="hide" then A:SetViewShown(false)
     elseif msg=="toggle" then
-        local visible=A.db.displayMode=="blizzard" and not A.db.trackerHidden or A.db.displayMode=="window" and not A.db.hidden
+        local visible=A:EffectiveDisplayMode()=="blizzard" and not A.db.trackerHidden or A:EffectiveDisplayMode()=="window" and not A.db.hidden
         A:SetViewShown(not visible)
     else A:OpenSettings() end
     if A.SyncSettings then A:SyncSettings() end
