@@ -993,7 +993,7 @@ function A:SizeTrackerSidebar()
     local f=self.sidebar
     local limit=f.heightLimit or 420
     local content=f.contentHeight or 1
-    local padding=(f.questiePlain and 34 or 44)+(f.headerOffset or 38)
+    local padding=(f.questiePlain==true and ((f.questieContentInset or 26)+8) or 44)+(f.headerOffset or 38)
     local overflow=content+padding>limit
     local viewport=math.max(1,math.min(content,limit-padding-(overflow and 14 or 0)))
     f.scroll:SetSize(math.max(1,f:GetWidth()-14),math.max(1,viewport))

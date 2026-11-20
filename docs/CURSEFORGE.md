@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.7-beta6.zip
+- **Release file:** PartyQuestsForever_1.1.7-beta7.zip
 - **Release type:** Beta
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -64,13 +64,13 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.7-beta6
+Party Quests Forever 1.1.7-beta7
 
-- Fixed intermittent missing Blizzard objectives after combat with automatic collapse enabled.
-- Restore waits for combat lockdown and the secure combat state to finish, then uses current module contents and respects native visibility changes.
-- Removed the extra party-pane redraw delay after combat restoration.
+- Tightened docking beside Questie by aligning the visible background edges instead of leaving a padded gap.
+- Aligned the party background top with Questie and followed the rendered header position.
+- Matched backdrop padding and border size across tracker scales, with content spacing that follows the header font.
 
-For WoW Forever 1.60.1 (interface 16001). Questie remains optional. Existing settings are preserved.
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional.
 
 ## Submission references checked 2026-11-13
 

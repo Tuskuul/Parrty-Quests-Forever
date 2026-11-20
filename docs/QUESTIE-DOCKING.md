@@ -25,3 +25,7 @@ Compact solo mode is a default, not an unconditional collapse rule. The +/headin
 ## Beta5 cleanup
 
 The map shortcut and its geometry/collision scanner are removed completely; retained sharing entry points are the tracker, Questie menu, separate window and Settings. Dock styling is applied on entry and font/scale/collapse visuals update when their values change. Rendered backdrop opacity still follows the live Questie values. A hidden standalone window marks its content dirty and renders fresh rows before it is shown, rather than building duplicate quest rows on every docked update.
+
+## Beta7 alignment refinement
+
+The dock now joins the visible fill edges using Questie's public backdrop insets, converted to UIParent coordinates. It aligns to the base frame top and reads the rendered title position independently rather than shifting the entire pane by a fixed header offset. Backdrop insets and border size follow effective scale; title/content offsets and compact height track the rendered header font. Missing backdrop metadata falls back to Questie's standard four-unit insets. No Questie frame, script or saved setting is modified.

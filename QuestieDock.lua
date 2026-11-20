@@ -21,6 +21,17 @@ function A:ReadQuestieDockRect()
     if not number(left) or not number(right) or not number(top) or not number(bottom) or right<=left or top<=bottom then return end
     local ratio=scale/uiScale
     left,right,top,bottom=left*ratio,right*ratio,top*ratio,bottom*ratio
+    -- The fill is inset from the frame bounds. Join the visible fills rather
+    -- than adding a gap between two already-inset backdrop rectangles.
+    local backdrop=call(target.GetBackdrop,target)
+    local insets=self.readable(backdrop) and self.readable(backdrop.insets) and backdrop.insets or nil
+    local function inset(key)
+        local value=insets and insets[key]
+        return (number(value) and value>=0 and value<=32 and value or 4)*ratio
+    end
+    local padding={left=inset("left"),right=inset("right"),top=inset("top"),bottom=inset("bottom")}
+    local edge=self.readable(backdrop) and backdrop.edgeSize
+    edge=(number(edge) and edge>=0 and edge<=64 and edge or 16)*ratio
     local sw,sh=call(UIParent.GetWidth,UIParent),call(UIParent.GetHeight,UIParent)
     if not number(sw) or not number(sh) or sw<=0 or sh<=0 then return end
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
@@ -34,8 +45,8 @@ function A:ReadQuestieDockRect()
     local compact=solo and not expanded
     if compact then width=180 end
     local side=self.db.trackerSide=="right" and "right" or "left"
-    local gap=2
-    local roomLeft,roomRight=left-gap,sw-right-gap
+    local leftEdge,rightEdge=left+padding.left+padding.right,right-padding.right-padding.left
+    local roomLeft,roomRight=leftEdge,sw-rightEdge
     if side=="left" and roomLeft<width and roomRight>roomLeft then side="right"
     elseif side=="right" and roomRight<width and roomLeft>roomRight then side="left" end
     local room=side=="left" and roomLeft or roomRight
@@ -46,15 +57,21 @@ function A:ReadQuestieDockRect()
     if height>=128 then s.dockExpandedHeight=height else height=s.dockExpandedHeight or 420 end
     height=math.min(math.max(128,height),sh-16)
     local header=Questie_HeaderFrame
-    local headerTop=header and call(header.IsShown,header)==true and call(header.GetTop,header)
-    local hs=header and call(header.GetEffectiveScale,header)
-    if number(headerTop) and number(hs) and hs>0 and math.abs(headerTop*hs/uiScale-top)<64 then top=headerTop*hs/uiScale+6 end
+    local label=header and self.readable(header.trackedQuests) and header.trackedQuests.label
+    local title=label and type(label.GetTop)=="function" and label or header
+    local headerShown=header and call(header.IsShown,header)==true
+    local headerTop=headerShown and title and call(title.GetTop,title)
+    local hs=title and call(title.GetEffectiveScale,title)
+    if headerShown and not number(headerTop) then headerTop=call(header.GetTop,header);hs=call(header.GetEffectiveScale,header) end
+    local titleInset=10*ratio
+    if number(headerTop) and number(hs) and hs>0 and math.abs(headerTop*hs/uiScale-top)<64 then titleInset=math.max(padding.top,top-headerTop*hs/uiScale) end
     top=math.max(48,math.min(sh-4,top))
     if top<128 then return end
     height=math.min(height,top-4)
     if not compact and top-bottom>=128 then height=math.min(height,top-bottom) end
-    local x=side=="left" and left-gap-width or right+gap
-    return {target=target,x=x,top=top,width=width,height=height,side=side,compact=compact,solo=solo,scale=ratio}
+    local x=side=="left" and leftEdge-width or rightEdge
+    return {target=target,x=x,top=top,width=width,height=height,side=side,compact=compact,solo=solo,scale=ratio,
+        padding=padding,edge=edge,titleInset=titleInset}
 end
 function A:RefreshQuestieDockTarget()
     local s=self.questieCompatibility
@@ -156,7 +173,6 @@ function A:StyleQuestieDock()
         f.collapse:ClearAllPoints();f.collapse:SetPoint("LEFT",f.title,"RIGHT",5,0)
         f.settings:ClearAllPoints();f.settings:SetPoint("LEFT",f.collapse,"RIGHT",3,0)
         f.questieHeaderClick:Show()
-        f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-26)
         f.questiePlain=true
     end
     local h=Questie_HeaderFrame
@@ -172,13 +188,25 @@ function A:StyleQuestieDock()
     elseif q.dockFont~="default" then
         f.title:SetFontObject(GameFontNormalSmall or GameFontNormal);q.dockFont="default"
     end
+    local rect=q.dockRect
+    local _,size=f.title:GetFont()
+    size=number(size) and size or 14
+    local inset=rect and rect.titleInset or 10
+    local ratio=rect and rect.scale or 1
+    local layout=table.concat({inset,size,ratio},":")
+    if q.dockHeaderLayout~=layout then
+        q.dockHeaderLayout=layout
+        f.title:ClearAllPoints();f.title:SetPoint("TOPLEFT",f,"TOPLEFT",7*ratio,-inset)
+        f.questieContentInset=inset+size+6*ratio
+        f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7*ratio,-f.questieContentInset)
+    end
 end
 function A:RestoreQuestieDockStyle()
     local f,q=self.sidebar,self.questieCompatibility
     local saved=q.dockStyle
     if not f or not saved then return end
-    q.dockStyle=nil;q.dockAppearance=nil;q.dockFont=nil;q.dockCollapseState=nil
-    f.questiePlain=nil;f:SetAlpha(1);f.headerOffset=nil
+    q.dockStyle=nil;q.dockAppearance=nil;q.dockFont=nil;q.dockCollapseState=nil;q.dockHeaderLayout=nil;q.dockBackdropLayout=nil
+    f.questiePlain=nil;f.questieContentInset=nil;f:SetAlpha(1);f.headerOffset=nil
     if saved.font and saved.size then f.title:SetFont(saved.font,saved.size,saved.flags) end
     f.headerArt:Show();f.share:Show();f.refresh:Show()
     f.settings:SetText("Settings");f.settings:SetSize(56,22);f.settings:SetScript("OnClick",saved.settingsClick);f.settings:SetScript("OnMouseDown",saved.settingsDown)
@@ -194,7 +222,14 @@ function A:SyncQuestieDockBackground()
     local bg,q=f.trackerBackground,self.questieCompatibility
     if not bg.questieArt then
         bg.questieArt=CreateFrame("Frame",nil,bg,"BackdropTemplate");bg.questieArt:SetAllPoints(bg)
-        bg.questieArt:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,edgeSize=16,insets={left=4,right=4,top=4,bottom=4}})
+    end
+    local rect=q.dockRect
+    local p=rect and rect.padding or {left=4,right=4,top=4,bottom=4}
+    local edge=rect and rect.edge or 16
+    local layout=table.concat({p.left,p.right,p.top,p.bottom,edge},":")
+    if q.dockBackdropLayout~=layout then
+        q.dockBackdropLayout=layout;q.dockAppearance=nil
+        bg.questieArt:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,edgeSize=edge,insets=p})
     end
     bg.art:Hide();bg.questieArt:Show()
     local signature=tostring(f:GetWidth())..":"..tostring(f:GetHeight())

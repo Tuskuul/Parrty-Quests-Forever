@@ -23,6 +23,8 @@ local function widget(kind,foreign)
  function w:SetAlpha(v) write(self);self.alpha=v end
  function w:GetAlpha() return self.alpha or 1 end
  function w:GetEffectiveAlpha() return self.alpha or 1 end
+ function w:GetBackdrop() return self.backdrop end
+ function w:SetBackdrop(v) write(self);self.backdrop=v;self.backdropWrites=(self.backdropWrites or 0)+1 end
  function w:SetBackdropColor(...) write(self);self.backdropColor={...} end
  function w:GetBackdropColor() if self.backdropColor then return table.unpack(self.backdropColor) end end
  function w:SetBackdropBorderColor(...) write(self);self.borderColor={...} end
@@ -73,13 +75,31 @@ Questie_HeaderFrame.trackedQuests.label.font={'QuestieFont',14,'OUTLINE'}
 A:TrackerIntegrationTick()
 local f=A.sidebar
 assert(A:QuestieDockActive() and A:EffectiveDisplayMode()=='blizzard' and f:IsShown() and not A.window:IsShown(),tostring(A.integration.lastError))
-assert(f.point[2]==UIParent and f.point[3]=='BOTTOMLEFT' and f.point[4]==428 and f.point[5]==896,'dock did not use independent numeric geometry')
-assert(f.heightLimit==496 and f.height<=496 and f.maxScroll>0 and renders==1)
+assert(f.point[2]==UIParent and f.point[3]=='BOTTOMLEFT' and f.point[4]==438 and f.point[5]==900,'dock did not use independent numeric geometry')
+assert(f.heightLimit==500 and f.height<=500 and f.maxScroll>0 and renders==1)
 assert(not A:NativeTrackerWritesAllowed() and not A:NativeCombatControlsAllowed())
+local function joinedFill()
+ local r=A.questieCompatibility.dockRect
+ local p=r.padding
+ local baseLeft=Questie_BaseFrame.left*r.scale
+ local baseRight=(Questie_BaseFrame.left+Questie_BaseFrame.width)*r.scale
+ if r.side=='left' then assert(math.abs(r.x+r.width-p.right-baseLeft-p.left)<0.001,'visible left-dock fills leave a seam')
+ else assert(math.abs(r.x+p.left-baseRight+p.right)<0.001,'visible right-dock fills leave a seam') end
+ assert(r.top==Questie_BaseFrame.top*r.scale,'dock top does not follow the base backdrop')
+ assert(f.trackerBackground.questieArt.backdrop.insets.top==p.top,'backdrop padding did not scale')
+end
+joinedFill()
+assert(f.title.point[5]==-10 and f.scroll.point[5]==-30,'header/content did not retain rendered alignment')
+local label=Questie_HeaderFrame.trackedQuests.label
+label.top=885;A:TrackerIntegrationTick()
+assert(f.title.point[5]==-15,'actual rendered label geometry was ignored')
+label.top=nil;A:TrackerIntegrationTick()
+
 assert(f.title.font[1]=='QuestieFont' and f.title.font[2]==14,'header font did not follow Questie')
 local fontWrites,scrollAnchors=f.title.fontWrites,f.scroll.anchorWrites
+local backdropWrites=f.trackerBackground.questieArt.backdropWrites
 for i=1,3 do A:TrackerIntegrationTick() end
-assert(f.title.fontWrites==fontWrites and f.scroll.anchorWrites==scrollAnchors,'unchanged Questie style was rebuilt on every tick')
+assert(f.title.fontWrites==fontWrites and f.scroll.anchorWrites==scrollAnchors and f.trackerBackground.questieArt.backdropWrites==backdropWrites,'unchanged Questie style was rebuilt on every tick')
 Questie_HeaderFrame.trackedQuests.label.font[2]=15
 A:TrackerIntegrationTick();assert(f.title.font[2]==15 and f.title.fontWrites==fontWrites+1,'cached dock font ignored a live change')
 Questie_HeaderFrame.trackedQuests.label.font[2]=14;A:TrackerIntegrationTick()
@@ -115,10 +135,14 @@ f.settings.scripts.OnClick();A.questieDockMenu.buttons[2].scripts.OnClick();asse
 f.questieHeaderClick.scripts.OnClick(nil,'RightButton');A.questieDockMenu.buttons[3].scripts.OnClick();assert(settings==1)
 
 A.db.trackerSide='right';Questie_BaseFrame.left=800;Questie_HeaderFrame.left=800
-A:TrackerIntegrationTick();assert(f.point[4]==1102,'right-side follow failed')
+A:TrackerIntegrationTick();assert(f.point[4]==1092,'right-side follow failed');joinedFill()
 Questie_BaseFrame.scale=0.8;Questie_HeaderFrame.scale=0.8
-A:TrackerIntegrationTick();assert(f.point[4]==882 and f.heightLimit==398,'mixed UI scales were ignored')
-assert(math.abs(f.title.font[2]-11.2)<0.01,'Questie header font scale was ignored')
+A:TrackerIntegrationTick();assert(math.abs(f.point[4]-873.6)<0.01 and f.heightLimit==400,'mixed UI scales were ignored')
+assert(math.abs(f.title.font[2]-11.2)<0.01,'Questie header font scale was ignored');joinedFill()
+Questie_BaseFrame.backdrop={edgeSize=12,insets={left=2,right=6,top=8,bottom=3}}
+A:TrackerIntegrationTick();joinedFill()
+assert(math.abs(f.trackerBackground.questieArt.backdrop.edgeSize-9.6)<0.001,'rendered border size did not scale')
+Questie_BaseFrame.backdrop=nil;A:TrackerIntegrationTick()
 -- At the right screen edge, prefer the side with room without changing settings.
 Questie_BaseFrame.scale=1;Questie_HeaderFrame.scale=1;Questie_BaseFrame.left=1450;Questie_HeaderFrame.left=1450
 A:TrackerIntegrationTick();assert(A.questieCompatibility.dockRect.side=='left' and A.db.trackerSide=='right')
@@ -127,7 +151,7 @@ assert(f.viewCollapsed and f:IsShown() and not f.scroll:IsShown(),'combat did no
 A:SetViewCollapsed(false);A:TrackerIntegrationTick()
 assert(not f.viewCollapsed and f.scroll:IsShown() and not A.db.trackerCollapsed,'manual combat reopen changed outside-combat preference')
 Questie_BaseFrame.left=1400;Questie_HeaderFrame.left=1400
-A:TrackerIntegrationTick();assert(f.point[4]==978,'already-independent dock stopped following during combat')
+A:TrackerIntegrationTick();assert(f.point[4]==988,'already-independent dock stopped following during combat')
 A:TogglePartyTracker();assert(not f:IsShown() and A.db.trackerHidden)
 A:TogglePartyTracker();assert(f:IsShown() and not A.db.trackerHidden)
 locked=false;A:TrackerIntegrationTick();assert(not f.viewCollapsed)
