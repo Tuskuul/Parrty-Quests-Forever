@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.7-beta3
+Party Quests Forever 1.1.7-beta4
 BETA: Compact Questie docking with matching backdrop opacity and live fades.
 See docs/QUESTIE-COMPATIBILITY.md for scope and live tests.
 For WoW Forever 1.60.1 (interface 16001)
@@ -24,7 +24,7 @@ width. Our pane follows Questie's position, size and scale and has independent
 collapse, scrolling and visibility controls. The ... menu or a right-click on
 Party Quests opens Share, Refresh and Settings. Background color, opacity and
 border follow Questie's rendered backdrop, including fades and zero opacity.
-Solo mode stays compact. Combat collapse affects only our
+Solo mode starts compact; + opens the empty-party view and - closes it. Combat collapse affects only our
 pane; click its collapse button to reopen. Questie's own controls are unchanged.
 Separate-window mode remains available and is the fallback for an unavailable
 or hidden Questie tracker, or when neither side has room. Native Blizzard

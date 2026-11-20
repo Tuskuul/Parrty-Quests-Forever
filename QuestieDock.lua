@@ -8,6 +8,9 @@ end
 local function number(v) return A.public(v,"number") and v==v and math.abs(v)<100000 end
 -- Read named UI geometry only. Never import Questie's runtime modules, parent
 -- our pane to its tracker, or change its anchors, scripts, settings or children.
+function A:QuestieDockIsSolo()
+    return not next(self.members or {}) and not self.demo
+end
 function A:ReadQuestieDockRect()
     local target=Questie_BaseFrame
     if not target or call(target.IsShown,target)~=true then return end
@@ -21,7 +24,14 @@ function A:ReadQuestieDockRect()
     local sw,sh=call(UIParent.GetWidth,UIParent),call(UIParent.GetHeight,UIParent)
     if not number(sw) or not number(sh) or sw<=0 or sh<=0 then return end
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
-    local compact=not next(self.members or {}) and not self.demo
+    local solo=self:QuestieDockIsSolo()
+    local q=self.questieCompatibility
+    local expanded=q.dockSoloExpanded==true
+    if combat() then
+        if not q.dockInCombat then expanded=self.db.combatAutoHide==false and expanded
+        else expanded=q.dockSoloCombatExpanded==true end
+    end
+    local compact=solo and not expanded
     if compact then width=180 end
     local side=self.db.trackerSide=="right" and "right" or "left"
     local gap=2
@@ -44,10 +54,15 @@ function A:ReadQuestieDockRect()
     height=math.min(height,top-4)
     if not compact and top-bottom>=128 then height=math.min(height,top-bottom) end
     local x=side=="left" and left-gap-width or right+gap
-    return {target=target,x=x,top=top,width=width,height=height,side=side,compact=compact,scale=ratio}
+    return {target=target,x=x,top=top,width=width,height=height,side=side,compact=compact,solo=solo,scale=ratio}
 end
 function A:RefreshQuestieDockTarget()
     local s=self.questieCompatibility
+    local solo=self:QuestieDockIsSolo()
+    if s.dockWasSolo~=solo then
+        s.dockWasSolo=solo;s.dockSoloExpanded=nil;s.dockSoloCombatExpanded=nil
+        self.integration.dirty=true;self.integration.due=nil
+    end
     local requested=self.db.displayMode=="blizzard" and self:QuestieOwnsTracker()
     local rect=requested and (not s.dockRetryAt or GetTime()>=s.dockRetryAt) and self:ReadQuestieDockRect() or nil
     -- Do not move a formerly Blizzard-attached pane into a different layout
@@ -205,8 +220,14 @@ function A:QuestieDockTick()
         f:SetScale(1)
     end
     if combat() then
-        if not q.dockInCombat then q.dockInCombat=true;q.dockCombatCollapsed=self.db.combatAutoHide~=false or self.db.trackerCollapsed==true end
-    else q.dockInCombat=nil;q.dockCombatCollapsed=nil end
+        if not q.dockInCombat then
+            q.dockInCombat=true
+            local restCollapsed
+            if rect.solo then restCollapsed=q.dockSoloExpanded~=true else restCollapsed=self.db.trackerCollapsed==true end
+            q.dockCombatCollapsed=self.db.combatAutoHide~=false or restCollapsed
+            q.dockSoloCombatExpanded=rect.solo and not q.dockCombatCollapsed
+        end
+    else q.dockInCombat=nil;q.dockCombatCollapsed=nil;q.dockSoloCombatExpanded=nil end
     local collapsed
     if q.dockInCombat then collapsed=q.dockCombatCollapsed else collapsed=not not self.db.trackerCollapsed end
     local signature=table.concat({rect.x,rect.top,rect.width,rect.height},":")
@@ -217,7 +238,7 @@ function A:QuestieDockTick()
     end
     self:SetTrackerSidebarHeaderLayout(false)
     self:StyleQuestieDock()
-    if rect.compact then collapsed=true end
+    if rect.solo and not q.dockInCombat then collapsed=q.dockSoloExpanded~=true end
     f.viewCollapsed=collapsed;f.scroll:SetShown(not collapsed);f.collapse:Show()
     local atlas=collapsed and "ui-questtrackerbutton-secondary-expand" or "ui-questtrackerbutton-secondary-collapse"
     f.collapse.normal:SetAtlas(atlas);f.collapse.pushed:SetAtlas(atlas.."-pressed")
@@ -246,6 +267,7 @@ function A:LeaveQuestieDock()
     if not q.dockActive and not q.dockStyle then return end
     self:RestoreQuestieDockStyle()
     q.dockActive=nil;q.dockGeometry=nil;q.dockBackground=nil;q.dockInCombat=nil;q.dockCombatCollapsed=nil
+    q.dockWasSolo=nil;q.dockSoloExpanded=nil;q.dockSoloCombatExpanded=nil
     s.anchor=nil;s.side=nil;s.appearanceSignature=nil;s.sidebarScale=nil;s.nativeCollapsed=nil
     s.dirty=true;s.due=nil
     if self.sidebar then self.sidebar:Hide();self.sidebar.trackerBackground:Hide() end

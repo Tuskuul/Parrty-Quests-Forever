@@ -147,6 +147,21 @@ A:SetViewCollapsed(false);assert(not f.viewCollapsed and A.db.trackerCollapsed)
 locked=false;A:TrackerIntegrationTick();assert(f.viewCollapsed,'combat exit lost the saved collapsed preference')
 A.members={};A:TrackerIntegrationTick()
 assert(A.questieCompatibility.dockRect.width==180 and f.viewCollapsed and not f.scroll:IsShown(),'solo dock left an oversized empty panel')
+-- Exercise the actual + and heading click callbacks, then repeated refreshes.
+local groupedCollapse=A.db.trackerCollapsed
+f.collapse.scripts.OnClick()
+for i=1,3 do A:TrackerIntegrationTick() end
+assert(not f.viewCollapsed and f.scroll:IsShown() and f:GetWidth()==420,'solo + was immediately forced shut again')
+assert(A.db.trackerCollapsed==groupedCollapse,'solo expansion changed the saved grouped collapse preference')
+f.questieHeaderClick.scripts.OnClick(nil,'LeftButton');A:TrackerIntegrationTick()
+assert(f.viewCollapsed and not f.scroll:IsShown() and f:GetWidth()==180,'solo heading did not collapse back to the compact view')
+f.collapse.scripts.OnClick();A.db.combatAutoHide=true
+locked=true;A:TrackerIntegrationTick();assert(f.viewCollapsed,'solo combat auto-collapse failed')
+f.collapse.scripts.OnClick();A:TrackerIntegrationTick();assert(not f.viewCollapsed and f.scroll:IsShown(),'solo + could not reopen in combat')
+locked=false;A:TrackerIntegrationTick();assert(not f.viewCollapsed,'combat exit lost the manually opened solo view')
+f.collapse.scripts.OnClick();locked=true;A:TrackerIntegrationTick()
+f.collapse.scripts.OnClick();A:TrackerIntegrationTick();assert(not f.viewCollapsed)
+locked=false;A:TrackerIntegrationTick();assert(f.viewCollapsed,'temporary combat reopening changed the outside-combat solo preference')
 A.members={member={}};A.db.trackerCollapsed=false;A:TrackerIntegrationTick()
 assert(f:GetWidth()==420 and not f.viewCollapsed,'joining a party retained the compact solo layout')
 assert(nativeAccess==0 and foreignWrites==0,'docking wrote to Questie or accessed Blizzard frames')

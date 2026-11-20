@@ -17,3 +17,7 @@ The screenshot review exposed beta2's fixed 0.35 background alpha and full-width
 The party pane uses addon-owned BackdropTemplate art matching Questie's simple white-fill/tooltip-border layout. Normal Blizzard background art is hidden only while this adapter is active. Native member/zone header bars are likewise suppressed only for the Questie renderer. The rendered Questie_HeaderFrame.trackedQuests.label font is read to align header typography and scale. Leaving the adapter restores the prior controls, font, alpha and native art.
 
 Dock gap is two UI units. The party title aligns with the top Questie header and the available party height ends at the same lower bound. A bottom-positioned Questie header does not drag the whole party column down. Solo mode uses a compact 180-unit heading near the tracker, while grouped mode retains configured width. The ... menu and right-click heading provide Share/Refresh/Settings; no Questie buttons or tracker scripts are replaced.
+
+## Beta4 solo expansion
+
+Compact solo mode is a default, not an unconditional collapse rule. The +/heading buttons can expand it to the normal width and existing empty-party message. A separate session-only solo expansion preference avoids overwriting the grouped collapse preference. Combat uses temporary solo state and restores the prior outside-combat solo view. Returning to or leaving a group clears this transient choice.

@@ -19,9 +19,14 @@ function A:SetCombatAutoHide(value)
 end
 function A:SetViewCollapsed(value)
     if self.QuestieDockActive and self:QuestieDockActive() then
-        if InCombatLockdown and InCombatLockdown() then self.questieCompatibility.dockCombatCollapsed=not not value
+        local q=self.questieCompatibility
+        local solo=self:QuestieDockIsSolo()
+        if InCombatLockdown and InCombatLockdown() then
+            q.dockCombatCollapsed=not not value
+            if solo then q.dockSoloCombatExpanded=not value end
+        elseif solo then q.dockSoloExpanded=not value
         else self.db.trackerCollapsed=not not value end
-        self:QuestieDockTick();return
+        self:RefreshQuestieDockTarget();self:QuestieDockTick();return
     end
     if self:EffectiveDisplayMode()=="blizzard" then
         local tracker=ObjectiveTrackerFrame
