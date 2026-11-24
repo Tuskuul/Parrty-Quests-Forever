@@ -494,9 +494,10 @@ function A:BuildTrackerEntries()
                             if r and #r>0 then requirements=r;break end
                         end
                     end
-                    local title=A:QuestTitleText(q.id,q.title)..(self:IsTrackerQuestReady(q,view.own[q.id]) and (" "..completeColor().."[Ready]|r") or "")
+                    local ready=self:IsTrackerQuestReady(q,view.own[q.id])
+                    local title=A:QuestTitleText(q.id,q.title)..(ready and (" "..completeColor().."[Ready]|r") or "")
                     if q.participants then title=title.." ["..(#q.participants+1).."/"..(#members+1).." players]" end
-                    entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
+                    entries[#entries+1]={kind="quest",key=key,id=q.id,title=title,rewardXP=self.QuestRewardXPText and self:QuestRewardXPText(q.id,ready),ownerGuid=s.member and s.member.guid,lines=lines,lineKinds=lineKinds,requirements=requirements,context=s.name..(g.name~="" and (" / "..g.name) or ""),open=self.db.questExpanded[key]}
                 end
             end
         end
@@ -937,6 +938,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
         b.label:ClearAllPoints()
         b.label:SetPoint("TOPLEFT",heading and not plain and 7 or 0,heading and not plain and -5 or 0)
         b.label:SetWidth(width-indent-(heading and not plain and 14 or 0));b.label:SetText(label)
+        if self.LayoutQuestRewardXP then self:LayoutQuestRewardXP(b,b.label,entry and entry.rewardXP,width-indent-(heading and not plain and 14 or 0)) end
         local height=math.max(heading and not plain and 26 or 1,b.label:GetStringHeight()+(heading and not plain and 10 or 3))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",indent,-y);b:SetSize(width-indent,height)
         b:EnableMouse(entry~=nil);b:Show();y=y+height+2

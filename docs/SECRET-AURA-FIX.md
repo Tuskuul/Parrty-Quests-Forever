@@ -1,7 +1,6 @@
 # Legacy Forever secret-aura compatibility fix
 
-Status: prepared for the next maintenance build. Addon version and release
-tags have not changed. This is a targeted workaround for a native-client defect,
+Status: included in 1.1.8. This is a targeted workaround for a native-client defect,
 not a claim that every possible source of UI taint has been removed.
 
 ## Reported failure
@@ -57,7 +56,7 @@ status. No user-facing setting is added for this compatibility detail.
 
 ## Validation
 
-`python3 run_checks.py`: 29 source files syntax checked; 29 regression suites
+`python3 run_checks.py`: 30 source files syntax checked; 30 regression suites
 passed; package manifest checked with zero errors.
 
 The new suite models both native entry paths continuing past the predicate,
@@ -66,10 +65,10 @@ loading, wrapper ownership, and modern/non-Forever exclusions. Existing combat,
 native refresh, Questie, sharing, and scheduling suites remain green.
 
 Mocks cannot reproduce the game client's actual taint engine. In-game validation
-is still required in the next labeled beta: reload, confirm guard status, level
+is still required in the combined release: reload, confirm guard status, level
 with Questie active, check tracker updates, enter/exit Edit Mode, then exercise
 combat collapse/restoration. Repeat without Questie as a separate case. Record
 GetBuildInfo and any new stack. Do not force native frame updates from a macro
 as part of the ordinary test.
 
-Pending XP and docking features have not been implemented in this change.
+The combined 1.1.8 release also includes ready-only XP and Questie docking refinements.

@@ -128,7 +128,7 @@ function A:Render(force)
     for _,c in ipairs(cards) do c:Hide() end
     local n, cn, y=0,0,0
     local contentWidth=self.contentWidth or 414
-    local function textRow(text,size,color,indent)
+    local function textRow(text,size,color,indent,rewardXP)
         n=n+1
         local row=rows[n]
         if not row then
@@ -140,6 +140,7 @@ function A:Render(force)
         row:ClearAllPoints();row:SetPoint("TOPLEFT",A.child,"TOPLEFT",indent or 0,-y)
         row:SetWidth(contentWidth-2-(indent or 0));row.text:SetWidth(contentWidth-18-(indent or 0))
         row.text:SetFont(STANDARD_TEXT_FONT,size or 12,"");row.text:SetText(text)
+        if A.LayoutQuestRewardXP then A:LayoutQuestRewardXP(row,row.text,rewardXP,contentWidth-18-(indent or 0),true) end
         -- Dark ink on parchment, including class-colored names. Font height
         -- stays explicit so resizing and reused rows preserve their hierarchy.
         local ink=color or {0.48,0.34,0.20}
@@ -191,7 +192,8 @@ function A:Render(force)
             questRows(combined,"all",8,function(q)
                 local key="all:"..q.id
                 local open=questExpansion[key]
-                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true).." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12)
+                local ready=self:IsTrackerQuestReady(q,own[q.id])
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(ready and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or "").." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12,self.QuestRewardXPText and self:QuestRewardXPText(q.id,ready))
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements
@@ -248,7 +250,8 @@ function A:Render(force)
                 questRows(quests,sectionKey,24,function(q)
                     local questKey=m.guid..":"..q.id
                     local questOpen=questExpansion[questKey]
-                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(self:IsQuestReady(q) and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""),13,{0.98,0.82,0.42},26)
+                    local ready=self:IsQuestReady(q)
+                    local questHeader=textRow((questOpen and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(ready and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or ""),13,{0.98,0.82,0.42},26,self.QuestRewardXPText and self:QuestRewardXPText(q.id,ready))
                     questHeader:EnableMouse(true)
                     if not both then self:BindQuestShareClick(questHeader,q.id,m.guid) end
                     questHeader:SetScript("OnClick",function()

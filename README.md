@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.7** adds Questie tracker integration, refined docking, combat restoration fixes and a smaller addon download.
+**1.1.8** adds ready-only XP rewards, smooth Questie dragging, compact grouped collapse, a cleaner border join and a legacy Forever secret-aura workaround.
 
 Choose **Beside the active quest tracker** to dock beside Questie when its tracker is enabled, or beside Blizzard when Questie's tracker is disabled. The party pane follows Questie's position, size and scale using read-only screen geometry. Choose left/right and width under Tracker layout; if your chosen side has too little room, the other side is used without changing your preference. Separate-window mode remains available, and is the fallback when Questie's tracker is hidden, unavailable or neither side has room. Your requested display mode is preserved.
 
@@ -21,7 +21,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.7.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.8.txt)
 
 ## Quest offers
 
@@ -96,3 +96,7 @@ Created by Wolfie. Project code is GPLv3. Static fallback data derives from Ques
 ## Audit record
 
 See [the beta5 cleanup record](docs/CODE-CLEANUP-1.1.7-beta5.md) for removed UI/code, retained compatibility paths and package-size measurements. The [earlier beta10 audit](docs/AUDIT-1.1.6-beta10.md) remains available as history.
+
+## Ready quest XP
+
+Ready quest title rows show a right-aligned XP reward without expanding the quest. Rewards use the client value for your character, not a party member’s level. Unknown and zero values are omitted; no quest selection is changed. Titles wrap within the remaining width. Rewards refresh with level/difficulty changes and normal view updates.

@@ -5,11 +5,12 @@
 ## X-Category: Quests & Leveling
 ## X-License: GPL-3.0-only
 ## Author: Wolfie
-## Version: 1.1.7
+## Version: 1.1.8
 ## OptionalDeps: Questie, QuestieDB
 ## SavedVariables: SimplyPartyQuestsDB, SimplyPartyQuestsAlphaDB
 Core.lua
 NativeAuraCompatibility.lua
+QuestRewards.lua
 QuestieCompatibility.lua
 QuestCatalog.lua
 QuestZones.lua

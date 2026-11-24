@@ -90,6 +90,25 @@ local function joinedFill()
  assert(f.trackerBackground.questieArt.backdrop.insets.top==p.top,'backdrop padding did not scale')
 end
 joinedFill()
+-- Movement follows between normal update ticks and does not rebuild rows.
+local initialRenders=renders
+Questie_BaseFrame.left=870;Questie_BaseFrame.top=910
+A:QuestieDockPositionTick()
+assert(f.point[4]==458 and f.point[5]==910 and renders==initialRenders,'drag follow waited for normal polling or rebuilt content')
+local positionWrites=f.anchorWrites
+A:QuestieDockPositionTick();assert(f.anchorWrites==positionWrites,'idle frame rewrote anchors')
+Questie_BaseFrame.left=850;Questie_BaseFrame.top=900;A:QuestieDockPositionTick()
+A.db.trackerCollapsed=true;A:TrackerIntegrationTick()
+assert(f:GetWidth()==180 and f.viewCollapsed,'grouped minimize retained full-width strip')
+A.db.trackerCollapsed=false;A:TrackerIntegrationTick()
+assert(f:GetWidth()==420 and not f.viewCollapsed,'grouped expansion did not restore configured width')
+local ownArt=f.trackerBackground.questieArt
+for _,key in ipairs({'LeftEdge','RightEdge','TopLeftCorner','TopRightCorner','BottomLeftCorner','BottomRightCorner'}) do ownArt[key]=widget('Texture') end
+A:SyncQuestieDockBackground()
+assert(not ownArt.RightEdge.shown and ownArt.LeftEdge.shown,'left dock duplicated the shared border')
+A.db.trackerSide='right';A:TrackerIntegrationTick()
+assert(not ownArt.LeftEdge.shown and ownArt.RightEdge.shown,'right dock failed to restore outer border')
+A.db.trackerSide='left';A:TrackerIntegrationTick()
 assert(f.title.point[5]==-10 and f.scroll.point[5]==-30,'header/content did not retain rendered alignment')
 local label=Questie_HeaderFrame.trackedQuests.label
 label.top=885;A:TrackerIntegrationTick()

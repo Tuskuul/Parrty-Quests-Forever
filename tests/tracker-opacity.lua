@@ -30,3 +30,4 @@ ObjectiveTrackerManager.backgroundAlpha=2
 A:SyncTrackerSidebarOpacity(tracker)
 assert(background.alpha==1,'opacity was not clamped')
 print('PASS: Edit Mode background opacity, slider changes, zero/full alpha, fallback, invalid values and no quest-text fading')
+

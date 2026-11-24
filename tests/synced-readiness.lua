@@ -36,3 +36,4 @@ info.isComplete=nil;C_QuestLog.IsComplete=function() return 1 end
 A:ReadOwn();assert(A.own[4641].ready,'numeric completion result failed')
 assert(not A:Deserialize('Q\t4641\tInvalid\tgarbage'),'invalid readiness marker was accepted')
 print('PASS: completion API, missing flags, full-log sync, legacy 10/10 inference, authoritative incomplete state and complete requirement coverage')
+

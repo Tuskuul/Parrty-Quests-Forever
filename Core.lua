@@ -66,6 +66,7 @@ function A:QuestTitleText(id,title,parchment)
     return color and (color..text.."|r") or text
 end
 function A:RefreshQuestDifficultyViews()
+    self.rewardXPCache=nil
     self:Changed()
     local picker=self.questSharePicker
     if picker and picker:IsShown() then
@@ -659,6 +660,7 @@ for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGIN","PLAYER_LEVEL_UP","UNIT_NAM
 frame:SetScript("OnUpdate",function(_,delta)
     if not A.db then return end
     elapsed,refreshElapsed=elapsed+delta,refreshElapsed+delta
+    if A.QuestieDockPositionTick then A:QuestieDockPositionTick() end
     if elapsed<0.15 then return end
     elapsed=0
     if A.layoutDirty then A.layoutDirty=nil;A:Render() end

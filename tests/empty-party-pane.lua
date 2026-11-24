@@ -71,3 +71,4 @@ assert(f.headerOffset==0 and not joined,'hidden native header did not return to 
 assert(f.collapse.shown and not f.scroll.shown and f.viewCollapsed,'party-only collapse fallback did not retain a single control')
 assert(A.db.displayMode=='blizzard' and A.db.trackerSide=='left','empty state changed saved preferences')
 print('PASS: empty/offline/synced states, no empty sections or fake heading, compact standalone anchoring and restored native sidebar')
+

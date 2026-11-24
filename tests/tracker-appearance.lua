@@ -45,3 +45,4 @@ assert(not A.integration.dirty,'appearance was applied during combat')
 locked=false;A:SyncTrackerSidebarAppearance(tracker)
 assert(A.integration.dirty,'deferred appearance was not applied after combat')
 print('PASS: tracker font size, outline/shadow contrast, live palette, scale, stable-state caching, layout reflow and combat deferral')
+

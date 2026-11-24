@@ -11,6 +11,15 @@ local function number(v) return A.public(v,"number") and v==v and math.abs(v)<10
 function A:QuestieDockIsSolo()
     return not next(self.members or {}) and not self.demo
 end
+function A:QuestieDockCollapsed()
+    local q=self.questieCompatibility
+    local rest=self:QuestieDockIsSolo() and q.dockSoloExpanded~=true or (not self:QuestieDockIsSolo() and self.db.trackerCollapsed==true)
+    if combat() then
+        if q.dockInCombat then return q.dockCombatCollapsed==true end
+        return self.db.combatAutoHide~=false or rest
+    end
+    return rest
+end
 function A:ReadQuestieDockRect()
     local target=Questie_BaseFrame
     if not target or call(target.IsShown,target)~=true then return end
@@ -37,12 +46,7 @@ function A:ReadQuestieDockRect()
     local width=math.max(320,math.min(640,self.db.sidebarWidth or 420))
     local solo=self:QuestieDockIsSolo()
     local q=self.questieCompatibility
-    local expanded=q.dockSoloExpanded==true
-    if combat() then
-        if not q.dockInCombat then expanded=self.db.combatAutoHide==false and expanded
-        else expanded=q.dockSoloCombatExpanded==true end
-    end
-    local compact=solo and not expanded
+    local compact=self:QuestieDockCollapsed()
     if compact then width=180 end
     local side=self.db.trackerSide=="right" and "right" or "left"
     local leftEdge,rightEdge=left+padding.left+padding.right,right-padding.right-padding.left
@@ -90,6 +94,24 @@ end
 function A:QuestieDockActive()
     local s=self.questieCompatibility
     return not not (s and s.dockReady and self.db and self.db.displayMode=="blizzard" and self:QuestieOwnsTracker())
+end
+function A:ApplyQuestieDockPosition(rect)
+    local q,f=self.questieCompatibility,self.sidebar
+    if not f then return end
+    if q.dockX~=rect.x or q.dockTop~=rect.top then
+        f:ClearAllPoints();f:SetPoint("TOPLEFT",UIParent,"BOTTOMLEFT",rect.x,rect.top)
+        q.dockX,q.dockTop=rect.x,rect.top
+    end
+end
+-- Geometry only: runs before the ordinary 150ms work budget. Never rebuild
+-- quest rows, query progress, or write to Questie's frames while following it.
+function A:QuestieDockPositionTick()
+    local q,f=self.questieCompatibility,self.sidebar
+    if not q or not q.dockActive or not f or not f:IsShown() or not self:QuestieDockActive() then return end
+    if combat() and call(f.IsProtected,f)==true then return end
+    local rect=self:ReadQuestieDockRect()
+    if not rect or not q.dockRect or rect.width~=q.dockRect.width or rect.side~=q.dockRect.side then return end
+    self:ApplyQuestieDockPosition(rect)
 end
 local function rgba(frame,method)
     local fn=frame and frame[method]
@@ -236,6 +258,15 @@ function A:SyncQuestieDockBackground()
         q.dockBackdropLayout=layout;q.dockAppearance=nil
         bg.questieArt:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,edgeSize=edge,insets=p})
     end
+    -- Questie's border already supplies the shared edge. Do not draw another
+    -- full edge/corners over it; only change our own backdrop textures.
+    for _,name in ipairs({"LeftEdge","RightEdge","TopLeftCorner","TopRightCorner","BottomLeftCorner","BottomRightCorner"}) do
+        local region=bg.questieArt[name]
+        if self.readable(region) and type(region.SetShown)=="function" then
+            local shared=rect and ((rect.side=="left" and name:find("Right",1,true)) or (rect.side=="right" and name:find("Left",1,true)))
+            region:SetShown(not shared)
+        end
+    end
     bg.art:Hide();bg.questieArt:Show()
     local signature=tostring(f:GetWidth())..":"..tostring(f:GetHeight())
     if q.dockBackground~=signature then
@@ -274,10 +305,10 @@ function A:QuestieDockTick()
     else q.dockInCombat=nil;q.dockCombatCollapsed=nil;q.dockSoloCombatExpanded=nil end
     local collapsed
     if q.dockInCombat then collapsed=q.dockCombatCollapsed else collapsed=not not self.db.trackerCollapsed end
-    local signature=table.concat({rect.x,rect.top,rect.width,rect.height},":")
+    self:ApplyQuestieDockPosition(rect)
+    local signature=table.concat({rect.width,rect.height},":")
     if q.dockGeometry~=signature then
         q.dockGeometry=signature
-        f:ClearAllPoints();f:SetPoint("TOPLEFT",UIParent,"BOTTOMLEFT",rect.x,rect.top)
         f:SetWidth(rect.width);f.heightLimit=rect.height;s.dirty=true;s.due=nil
     end
     self:SetTrackerSidebarHeaderLayout(false)
@@ -313,7 +344,7 @@ function A:LeaveQuestieDock()
     local q,s=self.questieCompatibility,self.integration
     if not q.dockActive and not q.dockStyle then return end
     self:RestoreQuestieDockStyle()
-    q.dockActive=nil;q.dockGeometry=nil;q.dockBackground=nil;q.dockInCombat=nil;q.dockCombatCollapsed=nil
+    q.dockActive=nil;q.dockGeometry=nil;q.dockX=nil;q.dockTop=nil;q.dockBackground=nil;q.dockInCombat=nil;q.dockCombatCollapsed=nil
     q.dockWasSolo=nil;q.dockSoloExpanded=nil;q.dockSoloCombatExpanded=nil
     s.anchor=nil;s.side=nil;s.appearanceSignature=nil;s.sidebarScale=nil;s.nativeCollapsed=nil
     s.dirty=true;s.due=nil

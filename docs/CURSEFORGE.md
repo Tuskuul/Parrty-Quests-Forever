@@ -9,7 +9,7 @@
 - **Main category:** Quests & Leveling
 - **Additional category:** Chat & Communication
 - **License:** GPLv3 for project code; preserve the full bundled QuestieDB statement and caveat.
-- **Release file:** PartyQuestsForever_1.1.7.zip
+- **Release file:** PartyQuestsForever_1.1.8.zip
 - **Release type:** Release
 - **Logo:** `docs/project-icon.png` (full-resolution 1254 × 1254 PNG)
 - **Required dependencies:** None
@@ -64,16 +64,15 @@ Created by Wolfie. Static fallback quest data adapts [QuestieDB](https://github.
 
 ## Release changelog
 
-Party Quests Forever 1.1.7
+Party Quests Forever 1.1.8
 
-- Added automatic docking beside Questie's tracker, with left/right placement, matching header fonts, backdrop colors, opacity and scale.
-- Refined expanded and collapsed docking, including a compact solo view when opened manually. Automatic display remains party-only.
-- Improved combat collapse and restoration, including intermittent missing Blizzard objectives after combat with automatic collapse enabled.
-- Simplified the separate-window toolbar and removed the redundant map sharing shortcut. Sharing remains accessible from the tracker, Questie menu, separate window and Settings.
-- Reduced repeated background checks and hidden-window redraws.
-- Reduced download size by excluding promotional artwork from installed packages. Quest data, the in-game icon and license files remain included.
+- Added a right-aligned XP reward beside ready quest titles in the party pane and separate window. Values come from the client for your character; unavailable or zero rewards are omitted.
+- Made the party pane follow Questie smoothly while dragging without rebuilding quest rows on each movement.
+- Minimized party panes now shrink to the compact heading while grouped as well as solo.
+- Removed the duplicate party-side border edge where the pane meets Questie's tracker.
+- Added an older-Forever compatibility guard for the secret Maw-aura read that could interrupt objective tracker layouts and Edit Mode anchor updates.
 
-Built for WoW Forever 1.60.1 (interface 16001). Questie is optional. Existing settings are preserved; install only one version in the SimplyPartyQuests folder.
+Built for WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional. Install one copy in the SimplyPartyQuests folder.
 
 ## Submission references checked 2026-11-13
 

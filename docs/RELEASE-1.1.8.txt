@@ -1,0 +1,9 @@
+Party Quests Forever 1.1.8
+
+- Added a right-aligned XP reward beside ready quest titles in the party pane and separate window. Values come from the client for your character; unavailable or zero rewards are omitted.
+- Made the party pane follow Questie smoothly while dragging without rebuilding quest rows on each movement.
+- Minimized party panes now shrink to the compact heading while grouped as well as solo.
+- Removed the duplicate party-side border edge where the pane meets Questie's tracker.
+- Added an older-Forever compatibility guard for the secret Maw-aura read that could interrupt objective tracker layouts and Edit Mode anchor updates.
+
+Built for WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Questie remains optional. Install one copy in the SimplyPartyQuests folder.

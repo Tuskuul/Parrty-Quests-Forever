@@ -31,3 +31,4 @@ C_SuperTrack=nil;A:UpdateTrackerQuestFocus();assert(not a.focusShown,'missing AP
 C_SuperTrack={GetSuperTrackedQuestID=function() error('restricted') end}
 A:UpdateTrackerQuestFocus();assert(A.integration.focusedQuestID==nil)
 print('PASS: focused quest matching, duplicate views, live combat event updates, clearing, row reuse, missing APIs and no native/text changes')
+
