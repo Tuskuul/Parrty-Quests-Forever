@@ -9,6 +9,7 @@
 ## OptionalDeps: Questie, QuestieDB
 ## SavedVariables: SimplyPartyQuestsDB, SimplyPartyQuestsAlphaDB
 Core.lua
+NativeAuraCompatibility.lua
 QuestieCompatibility.lua
 QuestCatalog.lua
 QuestZones.lua

@@ -396,6 +396,7 @@ function A:DiagnosticReport()
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),
+        self.NativeAuraCompatibilityReport and self:NativeAuraCompatibilityReport() or "",
         self.CombatTrackerReport and self:CombatTrackerReport() or "Combat tracker: unavailable",
         self.QuestieCompatibilityReport and self:QuestieCompatibilityReport() or "Questie compatibility: unavailable",
         "Local log: "..(self.ownReadError or "available").."; party transport: "..(self.partySendError or "available"),
