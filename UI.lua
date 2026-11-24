@@ -193,7 +193,7 @@ function A:Render(force)
                 local key="all:"..q.id
                 local open=questExpansion[key]
                 local ready=self:IsTrackerQuestReady(q,own[q.id])
-                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(ready and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or "").." "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r",13,{0.98,0.82,0.42},12,self.QuestRewardXPText and self:QuestRewardXPText(q.id,ready))
+                local hq=textRow((open and "[-] " or "[+] ")..self:QuestTitleText(q.id,q.title,true)..(ready and (" "..A:QuestDialogColorCode("ready").."[Ready]|r") or "")..(not ready and (" "..A:QuestDialogColorCode("muted").."["..(#q.participants+1).."/"..(#list+1).." players]|r") or ""),13,{0.98,0.82,0.42},12,self.QuestRewardXPText and self:QuestRewardXPText(q.id,ready))
                 hq:EnableMouse(true);hq:SetScript("OnClick",function() questExpansion[key]=not questExpansion[key];self:Render() end)
                 if open then
                     local requirements

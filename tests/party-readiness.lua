@@ -101,8 +101,10 @@ local function parent()
  for _,e in ipairs(A:BuildTrackerEntries()) do if e.kind=='quest' then return e end end
 end
 assert(parent().title:find('|cff00ff00[Ready]|r',1,true),'all-ready shared parent missing green Ready')
+assert(not parent().title:find('players',1,true),'ready shared row retained player count')
 remoteReady.ready=false
 assert(not parent().title:find('[Ready]',1,true),'mixed shared progress marked Ready')
+assert(parent().title:find('[2/2 players]',1,true),'in-progress shared row lost player count')
 remoteReady.ready=nil;remoteReady.readyKnown=nil
 assert(not parent().title:find('[Ready]',1,true),'unknown shared progress marked Ready')
 remoteReady.ready=true;ownReady.ready=false

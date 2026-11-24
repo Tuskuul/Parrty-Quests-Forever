@@ -76,7 +76,7 @@ Questie_HeaderFrame.trackedQuests.label.font={'QuestieFont',14,'OUTLINE'}
 A:TrackerIntegrationTick()
 local f=A.sidebar
 assert(A:QuestieDockActive() and A:EffectiveDisplayMode()=='blizzard' and f:IsShown() and not A.window:IsShown(),tostring(A.integration.lastError))
-assert(f.point[2]==UIParent and f.point[3]=='BOTTOMLEFT' and f.point[4]==438 and f.point[5]==900,'dock did not use independent numeric geometry')
+assert(f.point[2]==UIParent and f.point[3]=='BOTTOMLEFT' and f.point[4]==446 and f.point[5]==900,'dock did not use independent numeric geometry')
 assert(f.heightLimit==500 and f.height<=500 and f.maxScroll>0 and renders==1)
 assert(not A:NativeTrackerWritesAllowed() and not A:NativeCombatControlsAllowed())
 local function joinedFill()
@@ -84,8 +84,14 @@ local function joinedFill()
  local p=r.padding
  local baseLeft=Questie_BaseFrame.left*r.scale
  local baseRight=(Questie_BaseFrame.left+Questie_BaseFrame.width)*r.scale
- if r.side=='left' then assert(math.abs(r.x+r.width-p.right-baseLeft-p.left)<0.001,'visible left-dock fills leave a seam')
- else assert(math.abs(r.x+p.left-baseRight+p.right)<0.001,'visible right-dock fills leave a seam') end
+ local fill=f.trackerBackground.questieArt.backdrop.insets
+ if r.side=='left' then
+  assert(math.abs(r.x+r.width-r.edge/2-baseLeft-r.edge/2)<0.001,'left border strokes do not meet')
+  assert(math.abs(r.x+r.width-fill.right-baseLeft-p.left)<0.001,'left fills overlap or gap')
+ else
+  assert(math.abs(r.x+r.edge/2-baseRight+r.edge/2)<0.001,'right border strokes do not meet')
+  assert(math.abs(r.x+fill.left-baseRight+p.right)<0.001,'right fills overlap or gap')
+ end
  assert(r.top==Questie_BaseFrame.top*r.scale,'dock top does not follow the base backdrop')
  assert(f.trackerBackground.questieArt.backdrop.insets.top==p.top,'backdrop padding did not scale')
 end
@@ -94,7 +100,7 @@ joinedFill()
 local initialRenders=renders
 Questie_BaseFrame.left=870;Questie_BaseFrame.top=910
 A:QuestieDockPositionTick()
-assert(f.point[4]==458 and f.point[5]==910 and renders==initialRenders,'drag follow waited for normal polling or rebuilt content')
+assert(f.point[4]==466 and f.point[5]==910 and renders==initialRenders,'drag follow waited for normal polling or rebuilt content')
 local positionWrites=f.anchorWrites
 A:QuestieDockPositionTick();assert(f.anchorWrites==positionWrites,'idle frame rewrote anchors')
 Questie_BaseFrame.left=850;Questie_BaseFrame.top=900;A:QuestieDockPositionTick()
@@ -103,11 +109,13 @@ assert(f:GetWidth()==180 and f.viewCollapsed,'grouped minimize retained full-wid
 A.db.trackerCollapsed=false;A:TrackerIntegrationTick()
 assert(f:GetWidth()==420 and not f.viewCollapsed,'grouped expansion did not restore configured width')
 local ownArt=f.trackerBackground.questieArt
-for _,key in ipairs({'LeftEdge','RightEdge','TopLeftCorner','TopRightCorner','BottomLeftCorner','BottomRightCorner'}) do ownArt[key]=widget('Texture') end
+for _,key in ipairs({'LeftEdge','RightEdge','TopLeftCorner','TopRightCorner','BottomLeftCorner','BottomRightCorner','TopEdge','BottomEdge'}) do ownArt[key]=widget('Texture') end
 A:SyncQuestieDockBackground()
 assert(not ownArt.RightEdge.shown and ownArt.LeftEdge.shown,'left dock duplicated the shared border')
+assert(ownArt.TopEdge.point[4]==-8 and ownArt.BottomEdge.point[4]==-8,'left horizontal strokes stop short of shared edge')
 A.db.trackerSide='right';A:TrackerIntegrationTick()
 assert(not ownArt.LeftEdge.shown and ownArt.RightEdge.shown,'right dock failed to restore outer border')
+assert(ownArt.TopEdge.point[4]==-16,'right dock lost outer horizontal edge')
 A.db.trackerSide='left';A:TrackerIntegrationTick()
 assert(f.title.point[5]==-10 and f.scroll.point[5]==-30,'header/content did not retain rendered alignment')
 local label=Questie_HeaderFrame.trackedQuests.label
@@ -155,9 +163,9 @@ f.settings.scripts.OnClick();A.questieDockMenu.buttons[2].scripts.OnClick();asse
 f.questieHeaderClick.scripts.OnClick(nil,'RightButton');A.questieDockMenu.buttons[3].scripts.OnClick();assert(settings==1)
 
 A.db.trackerSide='right';Questie_BaseFrame.left=800;Questie_HeaderFrame.left=800
-A:TrackerIntegrationTick();assert(f.point[4]==1092,'right-side follow failed');joinedFill()
+A:TrackerIntegrationTick();assert(f.point[4]==1084,'right-side follow failed');joinedFill()
 Questie_BaseFrame.scale=0.8;Questie_HeaderFrame.scale=0.8
-A:TrackerIntegrationTick();assert(math.abs(f.point[4]-873.6)<0.01 and f.heightLimit==400,'mixed UI scales were ignored')
+A:TrackerIntegrationTick();assert(math.abs(f.point[4]-867.2)<0.01 and f.heightLimit==400,'mixed UI scales were ignored')
 assert(math.abs(f.title.font[2]-11.2)<0.01,'Questie header font scale was ignored');joinedFill()
 Questie_BaseFrame.backdrop={edgeSize=12,insets={left=2,right=6,top=8,bottom=3}}
 A:TrackerIntegrationTick();joinedFill()
@@ -171,7 +179,7 @@ assert(f.viewCollapsed and f:IsShown() and not f.scroll:IsShown(),'combat did no
 A:SetViewCollapsed(false);A:TrackerIntegrationTick()
 assert(not f.viewCollapsed and f.scroll:IsShown() and not A.db.trackerCollapsed,'manual combat reopen changed outside-combat preference')
 Questie_BaseFrame.left=1400;Questie_HeaderFrame.left=1400
-A:TrackerIntegrationTick();assert(f.point[4]==988,'already-independent dock stopped following during combat')
+A:TrackerIntegrationTick();assert(f.point[4]==996,'already-independent dock stopped following during combat')
 A:TogglePartyTracker();assert(not f:IsShown() and A.db.trackerHidden)
 A:TogglePartyTracker();assert(f:IsShown() and not A.db.trackerHidden)
 locked=false;A:TrackerIntegrationTick();assert(not f.viewCollapsed)

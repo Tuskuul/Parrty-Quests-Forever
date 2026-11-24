@@ -49,7 +49,8 @@ function A:ReadQuestieDockRect()
     local compact=self:QuestieDockCollapsed()
     if compact then width=180 end
     local side=self.db.trackerSide=="right" and "right" or "left"
-    local leftEdge,rightEdge=left+padding.left+padding.right,right-padding.right-padding.left
+    -- Align the centers of the native border strokes, not the fill insets.
+    local leftEdge,rightEdge=left+edge,right-edge
     local roomLeft,roomRight=leftEdge,sw-rightEdge
     if side=="left" and roomLeft<width and roomRight>roomLeft then side="right"
     elseif side=="right" and roomRight<width and roomLeft>roomRight then side="left" end
@@ -253,10 +254,29 @@ function A:SyncQuestieDockBackground()
     local rect=q.dockRect
     local p=rect and rect.padding or {left=4,right=4,top=4,bottom=4}
     local edge=rect and rect.edge or 16
-    local layout=table.concat({p.left,p.right,p.top,p.bottom,edge},":")
+    local native=call(Questie_BaseFrame and Questie_BaseFrame.GetBackdrop,Questie_BaseFrame)
+    local edgeFile=self.readable(native) and native.edgeFile
+    edgeFile=self.public(edgeFile,"string") and edgeFile or "Interface\\Tooltips\\UI-Tooltip-Border"
+    local layout=table.concat({p.left,p.right,p.top,p.bottom,edge,edgeFile,rect and rect.side or "left"},":")
     if q.dockBackdropLayout~=layout then
         q.dockBackdropLayout=layout;q.dockAppearance=nil
-        bg.questieArt:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,edgeSize=edge,insets=p})
+        local left=not rect or rect.side=="left"
+        local fill={left=left and p.left or math.max(0,edge-p.right),right=left and math.max(0,edge-p.left) or p.right,top=p.top,bottom=p.bottom}
+        bg.questieArt:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile=edgeFile,tile=true,edgeSize=edge,insets=fill})
+    end
+    -- Carry our horizontal strokes to Questie's existing vertical stroke.
+    -- Only our textures are edited; Questie's corners and scripts stay native.
+    local art=bg.questieArt
+    local left=not rect or rect.side=="left"
+    for _,name in ipairs({"TopEdge","BottomEdge"}) do
+        local region=art[name]
+        if self.readable(region) and type(region.SetPoint)=="function" then
+            local anchor=name=="TopEdge" and "TOP" or "BOTTOM"
+            region:ClearAllPoints()
+            region:SetPoint(anchor.."LEFT",art,anchor.."LEFT",left and edge or edge/2,0)
+            region:SetPoint(anchor.."RIGHT",art,anchor.."RIGHT",left and -edge/2 or -edge,0)
+            region:SetHeight(edge)
+        end
     end
     -- Questie's border already supplies the shared edge. Do not draw another
     -- full edge/corners over it; only change our own backdrop textures.

@@ -1,0 +1,6 @@
+Party Quests Forever 1.1.9
+
+- Matched the party pane border to Questie, with aligned edges and a cleaner shared join on either side.
+- Ready quest rows now show the quest title, Ready state and available XP without the player-count suffix. In-progress quests retain player counts.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved.
