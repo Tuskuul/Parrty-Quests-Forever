@@ -537,6 +537,7 @@ function A:Request()
     lastRequest = GetTime()
     local ok=pcall(C_ChatInfo.SendAddonMessage,self.prefix,"REQ","PARTY")
     if not ok then self.partySendError="Party refresh request failed" end
+    return ok
 end
 function A:Receive(message, sender)
     if not public(message,"string") or #message>255 then return end
@@ -669,6 +670,7 @@ frame:SetScript("OnUpdate",function(_,delta)
     if A.ApplyPendingSettings then A:ApplyPendingSettings() end
     if A.QuestieCompatibilityTick then A:QuestieCompatibilityTick() end
     A:CombatOwnTick()
+    if A.PartyRefreshTick then A:PartyRefreshTick() end
     if A.PollTick then A:PollTick() end
     if A.TriggerTick then A:TriggerTick() end
     if A.NativeTrackerTick then A:NativeTrackerTick() end

@@ -403,6 +403,7 @@ function A:DiagnosticReport()
         "Polling: "..(self.demo and "demo" or (memberCount==0 and "no tracked party" or (inCombat and "active (combat; discovery/layout deferred)" or "active")))
             .."; members="..memberCount.."; instance="..tostring(inInstance).."; raid="..tostring(IsInRaid()),
         "Sweep: "..self:SweepSummary(),
+        "Manual refresh: "..(self.partyRefreshStatus or "not requested"),
         string.format("Live: %d calls; %d payloads; %d rows applied; %d empty/restricted; %d errors",s.queries,s.payloads,s.rows,s.empty,s.errors),
         string.format("Counters: %d first observations; %d changed; %d repeated; %d readiness changes",s.first,s.changes,s.repeated,s.readyChanges),
         "Count changes by source: "..table.concat(sources,"; "),

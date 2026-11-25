@@ -550,7 +550,7 @@ function A:SetDisplayMode(mode)
     if self.SyncSettings then self:SyncSettings() end
 end
 function A:RefreshParty()
-    self:ReadOwn();self:Request();self:ScanUnit("target");self:RefreshKnown();self:StartSweep()
+    self:BeginPartyRefresh()
 end
 -- This panel is anchored beside the tracker, never inserted into its module list.
 -- Its own scroll area and fonts are independent of Blizzard's narrow columns.

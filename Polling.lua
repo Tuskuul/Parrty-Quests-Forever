@@ -3,6 +3,87 @@ local public = A.public
 local function paused()
     return (InCombatLockdown and InCombatLockdown())
 end
+function A:PartyRefreshNotice(text)
+    self.partyRefreshStatus=text
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffffd100Party Quests:|r "..text) end
+end
+function A:UpdatePartyRefreshButtons()
+    local job=self.manualRefresh
+    local caption=job and (job.queued and "Queued" or "Working") or "Refresh"
+    local buttons={self.sidebar and self.sidebar.refresh,self.windowRefreshButton,
+        self.settingsControls and self.settingsControls.refresh,
+        self.questieDockMenu and self.questieDockMenu.buttons[2]}
+    -- Sparse controls: some windows may not have been created yet.
+    for i=1,4 do
+        local button=buttons[i]
+        if button and button.partyRefreshCaption~=caption then
+            button.partyRefreshCaption=caption
+            button:SetText(i==3 and (job and caption.." party quests" or "Refresh party quests") or caption)
+        end
+    end
+end
+function A:BeginPartyRefresh()
+    if self.demo then return end
+    if self.manualRefresh then return end -- repeated clicks must not starve discovery
+    if paused() then
+        self.manualRefresh={queued=true}
+        self:PartyRefreshNotice("Full refresh queued until combat ends.")
+        self:UpdatePartyRefreshButtons();return
+    end
+    local now=GetTime()
+    local solo=self.soloOverride
+    self:Roster() -- cancel old roster-bound sweeps, partial transfers and query caches
+    self.soloOverride=solo and not next(self.members) or nil
+    local job={started=now,requestDue=now,expected={},before={},received=0}
+    self.manualRefresh=job
+    for guid,m in pairs(self.members) do
+        job.before[guid]=m.quests
+        if m.syncedAt then job.expected[guid]=true end
+        for _,q in pairs(m.quests) do q.pendingAbsentAt=nil end
+    end
+    self.lastSweep=nil;self.tooltipQueries={};self.tooltipRetryAt=nil
+    self.itemSourceCursor=1;self.liveIndex=nil
+    self:ReadOwn();self.sendPending=true
+    self:ScanUnit("target");self:ScanUnit("mouseover")
+    self:RefreshKnown();self:StartSweep()
+    job.sweep=self.sweep
+    self:Changed()
+    self:PartyRefreshNotice("Refreshing your log, requesting full addon logs and rediscovering party quests from game data.")
+    self:UpdatePartyRefreshButtons()
+end
+function A:PartyRefreshTick()
+    local job=self.manualRefresh
+    if not job then return end
+    if job.queued then
+        if not paused() then self.manualRefresh=nil;self:BeginPartyRefresh() end
+        return
+    end
+    self:UpdatePartyRefreshButtons()
+    if paused() then return end
+    local now=GetTime()
+    if now>=job.requestDue and now-job.started<=20 then
+        self:Request();job.requestDue=now+5
+    end
+    local waiting,received=0,0
+    for guid,before in pairs(job.before) do
+        local m=self.members[guid]
+        if m and m.syncedAt and m.quests~=before then received=received+1
+        elseif m and job.expected[guid] then waiting=waiting+1 end
+    end
+    job.received=received
+    local sweepPending=self.sweep~=nil or (next(self.members) and self.sweepDue and self.sweepDue<=now)
+    if sweepPending or now-job.started<5 or (waiting>0 and now-job.started<20) then return end
+    local matches=self.lastSweep and self.lastSweep.hits or 0
+    local text=string.format("Refresh finished: %d full addon log(s) received; %d game-data quest match(es).",received,matches)
+    if waiting>0 then text=text.." "..waiting.." addon member(s) did not return a fresh full log." end
+    if self.lastSweep and (self.lastSweep.errors>0 or self.lastSweep.unknown>0) then
+        text=text.." Some game data was unreadable or returned errors."
+    elseif self.lastSweep and matches==0 then
+        text=text.." No quests were exposed by the discovery API; this does not confirm an empty log."
+    elseif self.sweepStatus=="Quest sweep API unavailable" then text=text.." Quest discovery API unavailable." end
+    if self.ownReadError then text=text.." Your log was unavailable; retained its last known data." end
+    self.manualRefresh=nil;self:UpdatePartyRefreshButtons();self:PartyRefreshNotice(text)
+end
 -- A false membership answer can mean unavailable remote state. Removal requires
 -- a stable, loaded member in the same map/visibility context and a positive
 -- control quest in that same validation pass, on two separate passes.
