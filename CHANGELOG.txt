@@ -1,3 +1,10 @@
+Party Quests Forever 1.1.10-beta2
+
+- Replaced flat tracker tab labels with Blizzard's framed top-tab style, with a framed fallback for older clients.
+- Renamed the tracker layout choices to Tabbed and Side by Side.
+
+For WoW Forever 1.60.1 (interface 16001). Includes beta1's optional tab layout and full Refresh improvements. Existing settings are preserved.
+
 Party Quests Forever 1.1.10-beta1
 
 - Added an optional Objectives / Party Quests tab layout for the default Blizzard tracker. Side-by-side remains the default; Questie's layout is unchanged.

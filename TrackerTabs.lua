@@ -56,8 +56,22 @@ function A:UpdateTrackerTabsLabels()
     for i,key in ipairs({"objectives","party"}) do
         local selected=self.db.trackerTab==key
         local label=key=="party" and "Party Quests" or "Objectives"
-        t.buttons[i]:SetText((selected and "|cffffd100" or "|cffb0b0b0")..label.."|r"..(t.pending==key and " *" or ""))
-        t.buttons[i].selected:SetShown(selected)
+        local button=t.buttons[i]
+        local caption=label..(t.pending==key and " *" or "")
+        local signature=caption..":"..tostring(selected)
+        if button.tabVisualKey~=signature then
+            button.tabVisualKey=signature;button:SetText(caption)
+            if button.nativeTab then
+                if selected then PanelTemplates_SelectTab(button) else PanelTemplates_DeselectTab(button) end
+                -- Keep the active tab clickable so it can cancel a queued switch.
+                button:Enable()
+                PanelTemplates_TabResize(button,0,116)
+            else
+                button.selected:SetShown(selected)
+                button:SetNormalFontObject(selected and (GameFontNormalSmall or GameFontNormal) or (GameFontDisableSmall or GameFontNormal))
+                button:SetBackdropBorderColor(selected and 0.85 or 0.45,selected and 0.68 or 0.45,selected and 0.28 or 0.45,1)
+            end
+        end
     end
 end
 -- Native visibility belongs to a restricted controller prepared outside combat.
@@ -78,16 +92,26 @@ function A:InitTrackerTabs(native)
     if not t then
         t={};self.trackerTabs=t
         t.bar=CreateFrame("Frame","SimplyPartyQuestsTrackerTabs",UIParent)
-        t.bar:SetSize(240,24);t.bar:SetFrameStrata("MEDIUM");t.bar:SetClampedToScreen(true);t.buttons={}
+        t.bar:SetSize(240,28);t.bar:SetFrameStrata("MEDIUM");t.bar:SetClampedToScreen(true);t.buttons={}
+        t.bar.tabPadding=0;t.bar.minTabWidth=116;t.bar.maxTabWidth=116
         for i,key in ipairs({"objectives","party"}) do
-            local button=CreateFrame("Button",nil,t.bar)
-            button:SetSize(116,24);button:SetPoint("LEFT",t.bar,"LEFT",(i-1)*120,0)
-            button:SetNormalFontObject(ObjectiveTrackerLineFont or GameFontNormal)
-            local fill=button:CreateTexture(nil,"BACKGROUND");fill:SetAllPoints(button);fill:SetColorTexture(0,0,0,1)
-            button.fill=fill
-            local selected=button:CreateTexture(nil,"ARTWORK");selected:SetColorTexture(1,0.82,0,0.9)
-            selected:SetPoint("BOTTOMLEFT",2,0);selected:SetPoint("BOTTOMRIGHT",-2,0);selected:SetHeight(2)
-            button.selected=selected
+            local nativeTab=type(PanelTopTabButtonMixin)=="table" and type(PanelTemplates_SelectTab)=="function"
+                and type(PanelTemplates_DeselectTab)=="function" and type(PanelTemplates_TabResize)=="function"
+            local button=CreateFrame("Button",nil,t.bar,nativeTab and "PanelTopTabButtonTemplate" or "BackdropTemplate")
+            button.nativeTab=nativeTab
+            button:SetSize(116,28);button:SetPoint("BOTTOMLEFT",t.bar,"BOTTOMLEFT",(i-1)*120,0)
+            if nativeTab then
+                button.selected=button.MiddleActive
+            else
+                -- Older clients retain a framed tab, not a flat text/underline.
+                button:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=8,insets={left=2,right=2,top=2,bottom=2}})
+                button:SetBackdropColor(0.05,0.04,0.025,0.9)
+                button:SetNormalFontObject(GameFontNormalSmall or GameFontNormal)
+                button:SetHighlightFontObject(GameFontHighlightSmall or GameFontNormal)
+                local selected=button:CreateTexture(nil,"ARTWORK");selected:SetColorTexture(0.8,0.55,0.12,0.16)
+                selected:SetPoint("TOPLEFT",3,-3);selected:SetPoint("BOTTOMRIGHT",-3,3)
+                button.selected=selected
+            end
             button:SetScript("OnClick",function() A:SelectTrackerTab(key) end)
             button:SetScript("OnEnter",function(self)
                 if GameTooltip then
@@ -227,7 +251,6 @@ function A:TrackerTabsTick()
     f:SetShown(party);t.bar:Show();self:UpdateTrackerTabsLabels()
     self:SyncTrackerSidebarOpacity(native)
     local bg=f.trackerBackground
-    for _,button in ipairs(t.buttons) do button.fill:SetAlpha(bg:GetAlpha()) end
     bg:ClearAllPoints();bg:SetPoint("TOPLEFT",f,"TOPLEFT",0,0);bg:SetSize(f:GetWidth(),f:GetHeight());bg:SetScale(f:GetScale())
     bg:SetShown(party)
     if self.window then self.window:Hide() end

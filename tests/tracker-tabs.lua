@@ -152,4 +152,28 @@ A:TrackerIntegrationTick();assert(not t.active and A.integration.lastError:find(
 -- Existing installations and malformed preferences default to the old sidebar.
 A.db.defaultTrackerLayout='bad';A.db.trackerTab='bad';A:NormalizeSavedSettings()
 assert(A.db.defaultTrackerLayout=='sidebar' and A.db.trackerTab=='objectives')
+-- Native framed top tabs use Blizzard's template/state functions. Selecting an
+-- active tab must remain possible to cancel a pending combat switch.
+RegisterStateDriver=function() end
+PanelTopTabButtonMixin={}
+PanelTemplates_SelectTab=function(button) button.selected:Show();button.enabled=false end
+PanelTemplates_DeselectTab=function(button) button.selected:Hide();button.enabled=true end
+PanelTemplates_TabResize=function(button,_,width) button:SetWidth(width) end
+CreateFrame=function(kind,_,parent,template)
+ local f=widget(kind)
+ if template=='PanelTopTabButtonTemplate' then
+  f.MiddleActive=widget('Texture');f.template=template
+  function f:Enable() self.enabled=true end
+ end
+ return f
+end
+A.trackerTabs=nil;A.integration.tabsRetryAt=nil;A.db.defaultTrackerLayout='tabs'
+A:TrackerIntegrationTick()
+local nativeTabs=A.trackerTabs
+assert(nativeTabs.buttons[1].nativeTab and nativeTabs.buttons[1].template=='PanelTopTabButtonTemplate')
+assert(nativeTabs.buttons[1].selected.shown and nativeTabs.buttons[1].enabled,'selected native tab cannot cancel a pending switch')
+A:SelectTrackerTab('party')
+assert(nativeTabs.buttons[2].selected.shown and not nativeTabs.buttons[1].selected.shown)
+local file=assert(io.open('Settings.lua'));local settings=file:read('*a');file:close()
+assert(settings:find('"layoutSidebar","Side by Side"',1,true) and settings:find('"layoutTabs","Tabbed"',1,true),'layout names did not match requested labels')
 print('PASS: default tracker tab selection, same-space geometry, native visibility guards, combat queues/collapse/restore/opt-out, owned row updates, pending layout, toolbar restoration, party-only display, solo override, Questie isolation, saved defaults and secure-API fallback')
