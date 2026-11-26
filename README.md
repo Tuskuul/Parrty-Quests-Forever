@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.10-beta2** refines the optional Blizzard tracker tabs with native framed tabs and simpler layout names. It includes the full manual refresh with visible feedback.
+**1.1.10-beta3** fixes native quest rows briefly flashing over the selected Party Quests tab during quest turn-in. It includes the framed tabs, simpler layout names and full manual refresh with visible feedback.
 
 In **Settings → Tracker layout**, choose **Side by Side** (the existing default) or **Tabbed**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Automatic party display remains party-only; opening manually while solo remains available. Questie keeps its current docking behavior.
 
@@ -25,7 +25,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10-beta2.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10-beta3.txt)
 
 ## Quest offers
 

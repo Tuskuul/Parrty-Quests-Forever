@@ -1,3 +1,9 @@
+Party Quests Forever 1.1.10-beta3
+
+- Fixed a native Objectives redraw flashing over the Party Quests tab when turning in quests. The tab visibility guard now runs after Blizzard's OnShow layout.
+
+For WoW Forever 1.60.1 (interface 16001). Includes beta2's framed tabs and the Tabbed / Side by Side layout choices. Existing settings are preserved.
+
 Party Quests Forever 1.1.10-beta2
 
 - Replaced flat tracker tab labels with Blizzard's framed top-tab style, with a framed fallback for older clients.

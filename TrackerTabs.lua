@@ -131,6 +131,12 @@ function A:InitTrackerTabs(native)
         SecureHandlerWrapScript(native,"OnShow",t.control,[[
             if control:GetAttribute("enabled") and self==control:GetFrameRef("native") then
                 if not control:GetAttribute("applying") then control:SetAttribute("wanted",true) end
+            end
+            -- A non-nil message schedules the secure post-handler. Let the
+            -- native OnShow finish its layout before enforcing tab visibility.
+            return true,true
+        ]],[[
+            if control:GetAttribute("enabled") and self==control:GetFrameRef("native") then
                 if control:GetAttribute("party") or (control:GetAttribute("state-combat")==1 and control:GetAttribute("auto")) then
                     control:SetAttribute("applying",true);self:Hide(true);control:SetAttribute("applying",nil)
                 end

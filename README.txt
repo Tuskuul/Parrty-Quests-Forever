@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.10-beta2
+Party Quests Forever 1.1.10-beta3
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside the active quest tracker or in a movable, resizable

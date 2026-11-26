@@ -12,7 +12,15 @@ local function widget(kind,foreign)
  function w:HookScript(k,v) write(self);self.scripts[k]=v end
  function w:RegisterEvent() write(self) end
  function w:IsShown() return self.shown end
- function w:Show() write(self);local changed=not self.shown;self.shown=true;if changed and self.wrapShow then runSnippet(self.wrapShow.body,self.wrapShow.control,self) end end
+ function w:Show()
+  write(self);local changed=not self.shown;self.shown=true
+  if changed then
+   local wrap=self.wrapShow;local allow,message
+   if wrap then allow,message=runSnippet(wrap.body,wrap.control,self) end
+   if allow~=false and self.scripts.OnShow then self.scripts.OnShow(self) end
+   if wrap and wrap.postBody and message~=nil then runSnippet(wrap.postBody,wrap.control,self) end
+  end
+ end
  function w:Hide() write(self);local changed=self.shown;self.shown=false;if changed and self.wrapHide then runSnippet(self.wrapHide.body,self.wrapHide.control,self) end end
  function w:SetShown(v) if v then self:Show() else self:Hide() end end
  function w:SetSize(x,y) write(self);self.width=x;self.height=y end
@@ -60,15 +68,15 @@ end
 
 runSnippet=function(body,control,frame,newstate)
  local previous=secure;secure=true
- local ok,err=pcall(assert(load(body,'restricted snippet','t',setmetatable({self=frame or control,control=control,newstate=newstate},{__index=_G}))))
- secure=previous;assert(ok,err)
+ local ok,a,b=pcall(assert(load(body,'restricted snippet','t',setmetatable({self=frame or control,control=control,newstate=newstate},{__index=_G}))))
+ secure=previous;assert(ok,a);return a,b
 end
 CreateFrame=function(kind) return widget(kind) end
 RegisterStateDriver=function(control) control.registered=true end
 local wraps=0
-SecureHandlerWrapScript=function(frame,script,control,body)
+SecureHandlerWrapScript=function(frame,script,control,body,postBody)
  wraps=wraps+1
- frame[script=='OnShow' and 'wrapShow' or 'wrapHide']={control=control,body=body}
+ frame[script=='OnShow' and 'wrapShow' or 'wrapHide']={control=control,body=body,postBody=postBody}
 end
 securecallfunction=function(fn,...) return fn(...) end
 local messages={}
@@ -102,8 +110,12 @@ A:TrackerIntegrationTick()
 assert(f.width==350 and f.scale==0.8 and f.point[4]==1100 and t.bar.scale==0.8 and renders==2,'Edit Mode scale/width changes did not reflow')
 native.scale=1;native.width=300;native.left=1200;A:TrackerIntegrationTick()
 local priorRenders=renders
--- Blizzard's own show request stays suppressed and is remembered.
-native:Show();assert(not native.shown and t.control:GetAttribute('wanted'))
+-- The native OnShow/layout can complete visibility after a pre-guard. The
+-- post-handler must suppress it in the same event, before the next 150ms tick.
+native.scripts.OnShow=function(self) self.shown=true end
+native:Show();assert(not native.shown and t.control:GetAttribute('wanted'),'native turn-in redraw leaked through before next tick')
+for i=1,20 do native:Show();assert(not native.shown,'repeated native redraw flashed') end
+native.scripts.OnShow=nil
 -- A quest update rerenders only our rows; no native Update/SetCollapsed exists.
 A.integration.dirty=true;A:TrackerIntegrationTick();assert(renders==priorRenders+1)
 locked=true
