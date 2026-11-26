@@ -105,7 +105,7 @@ function A:UpdateTrackerTabsLabels()
             end
             local label=read(button,"GetFontString")
             if label then
-                label:SetHeight(size+6);label:ClearAllPoints();label:SetPoint("CENTER",button,"CENTER",0,0)
+                label:SetHeight(size+6);label:ClearAllPoints();label:SetPoint("CENTER",button,"CENTER",0,selected and -2 or -6)
             end
         end
     end
