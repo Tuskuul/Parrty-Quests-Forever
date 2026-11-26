@@ -13,7 +13,9 @@ function A:TrackerTabsRequested()
         and not (self.QuestieOwnsTracker and self:QuestieOwnsTracker())
 end
 function A:TrackerTabsWanted()
-    return self:TrackerTabsRequested() and not self.db.trackerHidden and not self.demo and self:ShouldShowPartyView()
+    -- Layout availability is independent of party membership and the old
+    -- sidebar Hide preference. The Party tab can display the empty-party state.
+    return self:TrackerTabsRequested() and not self.demo
 end
 function A:TrackerTabsNotice(message)
     if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffffd100Party Quests:|r "..message) end
@@ -65,9 +67,7 @@ function A:ToggleTabbedTracker()
         end
         return
     end
-    self.db.trackerTab="party"
     self:SetViewShown(true)
-    self:InvalidateTrackerIntegration(true);self:TrackerIntegrationTick()
 end
 function A:SetTabbedPartyCollapsed(value)
     local t=self.trackerTabs
@@ -230,7 +230,7 @@ function A:TrackerTabsTick()
     if not combat() and self.integration.tabsOpenPending then
         self.integration.tabsOpenPending=nil
         if self:TrackerTabsRequested() and not self.integration.pendingDisplayMode then
-            self.db.trackerTab="party";self:SetViewShown(true);self:InvalidateTrackerIntegration(true)
+            self.db.trackerTab="party";self.db.trackerHidden=false;self:InvalidateTrackerIntegration(true)
         end
     end
     if not self:TrackerTabsWanted() or self.integration.pendingDisplayMode then

@@ -5,6 +5,18 @@ local function font(parent,text,template)
 end
 function A:SetViewShown(shown)
     local tabbed=self.TrackerTabsRequested and self:TrackerTabsRequested()
+    if tabbed then
+        self.db.trackerHidden=not shown
+        if self.trackerTabs and self.trackerTabs.active then
+            self:SelectTrackerTab(shown and "party" or "objectives")
+        elseif shown and InCombatLockdown and InCombatLockdown() then
+            self:ToggleTabbedTracker()
+        else
+            self.db.trackerTab=shown and "party" or "objectives"
+            self:InvalidateTrackerIntegration(true);self:TrackerIntegrationTick()
+        end
+        self:SyncSettings();return
+    end
     self.soloOverride=shown and next(self.members)==nil or nil
     if self:EffectiveDisplayMode()=="blizzard" then
         self.db.trackerHidden=not shown;self:InvalidateTrackerIntegration()
@@ -143,7 +155,7 @@ function A:InitSettings()
     self.settingsQuestieStatus=text("")
     section("Tracker layout",sidebar)
     check("layoutSidebar","Side by Side","Show the tracker and party pane beside each other.",function() return A.db.defaultTrackerLayout~="tabs" end,function() A:SetDefaultTrackerLayout("sidebar") end,true)
-    check("layoutTabs","Tabbed","Switch between Objectives and Party Quests in one tracker area. Combat switches queue until combat ends. Questie's tracker keeps its sidebar.",function() return A.db.defaultTrackerLayout=="tabs" end,function() A:SetDefaultTrackerLayout("tabs") end,true)
+    check("layoutTabs","Tabbed","Keep both tabs available, including while solo. Combat switches queue until combat ends. Questie's tracker keeps its sidebar.",function() return A.db.defaultTrackerLayout=="tabs" end,function() A:SetDefaultTrackerLayout("tabs") end,true)
     section("Sidebar placement",function() return sidebar() and (A.db.defaultTrackerLayout~="tabs" or (A.QuestieOwnsTracker and A:QuestieOwnsTracker())) end)
     check("sidebarLeft","Party quests on the left","",function() return A.db.trackerSide~="right" end,function() A:SetTrackerSide("left") end,true)
     check("sidebarRight","Party quests on the right","",function() return A.db.trackerSide=="right" end,function() A:SetTrackerSide("right") end,true)

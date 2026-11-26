@@ -1,3 +1,10 @@
+Party Quests Forever 1.1.10-beta6
+
+- Kept both tabs available whenever the default tracker uses Tabbed layout, including solo, after leaving a party and with an old Hide preference saved.
+- The Party Quests tab shows the empty-party message while solo. Hide returns to Objectives without removing the tab bar.
+
+For WoW Forever 1.60.1 (interface 16001). Side by Side and Questie display behavior are unchanged. Combat tab switches remain deferred until combat ends.
+
 Party Quests Forever 1.1.10-beta5
 
 - Removed the redundant Blizzard-header Party Quests button in Tabbed mode. Manual opening now brings up the tabs and Party Quests view with one click, including while solo or previously hidden.

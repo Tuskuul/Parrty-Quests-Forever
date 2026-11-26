@@ -169,8 +169,10 @@ assert(f.settings.point[2]==f and f.refresh.point[2]==f.settings and f.share.poi
 -- Re-enable without duplicate visibility-parent guards; saved tab preference survives changes.
 A.db.trackerTab='party';A:SetDefaultTrackerLayout('tabs')
 assert(t.active and f.shown and not native:IsVisible() and wraps==1)
--- A roster loss restores Objectives and preserves party-only automatic display.
-A.members={};A:TrackerIntegrationTick();assert(not t.active and native:IsVisible())
+-- Both tabs remain available after the last party member leaves.
+A.members={};A:TrackerIntegrationTick();assert(t.active and t.bar.shown)
+A:SelectTrackerTab('objectives');assert(native:IsVisible())
+A:SelectTrackerTab('party');assert(f.shown and t.bar.shown)
 A.soloOverride=true;A:TrackerIntegrationTick();assert(t.active,'manual solo opening was lost')
 -- Questie's active tracker ignores the stored default-UI layout preference.
 Questie={db={profile={trackerEnabled=true}}}
@@ -224,25 +226,31 @@ assert(host:GetParent()==UIParent and host.ignoreInLayout and host.allPoints==ma
 A:SelectTrackerTab('party');native:SetParent(manager)
 assert(not native:IsVisible() and native:GetParent()==host,'managed container reparent revealed native objectives')
 A:SetDefaultTrackerLayout('sidebar');assert(native:GetParent()==manager,'custom native parent was not restored')
--- Tabbed mode has no redundant header launcher. Manual solo opening must not
--- first hide an already absent pane just because trackerHidden defaults false.
-A.db.defaultTrackerLayout='tabs';A.db.trackerHidden=false;A.members={};A.soloOverride=nil
+-- Tabs initialize while solo, even with the old sidebar Hide flag saved.
+A.db.defaultTrackerLayout='tabs';A.db.trackerHidden=true;A.db.trackerTab='objectives';A.members={};A.soloOverride=nil
 A.partyTrackerButton=widget()
 A:EnsurePartyTrackerButton(native);assert(not A.partyTrackerButton.shown)
+A:TrackerIntegrationTick()
+assert(A.trackerTabs.active and A.trackerTabs.bar.shown and native:IsVisible(),'tab strip unavailable while solo/hidden')
 A:TogglePartyTracker()
-assert(A.trackerTabs.active and A.db.trackerTab=='party' and A.soloOverride and f.shown,'solo tabs required a second click')
-A:TogglePartyTracker();assert(A.db.trackerTab=='objectives' and not f.shown,'active tab toggle did not switch directly')
--- A saved Hide choice needs one click too, and combat first-open is deferred.
-A:SetViewShown(false);A:TrackerIntegrationTick();assert(not A.trackerTabs.active)
-A:TogglePartyTracker();assert(A.trackerTabs.active and f.shown and not A.db.trackerHidden)
-A:SetViewShown(false);A:TrackerIntegrationTick();locked=true
+assert(A.db.trackerTab=='party' and f.shown,'manual tab switch required another click')
+A:SetViewShown(false);A:TrackerIntegrationTick()
+assert(A.trackerTabs.active and A.trackerTabs.bar.shown and A.db.trackerTab=='objectives' and not f.shown,'Hide removed the entire tab bar')
+A:SetViewShown(true);assert(A.db.trackerTab=='party' and f.shown)
+-- Both tabs remain reachable throughout combat; the page switch is deferred.
+A:SelectTrackerTab('objectives');locked=true
 local priorNotices=#messages
 A:TogglePartyTracker();A:TogglePartyTracker()
-assert(A.integration.tabsOpenPending and #messages==priorNotices+1 and not A.trackerTabs.active)
+assert(A.trackerTabs.active and A.trackerTabs.bar.shown and A.trackerTabs.pending=='party' and #messages==priorNotices+1)
+locked=false;A:TrackerIntegrationTick();assert(A.db.trackerTab=='party' and f.shown)
+-- First creation during combat still waits for safe setup, without recursive
+-- initialization when the queued open is applied.
+A:SetDefaultTrackerLayout('sidebar');A.db.defaultTrackerLayout='tabs';locked=true
+A:TogglePartyTracker();assert(A.integration.tabsOpenPending and not A.trackerTabs.active)
 locked=false;A:TrackerIntegrationTick()
 assert(not A.integration.tabsOpenPending and A.trackerTabs.active and f.shown)
 A:SetDefaultTrackerLayout('sidebar');A:EnsurePartyTrackerButton(native)
 assert(A.partyTrackerButton.shown,'side-by-side launcher was not restored')
 local file=assert(io.open('Settings.lua'));local settings=file:read('*a');file:close()
 assert(settings:find('"layoutSidebar","Side by Side"',1,true) and settings:find('"layoutTabs","Tabbed"',1,true),'layout names did not match requested labels')
-print('PASS: default tracker tab selection, same-space geometry, native visibility guards, combat queues/collapse/restore/opt-out, owned row updates, pending layout, toolbar restoration, party-only display, solo override, Questie isolation, saved defaults and secure-API fallback')
+print('PASS: default tracker tab selection, same-space geometry, native visibility guards, combat queues/collapse/restore/opt-out, owned row updates, pending layout, toolbar restoration, persistent solo/group tab availability, solo override, Questie isolation, saved defaults and secure-API fallback')

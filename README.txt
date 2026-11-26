@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.10-beta5
+Party Quests Forever 1.1.10-beta6
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside the active quest tracker or in a movable, resizable
@@ -15,7 +15,8 @@ CONTROLS
 Settings live directly in Options > AddOns > Party Quests Forever. /spq or
 minimap right-click opens that category. Minimap left-click toggles the
 party pane; in Tabbed mode it opens Party Quests with one click or switches
-tabs. Shift-click refreshes. Drag the minimap button to reposition it.
+tabs. Both tabs remain available while solo; Hide selects Objectives.
+Shift-click refreshes. Drag the minimap button to reposition it.
 Settings > Display chooses Beside the active quest tracker or Separate window.
 Tracker layout chooses Side by Side or Tabbed.
 Tabs apply to the default Blizzard tracker; Questie retains its sidebar. Combat
@@ -26,7 +27,8 @@ quest combining, zone grouping and double-click share requests.
 Click player, zone and quest headings to expand them. Mouse wheel scrolls.
 The separate window moves by its title and resizes from its bottom-right corner.
 Its action row has Share and Refresh; preference controls are in Settings.
-The pane normally hides while solo; open it manually with the minimap button.
+Side by Side normally hides the party pane while solo; open it manually with
+the minimap button. Tabbed keeps both tabs available regardless of party size.
 
 QUESTIE DOCKING
 With Questie's tracker enabled, sidebar mode docks our independent pane beside
