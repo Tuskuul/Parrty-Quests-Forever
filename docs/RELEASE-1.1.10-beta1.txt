@@ -1,0 +1,7 @@
+Party Quests Forever 1.1.10-beta1
+
+- Added an optional Objectives / Party Quests tab layout for the default Blizzard tracker. Side-by-side remains the default; Questie's layout is unchanged.
+- Tabs share the tracker area and follow its scale and size. Tab/layout switches during combat queue until combat ends; combat auto-hide is preserved.
+- Refresh now reconciles the roster, requests fresh full PQF logs and restarts discovery for non-users, with Working/Queued feedback and a result summary.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. This beta needs in-game validation.

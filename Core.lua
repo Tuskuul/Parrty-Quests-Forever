@@ -91,6 +91,8 @@ function A:NormalizeSavedSettings()
     end
     if db.displayMode~="blizzard" and db.displayMode~="window" then db.displayMode="blizzard" end
     if db.trackerSide~="right" then db.trackerSide="left" end
+    if db.defaultTrackerLayout~="tabs" then db.defaultTrackerLayout="sidebar" end
+    if db.trackerTab~="party" then db.trackerTab="objectives" end
     local function number(value,default,min,max)
         if not public(value,"number") or value~=value or value==math.huge or value==-math.huge then return default end
         return math.max(min,math.min(max,value))
@@ -120,6 +122,7 @@ function A:NativeTrackerWritesAllowed()
 end
 function A:NativeCombatControlsAllowed()
     return not (self.QuestieLoaded and self:QuestieLoaded())
+        and not (self.trackerTabs and self.trackerTabs.active)
 end
 -- Native Lua methods must enter through the client's call barrier. Calling
 -- them directly from addon execution can taint the fields their layouts write.

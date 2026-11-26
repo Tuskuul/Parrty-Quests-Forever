@@ -18,6 +18,7 @@ function A:SetCombatAutoHide(value)
     self:InvalidateTrackerIntegration();self:SyncSettings()
 end
 function A:SetViewCollapsed(value)
+    if self.trackerTabs and self.trackerTabs.active then self:SetTabbedPartyCollapsed(value);return end
     if self.QuestieDockActive and self:QuestieDockActive() then
         local q=self.questieCompatibility
         local solo=self:QuestieDockIsSolo()
@@ -75,7 +76,9 @@ function A:SyncSettings()
     local pending=A.integration and A.integration.pendingDisplayMode
     local suffix=pending and ("   |   "..(pending=="blizzard" and "Tracker" or "Window").." queued after combat")
         or ((InCombatLockdown and InCombatLockdown()) and "   |   Layout changes apply after combat" or "")
-    self.settingsStatus:SetText("View: "..(self:EffectiveDisplayMode()=="blizzard" and "Tracker sidebar" or "Pop-out window").."   |   Party members: "..count..suffix)
+    local view=self:EffectiveDisplayMode()=="blizzard" and "Tracker sidebar" or "Pop-out window"
+    if self.TrackerTabsRequested and self:TrackerTabsRequested() then view="Tracker tabs" end
+    self.settingsStatus:SetText("View: "..view.."   |   Party members: "..count..suffix)
     if self.settingsQuestieStatus then self.settingsQuestieStatus:SetText(self.QuestieSummary and self:QuestieSummary() or "Questie: not loaded") end
     if self.settingsPaperSlider then
         self.settingsPaperSync=true;self.settingsPaperSlider:SetValue(self:QuestPaperBrightness());self.settingsPaperSync=nil
@@ -138,6 +141,9 @@ function A:InitSettings()
     check("combatAutoHide","Collapse during combat","Restores the previous view after combat. With Questie loaded, only the Party Quests pane collapses; Questie's tracker keeps its own controls. Changes during combat apply afterward.",function() return A.db.combatAutoHide~=false end,function(v) A:SetCombatAutoHide(v) end)
     self.settingsQuestieStatus=text("")
     section("Tracker layout",sidebar)
+    check("layoutSidebar","Side-by-side panes","Keep the current tracker and party pane beside each other.",function() return A.db.defaultTrackerLayout~="tabs" end,function() A:SetDefaultTrackerLayout("sidebar") end,true)
+    check("layoutTabs","Objectives / Party Quests tabs","Use one tracker area with two tabs in the default Blizzard UI. Combat switches queue until combat ends. Questie's tracker keeps its sidebar.",function() return A.db.defaultTrackerLayout=="tabs" end,function() A:SetDefaultTrackerLayout("tabs") end,true)
+    section("Sidebar placement",function() return sidebar() and (A.db.defaultTrackerLayout~="tabs" or (A.QuestieOwnsTracker and A:QuestieOwnsTracker())) end)
     check("sidebarLeft","Party quests on the left","",function() return A.db.trackerSide~="right" end,function() A:SetTrackerSide("left") end,true)
     check("sidebarRight","Party quests on the right","",function() return A.db.trackerSide=="right" end,function() A:SetTrackerSide("right") end,true)
     self.settingsWidthLabel=text("")

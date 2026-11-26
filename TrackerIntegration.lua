@@ -598,6 +598,9 @@ function A:ApplyPendingTrackerRestore()
     self:InvalidateTrackerIntegration()
 end
 function A:TogglePartyTracker()
+    if self.trackerTabs and self.trackerTabs.active then
+        self:SelectTrackerTab(self.db.trackerTab=="party" and "objectives" or "party");return
+    end
     if self.QuestieDockActive and self:QuestieDockActive() then
         self:SetViewShown(not not self.db.trackerHidden);return
     end
@@ -703,6 +706,7 @@ function A:RenderCombatTrackerSidebar()
     return ok
 end
 function A:RefreshCombatTrackerPane()
+    if self.trackerTabs and self.trackerTabs.active then self:TrackerTabsTick();return end
     if self.QuestieDockActive and self:QuestieDockActive() then self:QuestieDockTick();return end
     if self:SyncCombatAutoHide() then return end
     if not combat() or self:EffectiveDisplayMode()~="blizzard" then return end
@@ -749,6 +753,7 @@ function A:MeasureCombatTrackerBackground()
         bottom=(ownTop*scale-bottom*nativeScale)/scale}}
 end
 function A:ResizeCombatTrackerBackground()
+    if self.trackerTabs and self.trackerTabs.active then self:TrackerTabsTick();return end
     if self.QuestieDockActive and self:QuestieDockActive() then self:SyncQuestieDockBackground();return end
     if self.integration.autoHideActive and self.integration.combatVisualCollapsed then return end
     self:MeasureCombatTrackerBackground()
@@ -1169,6 +1174,7 @@ function A:RestoreTrackerJoinVisuals()
     if self.sidebar and self.sidebar.trackerBackground then self.sidebar.trackerBackground:Hide() end
 end
 function A:SetJoinedCollapseVisual(collapsed)
+    if self.trackerTabs and self.trackerTabs.active then self:InvalidateTrackerIntegration();return end
     if not self:NativeTrackerWritesAllowed() then return end
     if self.integration.preparingCollapse then return end
     if not combat() and self.integration.preparedNative then
@@ -1361,6 +1367,7 @@ function A:TrackerIntegrationTick(compatibilityReady)
     -- The main update pass already refreshed compatibility before polling.
     -- Direct UI/event calls still need a fresh ownership/geometry check.
     if not compatibilityReady and self.QuestieCompatibilityTick then self:QuestieCompatibilityTick() end
+    if self.TrackerTabsTick and self:TrackerTabsTick() then return end
     if not self:NativeTrackerWritesAllowed() then
         local s=self.integration
         if not combat() and s.pendingDisplayMode then self:ApplyPendingDisplayMode();return end

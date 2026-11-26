@@ -9,7 +9,11 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.9** refines the shared Questie border and removes player counts from Ready quest rows, leaving room for their XP rewards.
+**1.1.10-beta1** tests an optional tabbed Blizzard tracker and a full manual refresh with visible feedback.
+
+In **Settings → Tracker layout**, choose **Side-by-side panes** (the existing default) or **Objectives / Party Quests tabs**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Automatic party display remains party-only; opening manually while solo remains available. Questie keeps its current docking behavior.
+
+**Refresh** reconciles the current roster, rereads your log, requests fresh full PQF logs and starts new game-API discovery. Buttons show Working/Queued, with chat messages reporting start and results. Unknown or unavailable data retains the last known log; zero API matches do not prove an empty remote log.
 
 Choose **Beside the active quest tracker** to dock beside Questie when its tracker is enabled, or beside Blizzard when Questie's tracker is disabled. The party pane follows Questie's position, size and scale using read-only screen geometry. Choose left/right and width under Tracker layout; if your chosen side has too little room, the other side is used without changing your preference. Separate-window mode remains available, and is the fallback when Questie's tracker is hidden, unavailable or neither side has room. Your requested display mode is preserved.
 
@@ -21,7 +25,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.9.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10-beta1.txt)
 
 ## Quest offers
 

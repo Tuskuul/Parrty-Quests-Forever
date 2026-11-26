@@ -66,7 +66,7 @@ function A:ReleaseNativeCombatControlUnsafe()
     -- it when Questie maps-only cleanup runs on each integration tick.
     s.expandAfterCombat=nil;s.blockedRestore=nil
     s.combatRestorePending=nil;s.combatCycleActive=nil
-    s.combatSetupStatus="paused while Questie is loaded"
+    s.combatSetupStatus=self.trackerTabs and self.trackerTabs.active and "native collapse handled by tracker tabs" or "paused while Questie is loaded"
 end
 function A:QuestieCompatibilityTick()
     if not self.db then return end

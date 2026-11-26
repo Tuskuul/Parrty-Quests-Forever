@@ -392,7 +392,7 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.1.9", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.1.10-beta1", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),
@@ -404,6 +404,10 @@ function A:DiagnosticReport()
             .."; members="..memberCount.."; instance="..tostring(inInstance).."; raid="..tostring(IsInRaid()),
         "Sweep: "..self:SweepSummary(),
         "Manual refresh: "..(self.partyRefreshStatus or "not requested"),
+        "Default tracker layout: "..tostring(self.db.defaultTrackerLayout or "sidebar").."; tab="..tostring(self.db.trackerTab or "objectives")
+            .."; tab active="..tostring(self.trackerTabs and self.trackerTabs.active==true or false)
+            .."; pending tab="..tostring(self.trackerTabs and self.trackerTabs.pending or "none")
+            .."; pending layout="..tostring(self.integration and self.integration.pendingTrackerLayout or "none"),
         string.format("Live: %d calls; %d payloads; %d rows applied; %d empty/restricted; %d errors",s.queries,s.payloads,s.rows,s.empty,s.errors),
         string.format("Counters: %d first observations; %d changed; %d repeated; %d readiness changes",s.first,s.changes,s.repeated,s.readyChanges),
         "Count changes by source: "..table.concat(sources,"; "),
