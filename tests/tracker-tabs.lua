@@ -12,6 +12,20 @@ local function widget(kind,foreign)
  function w:HookScript(k,v) write(self);self.scripts[k]=v end
  function w:RegisterEvent() write(self) end
  function w:IsShown() return self.shown end
+ function w:IsVisible() return self.shown and (not self.parent or self.parent:IsVisible()) end
+ function w:GetParent() return self.parent end
+ function w:SetParent(parent)
+  write(self);local visible=self:IsVisible();self.parent=parent
+  if not visible and self:IsVisible() then
+   local wrap=self.wrapShow;local allow,message
+   if wrap then allow,message=runSnippet(wrap.body,wrap.control,self) end
+   if allow~=false and self.scripts.OnShow then self.scripts.OnShow(self) end
+   if wrap and wrap.postBody and message~=nil then runSnippet(wrap.postBody,wrap.control,self) end
+  end
+ end
+ function w:SetAllPoints(target) write(self);self.allPoints=target end
+ function w:SetNormalFontObject(font) self.normalFont=font end
+ function w:GetFontString() return self.fontString end
  function w:Show()
   write(self);local changed=not self.shown;self.shown=true
   if changed then
@@ -83,7 +97,7 @@ local messages={}
 DEFAULT_CHAT_FRAME={AddMessage=function(_,v) messages[#messages+1]=v end}
 UIParent=widget();UIParent.width=1800;UIParent.height=1000
 ObjectiveTrackerFrame=widget();local native=ObjectiveTrackerFrame
-native.native=true;native.left=1200;native.top=850;native.width=300
+native.parent=UIParent;native.native=true;native.left=1200;native.top=850;native.width=300
 native.Header=widget();native.Header.MinimizeButton=widget()
 local A={}
 for _,name in ipairs({'Core.lua','QuestieCompatibility.lua','TrackerIntegration.lua','Settings.lua','TrackerTabs.lua'}) do
@@ -100,58 +114,63 @@ local renders=0
 function A:RenderTrackerSidebar() renders=renders+1;self.sidebar.contentHeight=500 end
 A:TrackerIntegrationTick()
 local t,f=A.trackerTabs,A.sidebar
-assert(t.active and t.bar.shown and not f.shown and native.shown,'initial Objectives view hides native tracker')
+assert(t.active and t.bar.shown and not f.shown and native:IsVisible(),'initial Objectives view hides native tracker')
 assert(f.point[2]==UIParent and t.bar.point[2]==UIParent,'native anchor protection leaked into owned frames')
-assert(f.width==300 and wraps==2 and not A:NativeCombatControlsAllowed())
+assert(f.width==300 and wraps==1 and not A:NativeCombatControlsAllowed())
 A:SelectTrackerTab('party')
-assert(f.shown and not native.shown and renders==1 and t.buttons[2].selected.shown,table.concat({tostring(f.shown),tostring(native.shown),renders,tostring(t.buttons[2].selected.shown),tostring(A.integration.due)},','))
+assert(f.shown and not native:IsVisible() and renders==1 and t.buttons[2].selected.shown,table.concat({tostring(f.shown),tostring(native:IsVisible()),renders,tostring(t.buttons[2].selected.shown),tostring(A.integration.due)},','))
 native.scale=0.8;native.width=350;native.left=1100
 A:TrackerIntegrationTick()
 assert(f.width==350 and f.scale==0.8 and f.point[4]==1100 and t.bar.scale==0.8 and renders==2,'Edit Mode scale/width changes did not reflow')
 native.scale=1;native.width=300;native.left=1200;A:TrackerIntegrationTick()
 local priorRenders=renders
--- The native OnShow/layout can complete visibility after a pre-guard. The
--- post-handler must suppress it in the same event, before the next 150ms tick.
+-- Native Show/SetShown calls cannot reveal a hidden ancestor, even if no
+-- periodic tracker tick occurs between repeated turn-in layouts.
 native.scripts.OnShow=function(self) self.shown=true end
-native:Show();assert(not native.shown and t.control:GetAttribute('wanted'),'native turn-in redraw leaked through before next tick')
-for i=1,20 do native:Show();assert(not native.shown,'repeated native redraw flashed') end
+native:Show();assert(not native:IsVisible() and native.shown and native:GetParent()==t.control,'native turn-in redraw leaked through before next tick')
+for i=1,20 do
+ native:Show();assert(not native:IsVisible(),'repeated native redraw flashed')
+ native:SetParent(UIParent);assert(not native:IsVisible() and native:GetParent()==t.control,'managed frame reparent escaped visibility host')
+end
 native.scripts.OnShow=nil
 -- A quest update rerenders only our rows; no native Update/SetCollapsed exists.
 A.integration.dirty=true;A:TrackerIntegrationTick();assert(renders==priorRenders+1)
 locked=true
 runSnippet(t.control:GetAttribute('_onstate-combat'),t.control,nil,1)
 t.control.attrs['state-combat']=1
-A:TrackerIntegrationTick();assert(f.viewCollapsed and f.shown and not f.scroll.shown and not native.shown)
+A:TrackerIntegrationTick();assert(f.viewCollapsed and f.shown and not f.scroll.shown and not native:IsVisible())
+secure=true;native:SetParent(UIParent);native:Show();secure=false
+assert(not native:IsVisible() and native:GetParent()==t.control,'secure native reparent escaped hidden tab during combat')
 A:SetViewCollapsed(false);assert(not f.viewCollapsed and f.scroll.shown,'party combat reopening failed')
-A:SelectTrackerTab('objectives');assert(t.pending=='objectives' and A.db.trackerTab=='party' and not native.shown)
+A:SelectTrackerTab('objectives');assert(t.pending=='objectives' and A.db.trackerTab=='party' and not native:IsVisible())
 local noticeCount=#messages;A:SelectTrackerTab('objectives');assert(#messages==noticeCount,'repeat tab click spammed notices')
 A:SelectTrackerTab('party');assert(not t.pending,'active tab failed to cancel queued switch')
 A:SelectTrackerTab('objectives')
 locked=false;t.control.attrs['state-combat']=0
 runSnippet(t.control:GetAttribute('_onstate-combat'),t.control,nil,0)
-A:TrackerIntegrationTick();assert(native.shown and not f.shown and A.db.trackerTab=='objectives' and not t.pending)
+A:TrackerIntegrationTick();assert(native:IsVisible() and not f.shown and A.db.trackerTab=='objectives' and not t.pending)
 -- Auto-hide the native view securely; retain the tab bar throughout combat.
 locked=true;t.control.attrs['state-combat']=1
 runSnippet(t.control:GetAttribute('_onstate-combat'),t.control,nil,1)
-A:TrackerIntegrationTick();assert(not native.shown and t.bar.shown)
+A:TrackerIntegrationTick();assert(not native:IsVisible() and t.bar.shown)
 locked=false;t.control.attrs['state-combat']=0
 runSnippet(t.control:GetAttribute('_onstate-combat'),t.control,nil,0)
-A:TrackerIntegrationTick();assert(native.shown and not f.shown)
+A:TrackerIntegrationTick();assert(native:IsVisible() and not f.shown)
 A.db.combatAutoHide=false;A:TrackerIntegrationTick()
 locked=true;t.control.attrs['state-combat']=1
 runSnippet(t.control:GetAttribute('_onstate-combat'),t.control,nil,1)
-A:TrackerIntegrationTick();assert(native.shown,'auto-hide opt-out ignored')
+A:TrackerIntegrationTick();assert(native:IsVisible(),'auto-hide opt-out ignored')
 -- Layout changes during combat are deferred and restore normal UI afterward.
 A:SetDefaultTrackerLayout('sidebar');assert(t.active and A.integration.pendingTrackerLayout=='sidebar')
 locked=false;t.control.attrs['state-combat']=0
 runSnippet(t.control:GetAttribute('_onstate-combat'),t.control,nil,0)
-A:TrackerIntegrationTick();assert(not t.active and not t.bar.shown and native.shown and fallback>0)
+A:TrackerIntegrationTick();assert(not t.active and not t.bar.shown and native:IsVisible() and fallback>0)
 assert(f.settings.point[2]==f and f.refresh.point[2]==f.settings and f.share.point[2]==f.refresh,'toolbar anchors did not restore')
--- Re-enable without duplicate wrappers; saved tab preference survives changes.
+-- Re-enable without duplicate visibility-parent guards; saved tab preference survives changes.
 A.db.trackerTab='party';A:SetDefaultTrackerLayout('tabs')
-assert(t.active and f.shown and not native.shown and wraps==2)
+assert(t.active and f.shown and not native:IsVisible() and wraps==1)
 -- A roster loss restores Objectives and preserves party-only automatic display.
-A.members={};A:TrackerIntegrationTick();assert(not t.active and native.shown)
+A.members={};A:TrackerIntegrationTick();assert(not t.active and native:IsVisible())
 A.soloOverride=true;A:TrackerIntegrationTick();assert(t.active,'manual solo opening was lost')
 -- Questie's active tracker ignores the stored default-UI layout preference.
 Questie={db={profile={trackerEnabled=true}}}
@@ -170,15 +189,18 @@ RegisterStateDriver=function() end
 PanelTopTabButtonMixin={}
 PanelTemplates_SelectTab=function(button) button.selected:Show();button.enabled=false end
 PanelTemplates_DeselectTab=function(button) button.selected:Hide();button.enabled=true end
-PanelTemplates_TabResize=function(button,_,width) button:SetWidth(width) end
+PanelTemplates_TabResize=function(button,_,width) button:SetWidth(width or 160) end
 CreateFrame=function(kind,_,parent,template)
  local f=widget(kind)
+ f.parent=parent
  if template=='PanelTopTabButtonTemplate' then
-  f.MiddleActive=widget('Texture');f.template=template
+  f.MiddleActive=widget('Texture');f.template=template;f.fontString=widget('FontString')
   function f:Enable() self.enabled=true end
  end
  return f
 end
+local fontSize=16
+ObjectiveTrackerHeaderFont={GetFont=function() return 'TrackerHeader',fontSize,'' end}
 A.trackerTabs=nil;A.integration.tabsRetryAt=nil;A.db.defaultTrackerLayout='tabs'
 A:TrackerIntegrationTick()
 local nativeTabs=A.trackerTabs
@@ -186,6 +208,22 @@ assert(nativeTabs.buttons[1].nativeTab and nativeTabs.buttons[1].template=='Pane
 assert(nativeTabs.buttons[1].selected.shown and nativeTabs.buttons[1].enabled,'selected native tab cannot cancel a pending switch')
 A:SelectTrackerTab('party')
 assert(nativeTabs.buttons[2].selected.shown and not nativeTabs.buttons[1].selected.shown)
+assert(nativeTabs.buttons[2].normalFont==ObjectiveTrackerHeaderFont,'native tabs retained the small template font')
+fontSize=20;A:UpdateTrackerTabsLabels();assert(nativeTabs.buttons[2].tabVisualKey:match(':20$'),'tab text did not follow live tracker text size')
+assert(nativeTabs.buttons[2].fontString.height==26 and nativeTabs.buttons[2].height==32,'larger tab text retained the template 10px clipping height')
+assert(native:GetParent()==nativeTabs.control and nativeTabs.control.allPoints==UIParent,'visibility host changed parent bounds')
+-- Native layout can hide an empty tracker while inactive. Opening Objectives
+-- must not force the empty tracker shown again.
+native:Hide();A:SelectTrackerTab('objectives');assert(not native:IsVisible())
+native:Show();assert(native:IsVisible())
+A:SetDefaultTrackerLayout('sidebar');assert(native:GetParent()==UIParent,'native parent was not restored')
+local manager=widget();manager.parent=UIParent;manager.scale=0.75
+native:SetParent(manager);A:SetDefaultTrackerLayout('tabs')
+local host=A.trackerTabs.control
+assert(host:GetParent()==UIParent and host.ignoreInLayout and host.allPoints==manager and host.scale==0.75,'host entered the managed layout child list or lost parent scale')
+A:SelectTrackerTab('party');native:SetParent(manager)
+assert(not native:IsVisible() and native:GetParent()==host,'managed container reparent revealed native objectives')
+A:SetDefaultTrackerLayout('sidebar');assert(native:GetParent()==manager,'custom native parent was not restored')
 local file=assert(io.open('Settings.lua'));local settings=file:read('*a');file:close()
 assert(settings:find('"layoutSidebar","Side by Side"',1,true) and settings:find('"layoutTabs","Tabbed"',1,true),'layout names did not match requested labels')
 print('PASS: default tracker tab selection, same-space geometry, native visibility guards, combat queues/collapse/restore/opt-out, owned row updates, pending layout, toolbar restoration, party-only display, solo override, Questie isolation, saved defaults and secure-API fallback')

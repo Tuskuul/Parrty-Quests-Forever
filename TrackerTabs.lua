@@ -18,6 +18,14 @@ end
 function A:TrackerTabsNotice(message)
     if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffffd100Party Quests:|r "..message) end
 end
+function A:TrackerTabsReport()
+    local t=self.trackerTabs
+    if not t or not t.active then return "Tabs visibility: inactive" end
+    return "Tabs visibility: host shown="..tostring(read(t.control,"IsShown"))
+        .."; native shown="..tostring(read(t.native,"IsShown"))
+        .."; native visible="..tostring(read(t.native,"IsVisible"))
+        .."; parent owned="..tostring(read(t.native,"GetParent")==t.control)
+end
 function A:SetDefaultTrackerLayout(layout)
     if layout~="tabs" and layout~="sidebar" then return end
     if combat() then
@@ -53,37 +61,49 @@ end
 function A:UpdateTrackerTabsLabels()
     local t=self.trackerTabs
     if not t then return end
+    local font=ObjectiveTrackerHeaderFont or GameFontNormal
+    local face,size
+    if font and type(font.GetFont)=="function" then face,size=font:GetFont() end
+    size=number(size) and size or 14
     for i,key in ipairs({"objectives","party"}) do
         local selected=self.db.trackerTab==key
         local label=key=="party" and "Party Quests" or "Objectives"
         local button=t.buttons[i]
         local caption=label..(t.pending==key and " *" or "")
-        local signature=caption..":"..tostring(selected)
+        local signature=caption..":"..tostring(selected)..":"..size
         if button.tabVisualKey~=signature then
             button.tabVisualKey=signature;button:SetText(caption)
             if button.nativeTab then
                 if selected then PanelTemplates_SelectTab(button) else PanelTemplates_DeselectTab(button) end
                 -- Keep the active tab clickable so it can cancel a queued switch.
                 button:Enable()
-                PanelTemplates_TabResize(button,0,116)
+                button:SetNormalFontObject(font);button:SetHighlightFontObject(font)
+                PanelTemplates_TabResize(button,8,nil,112,200)
             else
                 button.selected:SetShown(selected)
-                button:SetNormalFontObject(selected and (GameFontNormalSmall or GameFontNormal) or (GameFontDisableSmall or GameFontNormal))
+                button:SetNormalFontObject(font);button:SetHighlightFontObject(font)
                 button:SetBackdropBorderColor(selected and 0.85 or 0.45,selected and 0.68 or 0.45,selected and 0.28 or 0.45,1)
+                local label=read(button,"GetFontString")
+                local width=read(label,"GetStringWidth")
+                button:SetWidth(number(width) and math.max(112,math.min(200,width+24)) or 132)
+            end
+            local label=read(button,"GetFontString")
+            if label then
+                label:SetHeight(size+6);label:ClearAllPoints();label:SetPoint("CENTER",button,"CENTER",0,0)
             end
         end
     end
+    t.bar:SetHeight(math.max(28,size+12))
+    for _,button in ipairs(t.buttons) do button:SetHeight(t.bar:GetHeight()) end
 end
--- Native visibility belongs to a restricted controller prepared outside combat.
--- The ordinary addon tick only writes our independent frames during lockdown.
+-- A dedicated protected parent owns tab visibility. Native Show/SetShown and
+-- turn-in layouts can run normally without revealing a hidden ancestor.
 local state=[[
     if not self:GetAttribute("enabled") then return end
     local native=self:GetFrameRef("native")
+    if native then native:SetParent(self) end
     local hide=self:GetAttribute("party") or (newstate==1 and self:GetAttribute("auto"))
-    self:SetAttribute("applying",true)
-    if hide then native:Hide(true)
-    elseif self:GetAttribute("wanted") then native:Show(true) end
-    self:SetAttribute("applying",nil)
+    if hide then self:Hide(true) else self:Show(true) end
 ]]
 function A:InitTrackerTabs(native)
     if combat() then return false end
@@ -93,13 +113,15 @@ function A:InitTrackerTabs(native)
         t={};self.trackerTabs=t
         t.bar=CreateFrame("Frame","SimplyPartyQuestsTrackerTabs",UIParent)
         t.bar:SetSize(240,28);t.bar:SetFrameStrata("MEDIUM");t.bar:SetClampedToScreen(true);t.buttons={}
-        t.bar.tabPadding=0;t.bar.minTabWidth=116;t.bar.maxTabWidth=116
+        t.bar.tabPadding=8;t.bar.minTabWidth=112;t.bar.maxTabWidth=200
         for i,key in ipairs({"objectives","party"}) do
             local nativeTab=type(PanelTopTabButtonMixin)=="table" and type(PanelTemplates_SelectTab)=="function"
                 and type(PanelTemplates_DeselectTab)=="function" and type(PanelTemplates_TabResize)=="function"
             local button=CreateFrame("Button",nil,t.bar,nativeTab and "PanelTopTabButtonTemplate" or "BackdropTemplate")
             button.nativeTab=nativeTab
-            button:SetSize(116,28);button:SetPoint("BOTTOMLEFT",t.bar,"BOTTOMLEFT",(i-1)*120,0)
+            button:SetSize(132,28)
+            if i==1 then button:SetPoint("BOTTOMLEFT",t.bar,"BOTTOMLEFT",0,0)
+            else button:SetPoint("BOTTOMLEFT",t.buttons[i-1],"BOTTOMRIGHT",6,0) end
             if nativeTab then
                 button.selected=button.MiddleActive
             else
@@ -127,29 +149,39 @@ function A:InitTrackerTabs(native)
         RegisterStateDriver(t.control,"combat","[combat] 1; 0")
         t.bar:Hide();t.wrapped={}
     end
+    local parent=read(native,"GetParent")
+    if not parent or parent==t.control then return false end
+    t.originalParent=parent;t.originalLevel=read(native,"GetFrameLevel")
+    local parentScale,uiScale=read(parent,"GetEffectiveScale"),read(UIParent,"GetEffectiveScale")
+    if not number(parentScale) or not number(uiScale) then return false end
+    local ratio=parentScale/uiScale
+    if not number(ratio) or ratio>100 then return false end
+    -- Keep our host out of the managed container's layout-child list, while
+    -- preserving its bounds and inherited scale for native height calculations.
+    t.control:SetParent(UIParent);t.control.ignoreInLayout=true
+    t.control:SetScale(ratio);t.control:ClearAllPoints();t.control:SetAllPoints(parent)
+    t.control:Show()
+    t.control:SetFrameRef("native",native)
     if not t.wrapped[native] then
-        SecureHandlerWrapScript(native,"OnShow",t.control,[[
+        -- The managed-frame system can reparent a tracker while showing it.
+        -- Preserve the tab's ancestor after that native OnShow has completed.
+        SecureHandlerWrapScript(native,"OnShow",t.control,[[ return true,true ]],[[
             if control:GetAttribute("enabled") and self==control:GetFrameRef("native") then
-                if not control:GetAttribute("applying") then control:SetAttribute("wanted",true) end
-            end
-            -- A non-nil message schedules the secure post-handler. Let the
-            -- native OnShow finish its layout before enforcing tab visibility.
-            return true,true
-        ]],[[
-            if control:GetAttribute("enabled") and self==control:GetFrameRef("native") then
-                if control:GetAttribute("party") or (control:GetAttribute("state-combat")==1 and control:GetAttribute("auto")) then
-                    control:SetAttribute("applying",true);self:Hide(true);control:SetAttribute("applying",nil)
-                end
-            end
-        ]])
-        SecureHandlerWrapScript(native,"OnHide",t.control,[[
-            if control:GetAttribute("enabled") and self==control:GetFrameRef("native") and not control:GetAttribute("applying") then
-                control:SetAttribute("wanted",false)
+                self:SetParent(control)
             end
         ]])
         t.wrapped[native]=true
     end
-    t.control:SetFrameRef("native",native);t.native=native
+    local ok,err=self:CallNativeTrackerMethod(native,"SetParent",t.control)
+    if not ok then error(err) end
+    if finite(t.originalLevel) then
+        ok,err=self:CallNativeTrackerMethod(native,"SetFrameLevel",t.originalLevel)
+        if not ok then
+            self:CallNativeTrackerMethod(native,"SetParent",parent)
+            error(err)
+        end
+    end
+    t.native=native
     return true
 end
 function A:LeaveTrackerTabs()
@@ -157,10 +189,12 @@ function A:LeaveTrackerTabs()
     if not t or not t.active then return true end
     if combat() then return false end
     t.control:SetAttribute("enabled",false)
-    if t.control:GetAttribute("wanted") and self:NativeTrackerWritesAllowed() then
-        local ok,err=self:CallNativeTrackerMethod(t.native,"Show")
-        if not ok then self.integration.lastError=err;return false end
-    end
+    -- Restore ownership, not a stale shown/hidden snapshot. Native quest updates
+    -- decide whether their own tracker has content while the tab is inactive.
+    local ok,err=self:CallNativeTrackerMethod(t.native,"SetParent",t.originalParent)
+    if not ok then self.integration.lastError=err;return false end
+    if finite(t.originalLevel) then self:CallNativeTrackerMethod(t.native,"SetFrameLevel",t.originalLevel) end
+    t.originalParent=nil;t.originalLevel=nil;t.control:Hide()
     t.active=nil;t.pending=nil;t.combatCollapsed=nil;t.bar:Hide()
     local f=self.sidebar
     f.title:Show();f.headerArt:Show();f.headerOffset=nil
@@ -198,7 +232,7 @@ function A:TrackerTabsTick()
                 self.integration.tabsRetryAt=GetTime()+10
                 self.integration.lastError="Tabbed tracker setup unavailable; using sidebar";return false
             end
-            t=self.trackerTabs;t.control:SetAttribute("wanted",read(native,"IsShown")==true)
+            t=self.trackerTabs
             self:InitTrackerSidebar();t.active=true;self.integration.dirty=true;self.integration.due=nil
         end
         if t.pending then self.db.trackerTab=t.pending;t.pending=nil end
@@ -229,13 +263,11 @@ function A:TrackerTabsTick()
         t.control:SetAttribute("party",self.db.trackerTab=="party")
         t.control:SetAttribute("auto",self.db.combatAutoHide~=false)
         t.control:SetAttribute("enabled",true)
-        local method=self.db.trackerTab=="party" and "Hide" or (t.control:GetAttribute("wanted") and "Show" or nil)
-        if method and (read(native,"IsShown")==true)~=(method=="Show") then
-            t.control:SetAttribute("applying",true)
-            local ok,err=self:CallNativeTrackerMethod(native,method)
-            t.control:SetAttribute("applying",nil)
+        if read(native,"GetParent")~=t.control then
+            local ok,err=self:CallNativeTrackerMethod(native,"SetParent",t.control)
             if not ok then self.integration.lastError=err;self:LeaveTrackerTabs();return false end
         end
+        t.control:SetShown(self.db.trackerTab~="party")
     end
     local f,s=self.sidebar,self.integration
     local party=self.db.trackerTab=="party"

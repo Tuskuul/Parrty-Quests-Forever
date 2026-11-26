@@ -1,0 +1,6 @@
+Party Quests Forever 1.1.10-beta4
+
+- Isolated the inactive Objectives view behind a protected visibility parent to address the remaining quest-turn-in flash, including managed-frame reparenting.
+- Enlarged tab text to match the tracker header font. Tab widths and text height adapt to the larger labels.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Please retest quest turn-ins in Tabbed mode.
