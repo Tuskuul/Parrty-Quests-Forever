@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.10-beta4
+Party Quests Forever 1.1.10-beta5
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside the active quest tracker or in a movable, resizable
@@ -12,8 +12,10 @@ client restart. Normal settings use SimplyPartyQuestsDB; old alpha settings
 remain separate and are not imported or overwritten.
 
 CONTROLS
-Open Settings from /spq or minimap right-click. Minimap left-click toggles the
-party pane; Shift-click refreshes. Drag the minimap button to reposition it.
+Settings live directly in Options > AddOns > Party Quests Forever. /spq or
+minimap right-click opens that category. Minimap left-click toggles the
+party pane; in Tabbed mode it opens Party Quests with one click or switches
+tabs. Shift-click refreshes. Drag the minimap button to reposition it.
 Settings > Display chooses Beside the active quest tracker or Separate window.
 Tracker layout chooses Side by Side or Tabbed.
 Tabs apply to the default Blizzard tracker; Questie retains its sidebar. Combat

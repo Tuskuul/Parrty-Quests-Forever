@@ -598,6 +598,9 @@ function A:ApplyPendingTrackerRestore()
     self:InvalidateTrackerIntegration()
 end
 function A:TogglePartyTracker()
+    if self.TrackerTabsRequested and self:TrackerTabsRequested() then
+        self:ToggleTabbedTracker();return
+    end
     if self.trackerTabs and self.trackerTabs.active then
         self:SelectTrackerTab(self.db.trackerTab=="party" and "objectives" or "party");return
     end
@@ -630,6 +633,10 @@ function A:TogglePartyTracker()
 end
 function A:EnsurePartyTrackerButton(tracker)
     if not self:NativeTrackerWritesAllowed() then return end
+    if self.TrackerTabsRequested and self:TrackerTabsRequested() then
+        if self.partyTrackerButton and not combat() then self.partyTrackerButton:Hide() end
+        return
+    end
     if not self.partyTrackerButton then
         local b=CreateFrame("Button","SimplyPartyQuestsMainToggle",UIParent,"UIPanelButtonTemplate,SecureHandlerClickTemplate")
         b:SetNormalFontObject(ObjectiveTrackerLineFont or GameFontNormal)

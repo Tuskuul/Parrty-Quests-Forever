@@ -1,0 +1,6 @@
+Party Quests Forever 1.1.10-beta5
+
+- Removed the redundant Blizzard-header Party Quests button in Tabbed mode. Manual opening now brings up the tabs and Party Quests view with one click, including while solo or previously hidden.
+- Moved the settings controls directly into Options > AddOns > Party Quests Forever, removing the extra launcher and separate settings window.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved; automatic display remains party-only. Combat opening requests queue until combat ends.

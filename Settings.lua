@@ -4,12 +4,13 @@ local function font(parent,text,template)
     f:SetJustifyH("LEFT");f:SetJustifyV("TOP");f:SetText(text);return f
 end
 function A:SetViewShown(shown)
+    local tabbed=self.TrackerTabsRequested and self:TrackerTabsRequested()
     self.soloOverride=shown and next(self.members)==nil or nil
     if self:EffectiveDisplayMode()=="blizzard" then
         self.db.trackerHidden=not shown;self:InvalidateTrackerIntegration()
-        if self.RefreshCombatTrackerPane then self:RefreshCombatTrackerPane() end
+        if self.RefreshCombatTrackerPane and not tabbed then self:RefreshCombatTrackerPane() end
     else self.db.hidden=not shown;self:ShowStandaloneWindow(shown and self:ShouldShowPartyView()) end
-    if self.SyncCombatAutoHide then self:SyncCombatAutoHide() end
+    if self.SyncCombatAutoHide and not tabbed then self:SyncCombatAutoHide() end
     self:SyncSettings()
 end
 function A:SetCombatAutoHide(value)
@@ -233,18 +234,9 @@ function A:InitSettings()
 end
 function A:RegisterSettingsCategory()
     if not self.settingsPanel or self.settingsCategory or self.settingsLegacy then return end
-    -- Keep the real controls in our movable dialog. The native category is
-    -- only a launcher, so opening it never reparents an active share/settings UI.
-    local panel=self.settingsCategoryPanel
-    if not panel then
-        panel=CreateFrame("Frame",nil,UIParent);panel.name="Party Quests Forever";panel:Hide()
-        local help=font(panel,"Open Party Quests settings in a movable window alongside your quest and sharing windows.")
-        help:SetPoint("TOPLEFT",16,-20);help:SetWidth(520)
-        local open=CreateFrame("Button",nil,panel,"UIPanelButtonTemplate")
-        open:SetSize(240,26);open:SetPoint("TOPLEFT",16,-65);open:SetText("Open Party Quests settings")
-        open:SetScript("OnClick",function() A:OpenSettings() end)
-        self.settingsCategoryPanel=panel
-    end
+    -- Register the actual controls as the native category canvas.
+    local panel=self.settingsPanel
+    self.settingsCategoryPanel=panel
     if Settings and type(Settings.RegisterCanvasLayoutCategory)=="function" and type(Settings.RegisterAddOnCategory)=="function" then
         local category=Settings.RegisterCanvasLayoutCategory(panel,panel.name)
         Settings.RegisterAddOnCategory(category);self.settingsCategory=category
@@ -267,30 +259,14 @@ function A:OpenSettings()
     end
     self.settingsOpenPending=nil
     self:InitSettings();self:RegisterSettingsCategory();self:SyncSettings()
-    -- Leaving our native launcher uses Blizzard's normal close flow, including
-    -- its confirmation for unapplied game settings. Our host is not a UIPanel.
-    local launcher=self.settingsCategoryPanel
-    if launcher and launcher:IsShown() then
-        if SettingsPanel and type(SettingsPanel.Close)=="function" and SettingsPanel:IsShown() then SettingsPanel:Close(true)
-        elseif InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown() and type(HideUIPanel)=="function" then HideUIPanel(InterfaceOptionsFrame) end
+    if self.settingsCategory and Settings and type(Settings.OpenToCategory)=="function" then
+        local category=self.settingsCategory
+        local id=type(category.GetID)=="function" and category:GetID() or category.ID
+        if id then Settings.OpenToCategory(id);return true end
     end
-    self:ShowSettingsDialog()
-    return true
-end
-function A:ShowSettingsDialog()
-    if not self.settingsDialog then
-        local dialog=CreateFrame("Frame","SimplyPartyQuestsSettingsDialog",UIParent,"BackdropTemplate")
-        dialog:SetSize(660,600);dialog:SetPoint("CENTER",-100,30);dialog:SetFrameStrata("MEDIUM")
-        dialog:SetToplevel(true);dialog:SetClampedToScreen(true);dialog:EnableMouse(true)
-        dialog:SetMovable(true);dialog:RegisterForDrag("LeftButton")
-        dialog:SetScript("OnDragStart",function() dialog:StartMoving() end)
-        dialog:SetScript("OnDragStop",function() dialog:StopMovingOrSizing() end)
-        dialog:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=16})
-        dialog:SetBackdropColor(0.04,0.05,0.07,1)
-        local close=CreateFrame("Button",nil,dialog,"UIPanelCloseButton");close:SetPoint("TOPRIGHT");close:SetScript("OnClick",function() dialog:Hide() end)
-        self.settingsPanel:SetParent(dialog);self.settingsPanel:ClearAllPoints();self.settingsPanel:SetPoint("TOPLEFT",8,-8);self.settingsPanel:SetPoint("BOTTOMRIGHT",-8,8)
-        self.settingsDialog=dialog
-        if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="SimplyPartyQuestsSettingsDialog" end
+    if self.settingsLegacy and type(InterfaceOptionsFrame_OpenToCategory)=="function" then
+        InterfaceOptionsFrame_OpenToCategory(self.settingsPanel);return true
     end
-    self.settingsDialog:Show();self.settingsDialog:Raise();self.settingsPanel:Show()
+    if self.CombatControlNotice then self:CombatControlNotice("The game's AddOns settings panel is unavailable.") end
+    return false
 end

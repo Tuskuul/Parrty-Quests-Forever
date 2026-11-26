@@ -9,9 +9,9 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.10-beta4** addresses the remaining quest-turn-in flash by isolating the inactive Objectives view, and enlarges tab labels to match tracker headers. It includes the framed tabs, simpler layout names and full manual refresh with visible feedback.
+**1.1.10-beta5** removes the redundant header launcher in Tabbed mode, opens tabs with one manual click, and embeds the settings controls directly in the game’s AddOns settings pane. It includes the turn-in visibility isolation, larger tab labels and full manual refresh improvements.
 
-In **Settings → Tracker layout**, choose **Side by Side** (the existing default) or **Tabbed**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Automatic party display remains party-only; opening manually while solo remains available. Questie keeps its current docking behavior.
+In **Settings → Tracker layout**, choose **Side by Side** (the existing default) or **Tabbed**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Automatic party display remains party-only; a single minimap click opens Party Quests manually while solo or previously hidden. Tabbed mode has no extra Party Quests button in Blizzard’s All Objectives header. Questie keeps its current docking behavior.
 
 **Refresh** reconciles the current roster, rereads your log, requests fresh full PQF logs and starts new game-API discovery. Buttons show Working/Queued, with chat messages reporting start and results. Unknown or unavailable data retains the last known log; zero API matches do not prove an empty remote log.
 
@@ -25,7 +25,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10-beta4.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10-beta5.txt)
 
 ## Quest offers
 
@@ -61,7 +61,7 @@ The addon folder must be named **SimplyPartyQuests**. Put this repository's addo
 
 Stable and beta keep their existing settings. This alpha starts with independent settings. Replace files and `/reload`; a first installation may need a full client restart.
 
-Open **Esc → Settings → AddOns → Party Quests Forever**, or right-click the minimap button. `/spq` remains supported.
+Open **Esc → Settings → AddOns → Party Quests Forever** for the full settings controls directly in that pane. Right-clicking the minimap button, tracker Settings actions and `/spq` open the same category. There is no extra settings launcher or separate settings window. Open PQF sharing windows retain their selections and drafts.
 
 Native party quests show **Ready** when the member's reported progress completes every known requirement, even without an explicit turn-in flag. Unknown or partial progress remains unmarked.
 

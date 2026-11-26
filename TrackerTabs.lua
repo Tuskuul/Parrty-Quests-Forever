@@ -20,7 +20,7 @@ function A:TrackerTabsNotice(message)
 end
 function A:TrackerTabsReport()
     local t=self.trackerTabs
-    if not t or not t.active then return "Tabs visibility: inactive" end
+    if not t or not t.active then return "Tabs visibility: inactive; open queued="..tostring(self.integration.tabsOpenPending==true) end
     return "Tabs visibility: host shown="..tostring(read(t.control,"IsShown"))
         .."; native shown="..tostring(read(t.native,"IsShown"))
         .."; native visible="..tostring(read(t.native,"IsVisible"))
@@ -51,6 +51,22 @@ function A:SelectTrackerTab(tab)
         self:UpdateTrackerTabsLabels();return
     end
     t.pending=nil;self.db.trackerTab=tab
+    self:InvalidateTrackerIntegration(true);self:TrackerIntegrationTick()
+end
+function A:ToggleTabbedTracker()
+    local t=self.trackerTabs
+    if t and t.active then
+        self:SelectTrackerTab(self.db.trackerTab=="party" and "objectives" or "party");return
+    end
+    if combat() then
+        if not self.integration.tabsOpenPending then
+            self.integration.tabsOpenPending=true
+            self:TrackerTabsNotice("Party Quests tabs will open after combat.")
+        end
+        return
+    end
+    self.db.trackerTab="party"
+    self:SetViewShown(true)
     self:InvalidateTrackerIntegration(true);self:TrackerIntegrationTick()
 end
 function A:SetTabbedPartyCollapsed(value)
@@ -210,6 +226,12 @@ function A:TrackerTabsTick()
     if not combat() and self.integration.pendingTrackerLayout then
         self.db.defaultTrackerLayout=self.integration.pendingTrackerLayout;self.integration.pendingTrackerLayout=nil
         if self.SyncSettings then self:SyncSettings() end
+    end
+    if not combat() and self.integration.tabsOpenPending then
+        self.integration.tabsOpenPending=nil
+        if self:TrackerTabsRequested() and not self.integration.pendingDisplayMode then
+            self.db.trackerTab="party";self:SetViewShown(true);self:InvalidateTrackerIntegration(true)
+        end
     end
     if not self:TrackerTabsWanted() or self.integration.pendingDisplayMode then
         if t and t.active and not self:LeaveTrackerTabs() then return true end
