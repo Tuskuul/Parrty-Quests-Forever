@@ -9,7 +9,7 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.10-beta6** keeps both tabs available whenever Tabbed is selected, including while solo or after leaving a party. It includes the embedded native settings, turn-in visibility isolation, larger tab labels and full manual refresh improvements.
+**1.1.10** adds the optional Tabbed layout for the default tracker, full manual refresh with visible feedback, and settings embedded directly in the native AddOns pane. It includes persistent tabs, larger and centered tab labels, and inactive-objective visibility isolation. Side by Side remains the default; Questie keeps its existing docking.
 
 In **Settings → Tracker layout**, choose **Side by Side** (the existing default) or **Tabbed**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Both tabs remain available while solo and after leaving a party, without a minimap click. The Party Quests tab shows the empty-party message until grouped. Minimap clicks switch tabs; Hide selects Objectives without removing the tabs. Tabbed mode has no extra Party Quests button in Blizzard’s All Objectives header. Questie keeps its current docking behavior.
 
@@ -25,7 +25,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10-beta6.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10.txt)
 
 ## Quest offers
 

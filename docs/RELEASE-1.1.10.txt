@@ -1,0 +1,8 @@
+Party Quests Forever 1.1.10
+
+- Added an optional Tabbed layout for the default tracker, with Objectives and Party Quests always available. Side by Side remains the default; Questie keeps its current docking.
+- Refined tab styling, font size and centering, and isolated inactive objectives to prevent turn-in flashes. Combat tab switches queue until combat ends.
+- Refresh now rebuilds the roster and discovery pass, requests fresh full PQF logs, and shows progress and results.
+- Moved settings directly into the game's AddOns settings pane and removed the redundant header button in Tabbed mode.
+
+For WoW Forever 1.60.1 (interface 16001). Existing settings are preserved. Install one copy in the SimplyPartyQuests folder.
