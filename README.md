@@ -7,11 +7,13 @@
 Track party quests and available objective progress in **WoW Forever 1.60.1**.
 Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine shared quests, and group quests by player and zone.
 
-## Questie test branch
+## Party Questie Forever companion branch
 
-**1.1.11-questie-dev1** is a separate experimental Questie build. It adds Objectives / Party Quests tabs in one tracker-sized area, with **Side by Side** available in settings. Questie's layout preference is saved independently from Blizzard's. This branch has no release tag and is not a stable or CurseForge release.
+This branch now contains **Party Questie Forever 0.1.0-dev1**, a separate optional addon that requires **Party Quests Forever** (`SimplyPartyQuests`) and **Questie**. Install all three together. The companion adds Questie tabs and its own layout settings; normal PQF remains the only quest engine.
 
-Install this build **instead of** the normal SimplyPartyQuests folder; do not install two copies together. Questie remains a separate installed addon. [Implementation, limitations and live checks](docs/QUESTIE-TABS.md).
+The base addon here is stable 1.1.11 with a small `PluginAPI.lua` bridge and TOC entry. Unmodified CurseForge 1.1.11 does not expose that bridge, so use the matching base from the internal test bundle for now. Main/beta/alpha remain unchanged. This branch has no release tag.
+
+Build the correctly named two-folder test package with `python3 tools/build_questie_companion.py /path/to/PartyQuestieForever_0.1.0-dev1_TestBundle.zip`. Do not install this repository's nested companion folder inside SimplyPartyQuests. [Companion details and live checks](docs/QUESTIE-TABS.md).
 
 ## Stable base
 

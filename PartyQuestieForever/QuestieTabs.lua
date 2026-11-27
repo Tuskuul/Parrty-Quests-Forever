@@ -1,4 +1,6 @@
-local _,A=...
+local _,P=...
+local A=P.host
+if not A then return end
 -- Optional visual provider, shipped only on the Questie build branch. Questie's
 -- named root is the sole foreign frame we reparent. No module imports, script
 -- replacements, profile writes or quest-data hooks are needed.
@@ -11,7 +13,7 @@ end
 local function number(v) return A.public(v,"number") and v==v and v>=0 and v<100000 end
 function A:QuestieTabsRequested()
     local q=self.readable(Questie) and self.readable(Questie.db) and self.readable(Questie.db.profile) and Questie.db.profile
-    return self.db and self.db.displayMode=="blizzard" and self.db.questieTrackerLayout~="sidebar"
+    return self.db and self.db.displayMode=="blizzard" and P:Layout()=="tabs"
         and q and q.trackerEnabled==true and self:QuestieOwnsTracker()
 end
 function A:QuestieTabsHeight(native,t)

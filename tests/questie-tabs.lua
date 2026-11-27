@@ -100,9 +100,17 @@ ObjectiveTrackerFrame=widget();local native=ObjectiveTrackerFrame
 native.parent=UIParent;native.native=true;native.left=1200;native.top=850;native.width=300
 native.Header=widget();native.Header.MinimizeButton=widget()
 local A={}
-for _,name in ipairs({'Core.lua','QuestieCompatibility.lua','TrackerIntegration.lua','Settings.lua','TrackerTabs.lua','QuestieDock.lua','QuestieTabs.lua'}) do
+for _,name in ipairs({'Core.lua','QuestieCompatibility.lua','TrackerIntegration.lua','Settings.lua','TrackerTabs.lua','QuestieDock.lua','PluginAPI.lua'}) do
  assert(loadfile(name))('SimplyPartyQuests',A)
 end
+local P={}
+for _,name in ipairs({'Bootstrap.lua','TrackerTabs.lua','QuestieTabs.lua','Settings.lua'}) do
+ assert(loadfile('PartyQuestieForever/'..name))('PartyQuestieForever',P)
+end
+local engine=A.events
+assert(P.host==A and engine==A.events and A.prefix=='SPQ1','companion created a second quest engine')
+assert(not PartyQuestsForeverAPI.RegisterTrackerPlugin('PartyQuestieForever',1),'duplicate plugin registration accepted')
+assert(not PartyQuestsForeverAPI.RegisterTrackerPlugin('other',999),'unsupported contract accepted')
 local profile={trackerEnabled=true,trackerBackdropEnabled=true,trackerBorderEnabled=true,
  trackerBackdropColor={r=0.1,g=0.2,b=0.3,a=0.7}}
 Questie={db={profile=setmetatable({},{__index=profile,__newindex=function() error('Questie settings mutated') end})}}
@@ -112,7 +120,7 @@ root:SetBackdrop({bgFile='fill',edgeFile='border',edgeSize=16,insets={left=4,rig
 root:SetBackdropColor(0.1,0.2,0.3,0.7);root:SetBackdropBorderColor(1,1,1,0.7)
 local originalClick=function() end;root:SetScript('OnMouseDown',originalClick)
 A.db={displayMode='blizzard',defaultTrackerLayout='sidebar',trackerTab='objectives',combatAutoHide=true}
-A:NormalizeSavedSettings();assert(A.db.questieTrackerLayout=='tabs')
+A:NormalizeSavedSettings();assert(A.db.questieTrackerLayout==nil,'plugin preference leaked into base settings')
 A.members={};A.window=widget()
 local fullIntegrationTick=A.TrackerIntegrationTick
 function A:TrackerIntegrationTick() return self:TrackerTabsTick() end
@@ -121,6 +129,8 @@ function A:ReleaseNativeCombatControl() end
 function A:BuildTrackerEntries() return {},0 end
 local renders=0
 function A:RenderTrackerSidebar() renders=renders+1;self.sidebar.contentHeight=500 end
+P.events.scripts.OnEvent(P.events,'ADDON_LOADED','PartyQuestieForever')
+assert(P.db==PartyQuestieForeverDB and P:Layout()=='tabs')
 A:TrackerIntegrationTick()
 local t,f=A.trackerTabs,A.sidebar
 assert(t.active and t.provider=='questie' and t.bar.shown and root:IsVisible())
@@ -140,9 +150,9 @@ root.height=25;A:TrackerIntegrationTick();assert(f.heightLimit==600,'minimized t
 locked=true;A:SelectTrackerTab('objectives');assert(t.pending=='objectives' and not root:IsVisible())
 A:TrackerIntegrationTick();assert(f.viewCollapsed and not f.scroll.shown)
 A:SetViewCollapsed(false);assert(f.scroll.shown,'combat party reopening failed')
-A:SetDefaultTrackerLayout('sidebar');assert(A.db.questieTrackerLayout=='tabs')
+A:SetDefaultTrackerLayout('sidebar');assert(P:Layout()=='tabs')
 locked=false;A:TrackerIntegrationTick()
-assert(A.db.questieTrackerLayout=='sidebar' and A.db.defaultTrackerLayout=='sidebar')
+assert(P:Layout()=='sidebar' and A.db.defaultTrackerLayout=='sidebar')
 assert(not t.active and not t.bar.shown and root:GetParent()==UIParent and root:IsVisible())
 assert(not f.trackerBackground.questieTabsArt.shown,'plugin art leaked into dock')
 A:SetDefaultTrackerLayout('tabs');assert(A.trackerTabs==t and t.active,'provider host not reused')
@@ -176,5 +186,16 @@ locked=true;root:SetSize(350,550);root:Hide();root:Show();fullIntegrationTick(A)
 assert(not root:IsVisible() and f.shown,'combat root refresh escaped tab host')
 A:SetDefaultTrackerLayout('sidebar');profile.trackerEnabled=false;locked=false
 fullIntegrationTick(A)
-assert(A.db.questieTrackerLayout=='sidebar' and A.db.defaultTrackerLayout=='tabs','queued layout changed the wrong provider preference')
-print('PASS: Questie tabs share one viewport, preserve update/drag/profile ownership, restore dock/parents, retain solo tabs, queue combat switches, follow scale/movement, preserve hidden intent, and switch providers without native writes')
+assert(P:Layout()=='sidebar' and A.db.defaultTrackerLayout=='tabs','queued layout changed the wrong provider preference')
+assert(A.db.questieTrackerLayout==nil and P.db.layout=='sidebar','companion configuration is not isolated')
+-- The companion's settings still target Questie while its tracker is disabled.
+P:SetLayout('tabs');assert(P.db.layout=='tabs' and A.db.defaultTrackerLayout=='tabs')
+-- An older installed PQF fails cleanly without loading a second engine.
+local api=PartyQuestsForeverAPI;PartyQuestsForeverAPI=nil
+local missing={};assert(loadfile('PartyQuestieForever/Bootstrap.lua'))('PartyQuestieForever',missing)
+assert(not missing.host)
+assert(loadfile('PartyQuestieForever/TrackerTabs.lua'))('PartyQuestieForever',missing)
+assert(loadfile('PartyQuestieForever/QuestieTabs.lua'))('PartyQuestieForever',missing)
+assert(loadfile('PartyQuestieForever/Settings.lua'))('PartyQuestieForever',missing)
+PartyQuestsForeverAPI=api
+print('PASS: separate companion depends on one PQF engine, owns isolated settings, fails cleanly on an older host; Questie tabs share one viewport, preserve update/drag/profile ownership, restore dock/parents, retain solo tabs, queue combat switches, follow scale/movement, preserve hidden intent, and switch providers without native writes')

@@ -1,8 +1,9 @@
 package-as: SimplyPartyQuests
-manual-changelog: docs/QUESTIE-TABS-DEV1.txt
+manual-changelog: docs/RELEASE-1.1.11.txt
 ignore:
     - tests
     - run_checks.py
     - tools
     - docs/artwork
     - docs/project-icon.png
+    - PartyQuestieForever

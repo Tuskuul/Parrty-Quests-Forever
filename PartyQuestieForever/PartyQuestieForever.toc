@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: Party Questie Forever
+## Notes: Optional Questie tracker tabs for Party Quests Forever. Requires both addons.
+## Author: Wolfie
+## Version: 0.1.0-dev1
+## Dependencies: SimplyPartyQuests, Questie
+## SavedVariables: PartyQuestieForeverDB
+## X-License: GPL-3.0-only
+Bootstrap.lua
+TrackerTabs.lua
+QuestieTabs.lua
+Settings.lua
