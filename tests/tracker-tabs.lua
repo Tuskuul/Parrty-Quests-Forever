@@ -182,9 +182,13 @@ Questie=nil;A.db.displayMode='window';A:TrackerIntegrationTick();assert(not t.ac
 A.db.displayMode='blizzard';A.integration.tabsRetryAt=nil
 RegisterStateDriver=nil
 A:TrackerIntegrationTick();assert(not t.active and A.integration.lastError:find('setup unavailable'))
--- Existing installations and malformed preferences default to the old sidebar.
+-- Missing/invalid preferences choose Tabbed; explicit layout choices survive.
 A.db.defaultTrackerLayout='bad';A.db.trackerTab='bad';A:NormalizeSavedSettings()
-assert(A.db.defaultTrackerLayout=='sidebar' and A.db.trackerTab=='objectives')
+assert(A.db.defaultTrackerLayout=='tabs' and A.db.trackerTab=='objectives')
+A.db.defaultTrackerLayout=nil;A:NormalizeSavedSettings();assert(A.db.defaultTrackerLayout=='tabs')
+for _,layout in ipairs({'sidebar','tabs'}) do
+ A.db.defaultTrackerLayout=layout;A:NormalizeSavedSettings();assert(A.db.defaultTrackerLayout==layout,'explicit layout preference overwritten')
+end
 -- Native framed top tabs use Blizzard's template/state functions. Selecting an
 -- active tab must remain possible to cancel a pending combat switch.
 RegisterStateDriver=function() end

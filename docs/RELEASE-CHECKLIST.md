@@ -1,10 +1,9 @@
-# Party Quests Forever 1.1.10 release record
+# Party Quests Forever 1.1.11 release record
 
-- User reported no further odd behavior in beta testing and authorized promotion to main.
-- Promoted the 1.1.10-beta6 source with the saved selected/inactive tab-label centering adjustment from fix/tab-label-centering.
-- Includes optional persistent default-UI tabs, turn-in visibility isolation, larger tab fonts, full manual refresh and native embedded settings.
-- Side by Side remains the default; Questie integration and saved settings are preserved.
-- Version metadata, diagnostic banner, current README files and packager changelog use stable 1.1.10.
-- Validation: 31 source Lua files parse; all 32 Lua regression suites and 8 tagging tests pass. Package validation covers all 35 required runtime/attribution paths.
-- Install folder remains SimplyPartyQuests. The private Party Quest Lab is unchanged.
-- GitHub workflow and tag status are verified separately after pushing; this record does not assert CurseForge approval or visibility.
+- User requested Tabbed as the default following feedback, with docked mode available in Settings.
+- Missing or invalid layout preferences normalize to tabs. Explicit sidebar/tabs preferences are preserved.
+- The packager release notes use the user's requested changelog wording.
+- Version metadata, diagnostic banner, README files and packager changelog target stable 1.1.11.
+- Validation: 31 Lua source files parse, 32 regression suites and 8 tagging tests pass, with all 35 required package paths present.
+- The existing tracker, sharing and Questie behaviors are otherwise unchanged. Party Quest Lab is untouched.
+- Workflow and tag status are verified after pushing; this record does not claim CurseForge approval or visibility.

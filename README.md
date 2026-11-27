@@ -9,9 +9,9 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.10** adds the optional Tabbed layout for the default tracker, full manual refresh with visible feedback, and settings embedded directly in the native AddOns pane. It includes persistent tabs, larger and centered tab labels, and inactive-objective visibility isolation. Side by Side remains the default; Questie keeps its existing docking.
+**1.1.11** makes Tabbed the default for new or unset layout preferences, following feedback. Docked **Side by Side** remains available in Settings, and existing saved layout choices are preserved. Questie keeps its existing docking.
 
-In **Settings → Tracker layout**, choose **Side by Side** (the existing default) or **Tabbed**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Both tabs remain available while solo and after leaving a party, without a minimap click. The Party Quests tab shows the empty-party message until grouped. Minimap clicks switch tabs; Hide selects Objectives without removing the tabs. Tabbed mode has no extra Party Quests button in Blizzard’s All Objectives header. Questie keeps its current docking behavior.
+In **Settings → Tracker layout**, choose **Tabbed** (the default) or docked **Side by Side**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Both tabs remain available while solo and after leaving a party, without a minimap click. The Party Quests tab shows the empty-party message until grouped. Minimap clicks switch tabs; Hide selects Objectives without removing the tabs. Tabbed mode has no extra Party Quests button in Blizzard’s All Objectives header. Questie keeps its current docking behavior.
 
 **Refresh** reconciles the current roster, rereads your log, requests fresh full PQF logs and starts new game-API discovery. Buttons show Working/Queued, with chat messages reporting start and results. Unknown or unavailable data retains the last known log; zero API matches do not prove an empty remote log.
 
@@ -25,7 +25,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.10.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.11.txt)
 
 ## Quest offers
 

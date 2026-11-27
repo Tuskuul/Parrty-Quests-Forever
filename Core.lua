@@ -91,7 +91,7 @@ function A:NormalizeSavedSettings()
     end
     if db.displayMode~="blizzard" and db.displayMode~="window" then db.displayMode="blizzard" end
     if db.trackerSide~="right" then db.trackerSide="left" end
-    if db.defaultTrackerLayout~="tabs" then db.defaultTrackerLayout="sidebar" end
+    if db.defaultTrackerLayout~="tabs" and db.defaultTrackerLayout~="sidebar" then db.defaultTrackerLayout="tabs" end
     if db.trackerTab~="party" then db.trackerTab="objectives" end
     local function number(value,default,min,max)
         if not public(value,"number") or value~=value or value==math.huge or value==-math.huge then return default end

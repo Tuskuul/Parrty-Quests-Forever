@@ -1,0 +1,3 @@
+Party Quests Forever 1.1.11
+
+Following feedback, made tabbed view default, with docked mode option, can be adjusted in settings

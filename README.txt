@@ -1,4 +1,4 @@
-Party Quests Forever 1.1.10
+Party Quests Forever 1.1.11
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside the active quest tracker or in a movable, resizable
@@ -18,7 +18,8 @@ party pane; in Tabbed mode it opens Party Quests with one click or switches
 tabs. Both tabs remain available while solo; Hide selects Objectives.
 Shift-click refreshes. Drag the minimap button to reposition it.
 Settings > Display chooses Beside the active quest tracker or Separate window.
-Tracker layout chooses Side by Side or Tabbed.
+Tracker layout defaults to Tabbed; docked Side by Side remains optional.
+Existing saved layout choices are preserved.
 Tabs apply to the default Blizzard tracker; Questie retains its sidebar. Combat
 switches queue until combat ends. Side-by-side placement selects left/right and
 width. Refresh rebuilds roster/discovery and requests full addon logs, with

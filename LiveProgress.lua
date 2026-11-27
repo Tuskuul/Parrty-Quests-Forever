@@ -392,7 +392,7 @@ function A:DiagnosticReport()
     local ownIDs={}
     for id in pairs(self.own) do ownIDs[#ownIDs+1]=id end
     table.sort(ownIDs)
-    return table.concat({"Party Quests Forever 1.1.10", "Client: "..build,
+    return table.concat({"Party Quests Forever 1.1.11", "Client: "..build,
         self:QuestLogChatCompatibilitySummary(),
         self:BattleNetQuestLogSummary(),
         self:QuestLogTransferReport(),
@@ -405,7 +405,7 @@ function A:DiagnosticReport()
         "Sweep: "..self:SweepSummary(),
         "Manual refresh: "..(self.partyRefreshStatus or "not requested"),
         self.TrackerTabsReport and self:TrackerTabsReport() or "Tabs visibility: unavailable",
-        "Default tracker layout: "..tostring(self.db.defaultTrackerLayout or "sidebar").."; tab="..tostring(self.db.trackerTab or "objectives")
+        "Default tracker layout: "..tostring(self.db.defaultTrackerLayout or "tabs").."; tab="..tostring(self.db.trackerTab or "objectives")
             .."; tab active="..tostring(self.trackerTabs and self.trackerTabs.active==true or false)
             .."; pending tab="..tostring(self.trackerTabs and self.trackerTabs.pending or "none")
             .."; pending layout="..tostring(self.integration and self.integration.pendingTrackerLayout or "none"),

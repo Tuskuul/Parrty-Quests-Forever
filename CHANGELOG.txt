@@ -1,3 +1,7 @@
+Party Quests Forever 1.1.11
+
+Following feedback, made tabbed view default, with docked mode option, can be adjusted in settings
+
 Party Quests Forever 1.1.10
 
 - Added an optional Tabbed layout for the default tracker, with Objectives and Party Quests always available. Side by Side remains the default; Questie keeps its current docking.
