@@ -9,8 +9,22 @@ end
 local function finite(v) return A.public(v,"number") and v==v and math.abs(v)<100000 end
 local function number(v) return finite(v) and v>0 end
 function A:TrackerTabsRequested()
-    return self.db and self.db.displayMode=="blizzard" and self.db.defaultTrackerLayout=="tabs"
-        and not (self.QuestieOwnsTracker and self:QuestieOwnsTracker())
+    if not self.db or self.db.displayMode~="blizzard" then return false end
+    if self.QuestieOwnsTracker and self:QuestieOwnsTracker() then
+        return self.QuestieTabsRequested and self:QuestieTabsRequested()
+    end
+    return self.db.defaultTrackerLayout=="tabs"
+end
+function A:TrackerLayoutSetting()
+    return self.QuestieTabsRequested and self:QuestieOwnsTracker() and "questieTrackerLayout" or "defaultTrackerLayout"
+end
+function A:TrackerTabsFrameMethod(frame,method,...)
+    if self.trackerTabs and self.trackerTabs.provider=="questie" then
+        if combat() then return false,"Questie tab ownership change deferred in combat" end
+        if frame~=Questie_BaseFrame and frame~=self.trackerTabs.native then return false,"Not the Questie tab root" end
+        return pcall(frame[method],frame,...)
+    end
+    return self:CallNativeTrackerMethod(frame,method,...)
 end
 function A:TrackerTabsWanted()
     -- Layout availability is independent of party membership and the old
@@ -23,7 +37,7 @@ end
 function A:TrackerTabsReport()
     local t=self.trackerTabs
     if not t or not t.active then return "Tabs visibility: inactive; open queued="..tostring(self.integration.tabsOpenPending==true) end
-    return "Tabs visibility: host shown="..tostring(read(t.control,"IsShown"))
+    return "Tabs visibility: provider="..tostring(t.provider).."; host shown="..tostring(read(t.control,"IsShown"))
         .."; native shown="..tostring(read(t.native,"IsShown"))
         .."; native visible="..tostring(read(t.native,"IsVisible"))
         .."; parent owned="..tostring(read(t.native,"GetParent")==t.control)
@@ -33,11 +47,12 @@ function A:SetDefaultTrackerLayout(layout)
     if combat() then
         if self.integration.pendingTrackerLayout~=layout then
             self.integration.pendingTrackerLayout=layout
+            self.integration.pendingTrackerLayoutKey=self:TrackerLayoutSetting()
             self:TrackerTabsNotice("Tracker layout change queued until combat ends.")
         end
         return
     end
-    self.db.defaultTrackerLayout=layout
+    self.db[self:TrackerLayoutSetting()]=layout
     self:InvalidateTrackerIntegration(true);self:TrackerIntegrationTick()
     if self.SyncSettings then self:SyncSettings() end
 end
@@ -123,11 +138,17 @@ local state=[[
 ]]
 function A:InitTrackerTabs(native)
     if combat() then return false end
-    if type(RegisterStateDriver)~="function" or type(SecureHandlerWrapScript)~="function" then return false end
+    if not (self.QuestieTabsRequested and self:QuestieTabsRequested()) and
+        (type(RegisterStateDriver)~="function" or type(SecureHandlerWrapScript)~="function") then return false end
+    local provider=self.QuestieTabsRequested and self:QuestieTabsRequested() and "questie" or "blizzard"
     local t=self.trackerTabs
+    if t and t.provider~=provider then
+        self.trackerTabsCache=self.trackerTabsCache or {};self.trackerTabsCache[t.provider]=t
+        t=self.trackerTabsCache[provider];self.trackerTabs=t
+    end
     if not t then
-        t={};self.trackerTabs=t
-        t.bar=CreateFrame("Frame","SimplyPartyQuestsTrackerTabs",UIParent)
+        t={provider=provider};self.trackerTabs=t
+        t.bar=CreateFrame("Frame",nil,UIParent)
         t.bar:SetSize(240,28);t.bar:SetFrameStrata("MEDIUM");t.bar:SetClampedToScreen(true);t.buttons={}
         t.bar.tabPadding=8;t.bar.minTabWidth=112;t.bar.maxTabWidth=200
         for i,key in ipairs({"objectives","party"}) do
@@ -160,9 +181,13 @@ function A:InitTrackerTabs(native)
             button:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
             t.buttons[i]=button
         end
-        t.control=CreateFrame("Frame",nil,UIParent,"SecureHandlerStateTemplate")
-        t.control:SetAttribute("enabled",false);t.control:SetAttribute("_onstate-combat",state)
-        RegisterStateDriver(t.control,"combat","[combat] 1; 0")
+        -- Questie uses an ordinary visibility parent: making its root secure would
+        -- restrict Questie's own layout writes during combat.
+        t.control=CreateFrame("Frame",nil,UIParent,provider=="blizzard" and "SecureHandlerStateTemplate" or nil)
+        if provider=="blizzard" then
+            t.control:SetAttribute("enabled",false);t.control:SetAttribute("_onstate-combat",state)
+            RegisterStateDriver(t.control,"combat","[combat] 1; 0")
+        end
         t.bar:Hide();t.wrapped={}
     end
     local parent=read(native,"GetParent")
@@ -177,8 +202,8 @@ function A:InitTrackerTabs(native)
     t.control:SetParent(UIParent);t.control.ignoreInLayout=true
     t.control:SetScale(ratio);t.control:ClearAllPoints();t.control:SetAllPoints(parent)
     t.control:Show()
-    t.control:SetFrameRef("native",native)
-    if not t.wrapped[native] then
+    if provider=="blizzard" then t.control:SetFrameRef("native",native) end
+    if provider=="blizzard" and not t.wrapped[native] then
         -- The managed-frame system can reparent a tracker while showing it.
         -- Preserve the tab's ancestor after that native OnShow has completed.
         SecureHandlerWrapScript(native,"OnShow",t.control,[[ return true,true ]],[[
@@ -188,12 +213,12 @@ function A:InitTrackerTabs(native)
         ]])
         t.wrapped[native]=true
     end
-    local ok,err=self:CallNativeTrackerMethod(native,"SetParent",t.control)
+    local ok,err=self:TrackerTabsFrameMethod(native,"SetParent",t.control)
     if not ok then error(err) end
     if finite(t.originalLevel) then
-        ok,err=self:CallNativeTrackerMethod(native,"SetFrameLevel",t.originalLevel)
+        ok,err=self:TrackerTabsFrameMethod(native,"SetFrameLevel",t.originalLevel)
         if not ok then
-            self:CallNativeTrackerMethod(native,"SetParent",parent)
+            self:TrackerTabsFrameMethod(native,"SetParent",parent)
             error(err)
         end
     end
@@ -204,14 +229,15 @@ function A:LeaveTrackerTabs()
     local t=self.trackerTabs
     if not t or not t.active then return true end
     if combat() then return false end
-    t.control:SetAttribute("enabled",false)
+    if t.provider=="blizzard" then t.control:SetAttribute("enabled",false) end
     -- Restore ownership, not a stale shown/hidden snapshot. Native quest updates
     -- decide whether their own tracker has content while the tab is inactive.
-    local ok,err=self:CallNativeTrackerMethod(t.native,"SetParent",t.originalParent)
+    local ok,err=self:TrackerTabsFrameMethod(t.native,"SetParent",t.originalParent)
     if not ok then self.integration.lastError=err;return false end
-    if finite(t.originalLevel) then self:CallNativeTrackerMethod(t.native,"SetFrameLevel",t.originalLevel) end
+    if finite(t.originalLevel) then self:TrackerTabsFrameMethod(t.native,"SetFrameLevel",t.originalLevel) end
     t.originalParent=nil;t.originalLevel=nil;t.control:Hide()
     t.active=nil;t.pending=nil;t.combatCollapsed=nil;t.bar:Hide()
+    if t.provider=="questie" and self.RestoreQuestieTabsAppearance then self:RestoreQuestieTabsAppearance() end
     local f=self.sidebar
     f.title:Show();f.headerArt:Show();f.headerOffset=nil
     f.settings:ClearAllPoints();f.settings:SetPoint("TOPRIGHT",f,"TOPRIGHT",-6,-3)
@@ -224,7 +250,8 @@ end
 function A:TrackerTabsTick()
     local t=self.trackerTabs
     if not combat() and self.integration.pendingTrackerLayout then
-        self.db.defaultTrackerLayout=self.integration.pendingTrackerLayout;self.integration.pendingTrackerLayout=nil
+        self.db[self.integration.pendingTrackerLayoutKey or self:TrackerLayoutSetting()]=self.integration.pendingTrackerLayout
+        self.integration.pendingTrackerLayout=nil;self.integration.pendingTrackerLayoutKey=nil
         if self.SyncSettings then self:SyncSettings() end
     end
     if not combat() and self.integration.tabsOpenPending then
@@ -237,8 +264,12 @@ function A:TrackerTabsTick()
         if t and t.active and not self:LeaveTrackerTabs() then return true end
         return false
     end
-    local native=ObjectiveTrackerFrame
-    if not native then return false end
+    local questie=self.QuestieTabsRequested and self:QuestieTabsRequested()
+    local native=questie and Questie_BaseFrame or (not questie and ObjectiveTrackerFrame)
+    if not native then
+        if t and t.active and not self:LeaveTrackerTabs() then return true end
+        return false
+    end
     if combat() and (not t or not t.active or t.native~=native) then return false end
     if not combat() then
         if t and t.active and t.native~=native then
@@ -249,6 +280,7 @@ function A:TrackerTabsTick()
             if self.integration.combatRestorePending then self:RestoreCombatModules() end
             if self.ReleaseNativeCombatControl then self:ReleaseNativeCombatControl() end
             self:RestoreJoinedTrackerHeader();self:RestoreTrackerJoinVisuals()
+            if self.LeaveQuestieDock then self:LeaveQuestieDock() end
             local ok,ready=pcall(self.InitTrackerTabs,self,native)
             if not ok or not ready then
                 self.integration.tabsRetryAt=GetTime()+10
@@ -274,7 +306,8 @@ function A:TrackerTabsTick()
         f:ClearAllPoints();f:SetPoint("TOPLEFT",UIParent,"BOTTOMLEFT",left,top)
         t.bar:ClearAllPoints();t.bar:SetPoint("BOTTOMLEFT",UIParent,"BOTTOMLEFT",left,top+2)
         t.bar:SetWidth(math.max(240,math.min(640,width)))
-        f:SetWidth(math.max(240,math.min(640,width)));f.heightLimit=self:TrackerSidebarHeightLimit(native)
+        f:SetWidth(math.max(240,math.min(640,width)))
+        f.heightLimit=questie and self:QuestieTabsHeight(native,t) or self:TrackerSidebarHeightLimit(native)
         f.headerOffset=0;f.title:Hide();f.headerArt:Hide()
         f.share:ClearAllPoints();f.share:SetPoint("TOPLEFT",f,"TOPLEFT",7,-3)
         f.refresh:ClearAllPoints();f.refresh:SetPoint("LEFT",f.share,"RIGHT",6,0)
@@ -282,11 +315,13 @@ function A:TrackerTabsTick()
         f.collapse:ClearAllPoints();f.collapse:SetPoint("TOPRIGHT",f,"TOPRIGHT",-4,-6)
         f.scroll:ClearAllPoints();f.scroll:SetPoint("TOPLEFT",f,"TOPLEFT",7,-32)
         if self.partyTrackerButton then self.partyTrackerButton:Hide() end
-        t.control:SetAttribute("party",self.db.trackerTab=="party")
-        t.control:SetAttribute("auto",self.db.combatAutoHide~=false)
-        t.control:SetAttribute("enabled",true)
+        if not questie then
+            t.control:SetAttribute("party",self.db.trackerTab=="party")
+            t.control:SetAttribute("auto",self.db.combatAutoHide~=false)
+            t.control:SetAttribute("enabled",true)
+        end
         if read(native,"GetParent")~=t.control then
-            local ok,err=self:CallNativeTrackerMethod(native,"SetParent",t.control)
+            local ok,err=self:TrackerTabsFrameMethod(native,"SetParent",t.control)
             if not ok then self.integration.lastError=err;self:LeaveTrackerTabs();return false end
         end
         t.control:SetShown(self.db.trackerTab~="party")
@@ -309,11 +344,11 @@ function A:TrackerTabsTick()
     end
     self:SizeTrackerSidebar();self:UpdateTrackerQuestFocus()
     f:SetShown(party);t.bar:Show();self:UpdateTrackerTabsLabels()
-    self:SyncTrackerSidebarOpacity(native)
+    if questie then self:SyncQuestieTabsAppearance() else self:SyncTrackerSidebarOpacity(native) end
     local bg=f.trackerBackground
     bg:ClearAllPoints();bg:SetPoint("TOPLEFT",f,"TOPLEFT",0,0);bg:SetSize(f:GetWidth(),f:GetHeight());bg:SetScale(f:GetScale())
     bg:SetShown(party)
     if self.window then self.window:Hide() end
-    s.attached=true;s.status="Blizzard tabs: "..self.db.trackerTab..(t.pending and " (switch queued)" or "")
+    s.attached=true;s.status=(questie and "Questie tabs: " or "Blizzard tabs: ")..self.db.trackerTab..(t.pending and " (switch queued)" or "")
     return true
 end

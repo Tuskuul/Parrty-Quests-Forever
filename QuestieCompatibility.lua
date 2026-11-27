@@ -24,6 +24,7 @@ end
 function A:QuestieSummary()
     if not self:QuestieLoaded() then return "Questie: not loaded" end
     if self:QuestieOwnsTracker() then
+        if self.trackerTabs and self.trackerTabs.active and self.trackerTabs.provider=="questie" then return "Questie: tabbed tracker active" end
         if self.QuestieDockActive and self:QuestieDockActive() then return "Questie: tracker enabled; independent party sidebar active" end
         return "Questie: tracker enabled or initializing; party popout active"
     end

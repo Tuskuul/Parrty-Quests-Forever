@@ -1,11 +1,11 @@
 ## Interface: 16001
-## Title: Party Quests Forever
+## Title: Party Quests Forever - Questie Test Build
 ## Notes: Party quest progress beside the Blizzard tracker or a resizable window. Built for WoW Forever.
 ## IconTexture: Interface\AddOns\SimplyPartyQuests\Assets\Icon
 ## X-Category: Quests & Leveling
 ## X-License: GPL-3.0-only
 ## Author: Wolfie
-## Version: 1.1.11
+## Version: 1.1.11-questie-dev1
 ## OptionalDeps: Questie, QuestieDB
 ## SavedVariables: SimplyPartyQuestsDB, SimplyPartyQuestsAlphaDB
 Core.lua
@@ -25,6 +25,7 @@ NativeTracker.lua
 TrackerIntegration.lua
 QuestieDock.lua
 TrackerTabs.lua
+QuestieTabs.lua
 UI.lua
 ShareRequests.lua
 ShareApiDiagnostics.lua

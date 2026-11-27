@@ -91,6 +91,7 @@ function A:NormalizeSavedSettings()
     end
     if db.displayMode~="blizzard" and db.displayMode~="window" then db.displayMode="blizzard" end
     if db.trackerSide~="right" then db.trackerSide="left" end
+    if self.QuestieTabsRequested and db.questieTrackerLayout~="tabs" and db.questieTrackerLayout~="sidebar" then db.questieTrackerLayout="tabs" end
     if db.defaultTrackerLayout~="tabs" and db.defaultTrackerLayout~="sidebar" then db.defaultTrackerLayout="tabs" end
     if db.trackerTab~="party" then db.trackerTab="objectives" end
     local function number(value,default,min,max)
@@ -112,7 +113,7 @@ function A:NormalizeSavedSettings()
 end
 function A:EffectiveDisplayMode()
     if self.QuestieOwnsTracker and self:QuestieOwnsTracker() then
-        if self.QuestieDockActive and self:QuestieDockActive() then return "blizzard" end
+        if (self.QuestieTabsRequested and self:QuestieTabsRequested()) or (self.QuestieDockActive and self:QuestieDockActive()) then return "blizzard" end
         return "window"
     end
     return self.db and self.db.displayMode or "blizzard"

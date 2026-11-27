@@ -7,7 +7,13 @@
 Track party quests and available objective progress in **WoW Forever 1.60.1**.
 Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine shared quests, and group quests by player and zone.
 
-## Current build
+## Questie test branch
+
+**1.1.11-questie-dev1** is a separate experimental Questie build. It adds Objectives / Party Quests tabs in one tracker-sized area, with **Side by Side** available in settings. Questie's layout preference is saved independently from Blizzard's. This branch has no release tag and is not a stable or CurseForge release.
+
+Install this build **instead of** the normal SimplyPartyQuests folder; do not install two copies together. Questie remains a separate installed addon. [Implementation, limitations and live checks](docs/QUESTIE-TABS.md).
+
+## Stable base
 
 **1.1.11** makes Tabbed the default for new or unset layout preferences, following feedback. Docked **Side by Side** remains available in Settings, and existing saved layout choices are preserved. Questie keeps its existing docking.
 
