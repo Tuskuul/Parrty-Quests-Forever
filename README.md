@@ -9,7 +9,9 @@ Choose a Blizzard-styled tracker sidebar or a separate resizable window, combine
 
 ## Current build
 
-**1.1.11** makes Tabbed the default for new or unset layout preferences, following feedback. Docked **Side by Side** remains available in Settings, and existing saved layout choices are preserved. Questie keeps its existing docking.
+**1.2.0** adds a separate **Party members** section and compact controls. **Collapse all** first closes individual logs; a second click hides names into a slim count bar. **Expand** restores names with logs closed. **Expand all** restores names and expands their logs, quest details and own-progress rows. Shared quests retain their own expansion states. Share, Refresh and Settings use matching framed buttons.
+
+A complete bundled-category audit restored 257 skipped class/profession/other sort assignments, including the Paladin quests Making Repairs and Diplomatic Incident. Live category values of zero now fall back to bundled data. This release also provides the small plugin API required by the separately installed Party Questie Forever companion; the companion is not included in the normal addon.
 
 In **Settings → Tracker layout**, choose **Tabbed** (the default) or docked **Side by Side**. Tabs share the default tracker area and follow its size and scale. The tab choice is saved; switching tabs or layouts during combat is queued until combat ends, with an asterisk on the pending tab. Combat auto-hide leaves the tabs accessible and restores the selected view afterward. Both tabs remain available while solo and after leaving a party, without a minimap click. The Party Quests tab shows the empty-party message until grouped. Minimap clicks switch tabs; Hide selects Objectives without removing the tabs. Tabbed mode has no extra Party Quests button in Blizzard’s All Objectives header. Questie keeps its current docking behavior.
 
@@ -25,7 +27,7 @@ QuestieDB is optional and supplies fallback quest names and zones; native inform
 
 This release uses the existing `SimplyPartyQuestsDB` settings. Earlier alpha settings stay in their separate `SimplyPartyQuestsAlphaDB` table and are not imported or overwritten. Install one version at a time in the `SimplyPartyQuests` folder.
 
-[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.1.11.txt)
+[Compatibility audit](docs/QUESTIE-COMPATIBILITY.md) · [Live test observations](docs/QUESTIE-LIVE-TESTS.md) · [Release notes](docs/RELEASE-1.2.0.txt)
 
 ## Quest offers
 

@@ -2,6 +2,7 @@
 from pathlib import Path
 import json,re,urllib.request
 from lupa import LuaRuntime
+from zone_categories import enum_symbols, apply_categories, sort_labels
 ROOT=Path(__file__).resolve().parents[1]
 REV='0f7d8adc92b28ac6594f4ad8745257f4d9784edf'
 BASE='https://raw.githubusercontent.com/Questie/QuestieDB/'+REV+'/'
@@ -9,7 +10,9 @@ def read(path): return urllib.request.urlopen(BASE+path,timeout=30).read().decod
 lua=LuaRuntime()
 s=read('data/Forever/foreverQuestDB.lua')
 data=lua.execute(re.search(r'questData\s*=\s*\[\[(.*?)\]\]',s,re.S).group(1))
-symbols={k:int(v) for k,v in re.findall(r'^\s*([A-Z][A-Z_0-9]+)\s*=\s*(\d+)',read('src/corrections/enum/zones.lua'),re.M)}
+symbols=enum_symbols(read('src/corrections/enum/zones.lua'))
+sort_source=read('src/corrections/enum/quests.lua').split('constants.sortKeys = {',1)[1]
+sorts=enum_symbols(sort_source)
 names={v:k.replace('_FOREVER','').replace('_',' ').title() for k,v in symbols.items()}
 # Use authored English labels where the map relationship table provides them.
 for area,comment in re.findall(r'^\s*\[(\d+)\]\s*=\s*\d+,\s*-- ([^\n]+)',read('support/Forever/Zones/areaIdToUiMapId.lua'),re.M):
@@ -18,13 +21,10 @@ for area,comment in re.findall(r'^\s*\[(\d+)\]\s*=\s*\d+,\s*-- ([^\n]+)',read('s
 zones={int(id):int(r[17]) for id,r in data.items() if r[17] and r[17]!=0}
 # Apply explicit zoneOrSort assignments from Forever correction layers.
 for path in ['src/corrections/Forever/generated/foreverBaseQuest.lua','src/corrections/Forever/traces/foreverQuestTraces.lua','src/corrections/Forever/foreverQuestFixes.lua']:
- s=read(path);blocks=list(re.finditer(r'^        \[(\d+)\]\s*=\s*\{',s,re.M))
- for i,m in enumerate(blocks):
-  b=s[m.end():blocks[i+1].start() if i+1<len(blocks) else len(s)]
-  a=re.search(r'\[questKeys.zoneOrSort\]\s*=\s*(-?\d+|zoneIDs\.\w+)\s*[,\n]',b)
-  if a:
-   expr=a.group(1);v=symbols.get(expr[8:]) if expr.startswith('zoneIDs.') else int(expr)
-   if v is not None: zones[int(m.group(1))]=v
+ apply_categories(read(path),zones,symbols,sorts)
+names.update(sort_labels(sorts))
+# Classic area referenced by inherited quests but absent from the zone enum.
+names.setdefault(25,"Blackrock Mountain")
 # Known class bit flags provide readable fallback labels for class categories.
 classes={1:'Warrior',2:'Paladin',4:'Hunter',8:'Rogue',16:'Priest',64:'Shaman',128:'Mage',256:'Warlock',1024:'Druid'}
 for id,zone in zones.items():

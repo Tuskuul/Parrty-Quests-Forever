@@ -87,7 +87,7 @@ function A:QuestZone(id)
     local own=(self.demo and self.demoOwn or self.own)[id]
     if own and own.zoneName then return "header:"..own.zoneName,own.zoneName end
     local area=self.QuestieField and self:QuestieField(id,"zoneOrSort")
-    if not self.validInteger(area,-10000000,10000000) then area=(self.questZones or {})[id] end
+    if not self.validInteger(area,-10000000,10000000) or area==0 then area=(self.questZones or {})[id] end
     if not area or area==0 then return "unknown","Unknown zone" end
     local name
     if area>0 and GetAreaInfo then

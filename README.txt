@@ -1,4 +1,10 @@
-Party Quests Forever 1.1.11
+Party Quests Forever 1.2.0
+
+Added a Party members section with two-stage Collapse all, Expand and Expand all controls. Shared quests keep their own expansion state.
+Matched Share, Refresh and Settings button styling to the new controls.
+Fixed missing class, profession and other quest categories, including Making Repairs and Diplomatic Incident. Audited the bundled category mappings and corrected zero-value metadata fallback.
+Added the plugin hook for the separate Party Questie Forever companion addon.
+
 For WoW Forever 1.60.1 (interface 16001)
 
 Track party quests beside the active quest tracker or in a movable, resizable

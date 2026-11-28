@@ -453,17 +453,22 @@ function A:BuildTrackerEntries()
         sources[#sources+1]={key=key,name=name,quests=quests,member=member}
     end
     if self.db.combineShared and #view.combined>0 then source("all","Shared quests",view.combined) end
+    if self.PartyHeaderEnabled and #members>0 then sources[#sources+1]={kind="partyHeader",count=#members} end
     for _,m in ipairs(members) do
         local data=view.sections[m.guid]
+        if not (self.PartyHeaderEnabled and self.db.trackerPartyCollapsed) then
         sources[#sources+1]={kind="member",member=m,count=data.count}
         if not (self.db.trackerMembersClosed or {})[m.guid] then
             if not self.db.combineShared and #data.shared>0 then source(m.guid..":shared",m.name.." — Both on",data.shared,m) end
             if #data.other>0 then source(m.guid..":other",m.name.." — Other quests",data.other,m) end
         end
     end
+    end
     local closed=self.db.trackerGroupsClosed or {}
     for _,s in ipairs(sources) do
-        if s.kind=="member" then
+        if s.kind=="partyHeader" then
+            entries[#entries+1]={kind="partyHeader",count=s.count}
+        elseif s.kind=="member" then
             local m=s.member
             entries[#entries+1]={kind="member",key=m.guid,closed=(self.db.trackerMembersClosed or {})[m.guid],title=m.name.." ("..s.count..")",name=m.name,class=m.class,count=s.count,connected=m.connected,syncedAt=m.syncedAt,sweepAt=m.sweepAt}
             if s.count==0 and not (self.db.trackerMembersClosed or {})[m.guid] then
@@ -825,7 +830,7 @@ function A:InitTrackerSidebar()
     headerArt:SetAtlas("UI-QuestTracker-Secondary-Objective-Header")
     headerArt:SetPoint("TOPLEFT",0,-32);headerArt:SetPoint("TOPRIGHT",0,-32);headerArt:SetHeight(26)
     local function button(label,width,callback)
-        local b=CreateFrame("Button",nil,f);b:SetSize(width,22)
+        local b=CreateFrame("Button",nil,f,"BackdropTemplate");b:SetSize(width,22)
         local labelFont=text(b,"line",nativeColor("Header"));labelFont:SetPoint("CENTER");labelFont:SetText(label)
         b.caption=labelFont;b.SetText=function(_,v) labelFont:SetText(v) end
         b:SetScript("OnClick",callback)
@@ -849,6 +854,7 @@ function A:InitTrackerSidebar()
         A:OpenQuestLogShare(draft);A.questLogShareDraft=nil
     end)
     f.share:SetPoint("RIGHT",f.refresh,"LEFT",-6,0)
+    if self.StylePartyToolbar then self:StylePartyToolbar(f) end
     f.share:SetScript("OnMouseDown",function()
         if not A.questLogShareDraft then A.questLogShareDraft=A:CaptureQuestLogChatDraft() end
     end)
@@ -920,6 +926,7 @@ function A:RenderTrackerSidebar(entries,memberCount)
         if not b then
             b=CreateFrame("Button",nil,f.child);b.label=text(b,role,color)
             b.headerBackground=false
+            b.partyActions=false;b.partyBar=false
             -- Allocate once with the pooled row; focus changes only toggle art.
             b.focusFill=b:CreateTexture(nil,"BACKGROUND",nil,1)
             b.focusFill:SetPoint("TOPLEFT",b,"TOPLEFT",-6,1)
@@ -938,6 +945,8 @@ function A:RenderTrackerSidebar(entries,memberCount)
             end)
             f.rows[used]=b
         end
+        if b.partyActions then b.partyActions:Hide() end
+        if b.partyBar then b.partyBar:Hide() end
         b.entry=entry;b.liveQuestKey=liveQuestKey;b.liveLine=liveLine
         applyFont(b.label,role);b.label:SetTextColor(unpack(color))
         local heading=entry and (entry.kind=="member" or entry.kind=="group")
@@ -954,14 +963,21 @@ function A:RenderTrackerSidebar(entries,memberCount)
         local height=math.max(heading and not plain and 26 or 1,b.label:GetStringHeight()+(heading and not plain and 10 or 3))
         b:ClearAllPoints();b:SetPoint("TOPLEFT",indent,-y);b:SetSize(width-indent,height)
         b:EnableMouse(entry~=nil);b:Show();y=y+height+2
+        return b,height
     end
     if memberCount==0 then row("Join a party to see available quests.","line",nativeColor("Normal"),0)
     elseif #entries==0 then row("No party quests discovered yet. Try Refresh in Settings.","line",nativeColor("Normal"),0)
     else
         local previousSource,previousMember
         for _,e in ipairs(entries) do
-            if e.kind=="member" then
+            if e.kind=="partyHeader" then
                 if used>0 then y=y+10 end
+                local b,height=row("Party members","line",nativeColor("Normal"),8)
+                local extra=self:LayoutPartyHeader(b,width-8,e.count,height)
+                y=y+extra
+            elseif e.kind=="member" then
+                if used>0 then y=y+10 end
+
                 row((e.closed and "+ " or "- ")..e.title,"header",nativeColor("Header"),0,e)
                 local status=e.syncedAt and "Full log synced" or "Discovered quests"
                 if e.connected==false then status=status.." - offline, cached" end

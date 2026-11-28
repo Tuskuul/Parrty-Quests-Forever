@@ -1,5 +1,5 @@
 package-as: SimplyPartyQuests
-manual-changelog: docs/RELEASE-1.1.11.txt
+manual-changelog: docs/RELEASE-1.2.0.txt
 ignore:
     - tests
     - run_checks.py

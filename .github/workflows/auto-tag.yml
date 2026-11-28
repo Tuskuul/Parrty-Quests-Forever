@@ -31,7 +31,7 @@ jobs:
       - name: Check addon syntax and regressions
         run: python3 run_checks.py
       - name: Check automatic tagging behavior
-        run: python3 -m unittest discover -s tests -p 'test_auto_tag.py' -v
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Publish missing version tag
         env:
           RELEASE_BRANCH: ${{ github.ref_name }}

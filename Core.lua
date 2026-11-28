@@ -86,7 +86,7 @@ function A:NormalizeSavedSettings()
     for _,key in ipairs({"expanded","questExpanded","sectionCollapsed","zoneCollapsed","trackerGroupsClosed","trackerMembersClosed","trackerOwnProgressExpanded"}) do
         if not readable(db[key]) then db[key]={} end
     end
-    for _,key in ipairs({"combineShared","groupByZone","nativeTrackerRepair","combatAutoHide","locked","hideMinimapButton","trackerHidden","hidden","collapsed","trackerCollapsed","requestShares","diag"}) do
+    for _,key in ipairs({"combineShared","groupByZone","nativeTrackerRepair","combatAutoHide","locked","hideMinimapButton","trackerHidden","hidden","collapsed","trackerCollapsed","trackerPartyCollapsed","trackerPartyCollapsePrimed","requestShares","diag"}) do
         if db[key]~=nil and type(db[key])~="boolean" then db[key]=nil end
     end
     if db.displayMode~="blizzard" and db.displayMode~="window" then db.displayMode="blizzard" end
